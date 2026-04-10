@@ -1,0 +1,152 @@
+/**
+ * cards.js — カード情報登録ページ
+ * 依存: storage.js / utils.js / modal.js / deck.js（deck 変数参照）
+ */
+
+/* ----------------------------------------------------------------
+   ページ初期化
+---------------------------------------------------------------- */
+function initCardPage() {
+  populateSkillSelect();
+  populateOugiSelect();
+  refreshWorkSuggestions();
+  renderCardList();
+}
+
+/* ----------------------------------------------------------------
+   カードフォームのセレクト更新（他ページから呼び出される）
+---------------------------------------------------------------- */
+function populateSkillSelect() {
+  const sel = document.getElementById('cardSkill');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">なし</option>' +
+    Storage.skills.getAll().map(s =>
+      `<option value="${esc(s.id)}"${s.id === cur ? ' selected' : ''}>${esc(s.name)}</option>`
+    ).join('');
+}
+
+function populateOugiSelect() {
+  const sel = document.getElementById('cardOugi');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">なし</option>' +
+    Storage.ougi.getAll().map(o =>
+      `<option value="${esc(o.id)}"${o.id === cur ? ' selected' : ''}>${esc(o.name)}</option>`
+    ).join('');
+}
+
+/* ----------------------------------------------------------------
+   作品サジェスト更新
+---------------------------------------------------------------- */
+function refreshWorkSuggestions() {
+  const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
+  document.getElementById('workSuggestions').innerHTML =
+    works.map(w => `<option value="${esc(w)}">`).join('');
+}
+
+/* ----------------------------------------------------------------
+   登録済みカード一覧
+---------------------------------------------------------------- */
+function renderCardList() {
+  const query = (document.getElementById('cardListSearch').value || '').toLowerCase();
+  let cards = Storage.cards.getAll();
+  if (query) cards = cards.filter(c =>
+    [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
+  );
+
+  const el = document.getElementById('cardList');
+  if (!cards.length) {
+    el.innerHTML = '<div class="empty-state">カードが登録されていません</div>';
+    return;
+  }
+
+  el.innerHTML = cards.map(c => `
+    <div class="list-item">
+      <span class="slot-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
+      <div class="list-item-main">
+        <div class="list-item-name">${esc(c.cardName)}</div>
+        <div class="list-item-sub">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''} — 脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="icon-btn edit"   data-id="${esc(c.id)}">編集</button>
+        <button class="icon-btn delete" data-id="${esc(c.id)}">削除</button>
+      </div>
+    </div>`).join('');
+
+  el.querySelectorAll('.icon-btn.edit').forEach(btn =>
+    btn.addEventListener('click', () => editCard(btn.dataset.id))
+  );
+  el.querySelectorAll('.icon-btn.delete').forEach(btn =>
+    btn.addEventListener('click', () => deleteCard(btn.dataset.id))
+  );
+}
+
+document.getElementById('cardListSearch').addEventListener('input', renderCardList);
+
+/* ----------------------------------------------------------------
+   フォーム操作
+---------------------------------------------------------------- */
+function resetCardForm() {
+  document.getElementById('cardForm').reset();
+  document.getElementById('cardId').value = '';
+  document.getElementById('cardFormTitle').textContent = '新規カード登録';
+  document.getElementById('cardCancelBtn').hidden = true;
+}
+
+function editCard(id) {
+  const c = Storage.cards.get(id);
+  if (!c) return;
+
+  document.getElementById('cardId').value    = c.id;
+  document.getElementById('cardName').value  = c.cardName || '';
+  document.getElementById('charName').value  = c.charName || '';
+  document.getElementById('workName').value  = c.workName || '';
+  document.getElementById('cardLv').value    = c.lv       || '';
+  document.getElementById('cardPower').value = c.power    || '';
+  document.getElementById('cardHp').value    = c.hp       || '';
+  document.getElementById('cardSkill').value = c.skillId  || '';
+  document.getElementById('cardOugi').value  = c.ougiId   || '';
+  document.querySelector(`input[name="rarity"][value="${c.rarity}"]`).checked       = true;
+  document.querySelector(`input[name="attribute"][value="${c.attribute}"]`).checked = true;
+
+  document.getElementById('cardFormTitle').textContent = 'カード編集';
+  document.getElementById('cardCancelBtn').hidden = false;
+  document.getElementById('cardForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteCard(id) {
+  const c = Storage.cards.get(id);
+  if (!c) return;
+  openConfirm(`「${c.cardName}」を削除しますか？`, () => {
+    Storage.cards.delete(id);
+    /* デッキからも除去（deck は deck.js のグローバル変数） */
+    deck = deck.map(d => (d && d.id === id) ? null : d);
+    renderCardList();
+    refreshWorkSuggestions();
+  });
+}
+
+document.getElementById('cardForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const rarity    = document.querySelector('input[name="rarity"]:checked');
+  const attribute = document.querySelector('input[name="attribute"]:checked');
+  if (!rarity || !attribute) { alert('レア度と属性は必須です'); return; }
+
+  Storage.cards.save({
+    id:        document.getElementById('cardId').value || undefined,
+    cardName:  document.getElementById('cardName').value.trim(),
+    charName:  document.getElementById('charName').value.trim(),
+    rarity:    rarity.value,
+    workName:  document.getElementById('workName').value.trim(),
+    attribute: attribute.value,
+    lv:        document.getElementById('cardLv').value,
+    power:     document.getElementById('cardPower').value,
+    hp:        document.getElementById('cardHp').value,
+    skillId:   document.getElementById('cardSkill').value || undefined,
+    ougiId:    document.getElementById('cardOugi').value  || undefined,
+  });
+  resetCardForm();
+  renderCardList();
+  refreshWorkSuggestions();
+});
+
+document.getElementById('cardCancelBtn').addEventListener('click', resetCardForm);
