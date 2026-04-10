@@ -7,279 +7,284 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
   <header class="header">
     <div class="header-inner">
       <h1 class="site-title">Hisaku DeckBuilder</h1>
-      <nav class="nav">
+      <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
         <button class="nav-btn" data-page="cards">カード情報登録</button>
-        <button class="nav-btn" data-page="skills">スキル/奥義登録</button>
+        <button class="nav-btn" data-page="skills">スキル / 奥義登録</button>
       </nav>
-      <button class="hamburger" id="hamburger" aria-label="メニュー">
+      <button class="hamburger" id="hamburger" aria-label="メニューを開く">
         <span></span><span></span><span></span>
       </button>
     </div>
     <nav class="nav-mobile" id="navMobile">
-      <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
+      <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
       <button class="nav-btn" data-page="cards">カード情報登録</button>
-      <button class="nav-btn" data-page="skills">スキル/奥義登録</button>
+      <button class="nav-btn" data-page="skills">スキル / 奥義登録</button>
     </nav>
   </header>
 
   <main class="main">
-    <!-- デッキシミュレーション -->
+
+    <!-- ページ: デッキシミュレーション -->
     <section id="page-deck" class="page active">
-      <h2>デッキシミュレーション</h2>
-      <div class="deck-area">
-        <div class="deck-slots">
-          <h3>デッキ（5枚）</h3>
-          <div class="deck-cards" id="deckCards">
-            <div class="deck-slot empty" data-slot="0">スロット 1</div>
-            <div class="deck-slot empty" data-slot="1">スロット 2</div>
-            <div class="deck-slot empty" data-slot="2">スロット 3</div>
-            <div class="deck-slot empty" data-slot="3">スロット 4</div>
-            <div class="deck-slot empty" data-slot="4">スロット 5</div>
-          </div>
+      <h2 class="page-title">デッキシミュレーション</h2>
+      <div class="deck-layout">
+
+        <div class="deck-panel">
+          <h3 class="panel-title">デッキ（最大5枚）</h3>
+          <div class="deck-slots" id="deckSlots"></div>
           <div class="deck-stats" id="deckStats"></div>
-          <div class="deck-skill-preview" id="deckSkillPreview"></div>
-          <div class="deck-actions">
-            <button class="btn btn-secondary" id="clearDeck">デッキをクリア</button>
+          <div class="deck-skill-status" id="deckSkillStatus"></div>
+          <div class="panel-actions">
+            <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
           </div>
         </div>
-        <div class="card-list-area">
-          <h3>カード一覧</h3>
+
+        <div class="card-pool-panel">
+          <h3 class="panel-title">カード一覧</h3>
           <div class="filter-bar">
-            <input type="text" id="filterText" placeholder="カード名・キャラクター名で検索" class="filter-input">
+            <input type="text" id="filterText" class="filter-input" placeholder="カード名 / キャラクター名 / 作品名で検索">
             <select id="filterRarity" class="filter-select">
-              <option value="">レア度：全て</option>
+              <option value="">レア度: すべて</option>
               <option value="N">N</option>
               <option value="R">R</option>
               <option value="SR">SR</option>
               <option value="SSR">SSR</option>
             </select>
             <select id="filterAttribute" class="filter-select">
-              <option value="">属性：全て</option>
+              <option value="">属性: すべて</option>
               <option value="親愛">親愛</option>
               <option value="調教">調教</option>
               <option value="従順">従順</option>
             </select>
             <select id="filterWork" class="filter-select">
-              <option value="">作品：全て</option>
+              <option value="">作品: すべて</option>
             </select>
           </div>
           <div class="card-grid" id="cardGrid"></div>
         </div>
+
       </div>
     </section>
 
-    <!-- カード情報登録 -->
+    <!-- ページ: カード情報登録 -->
     <section id="page-cards" class="page">
-      <h2>カード情報登録</h2>
+      <h2 class="page-title">カード情報登録</h2>
       <div class="split-layout">
+
         <div class="form-panel">
-          <h3 id="cardFormTitle">新規カード登録</h3>
-          <form id="cardForm" class="form">
+          <h3 class="panel-title" id="cardFormTitle">新規カード登録</h3>
+          <form id="cardForm" class="form" novalidate>
             <input type="hidden" id="cardId">
+
             <div class="form-row">
-              <label>カード名 <span class="required">*</span></label>
-              <input type="text" id="cardName" required placeholder="カード名を入力">
+              <label class="form-label">カード名 <span class="req">*</span></label>
+              <input type="text" id="cardName" class="form-input" placeholder="カード名を入力" required>
             </div>
             <div class="form-row">
-              <label>キャラクター名 <span class="required">*</span></label>
-              <input type="text" id="charName" required placeholder="キャラクター名を入力">
+              <label class="form-label">キャラクター名 <span class="req">*</span></label>
+              <input type="text" id="charName" class="form-input" placeholder="キャラクター名を入力" required>
             </div>
             <div class="form-row">
-              <label>レア度 <span class="required">*</span></label>
+              <label class="form-label">レア度 <span class="req">*</span></label>
               <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="rarity" value="N" required> N</label>
+                <label class="radio-label"><input type="radio" name="rarity" value="N"> N</label>
                 <label class="radio-label"><input type="radio" name="rarity" value="R"> R</label>
                 <label class="radio-label"><input type="radio" name="rarity" value="SR"> SR</label>
                 <label class="radio-label"><input type="radio" name="rarity" value="SSR"> SSR</label>
               </div>
             </div>
             <div class="form-row">
-              <label>作品</label>
-              <div class="input-with-datalist">
-                <input type="text" id="workName" placeholder="作品名を入力" list="workList" autocomplete="off">
-                <datalist id="workList"></datalist>
-              </div>
+              <label class="form-label">作品</label>
+              <input type="text" id="workName" class="form-input" placeholder="作品名を入力" list="workSuggestions" autocomplete="off">
+              <datalist id="workSuggestions"></datalist>
             </div>
             <div class="form-row">
-              <label>属性 <span class="required">*</span></label>
+              <label class="form-label">属性 <span class="req">*</span></label>
               <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="attribute" value="親愛" required> 親愛</label>
+                <label class="radio-label"><input type="radio" name="attribute" value="親愛"> 親愛</label>
                 <label class="radio-label"><input type="radio" name="attribute" value="調教"> 調教</label>
                 <label class="radio-label"><input type="radio" name="attribute" value="従順"> 従順</label>
               </div>
             </div>
-            <div class="form-row">
-              <label>Lv</label>
-              <input type="number" id="cardLv" min="1" placeholder="1">
+            <div class="form-row form-row-inline">
+              <div>
+                <label class="form-label">Lv</label>
+                <input type="number" id="cardLv" class="form-input form-input-sm" min="1" placeholder="1">
+              </div>
+              <div>
+                <label class="form-label">脅迫力</label>
+                <input type="number" id="cardPower" class="form-input form-input-sm" min="0" placeholder="0">
+              </div>
+              <div>
+                <label class="form-label">耐久力</label>
+                <input type="number" id="cardHp" class="form-input form-input-sm" min="0" placeholder="0">
+              </div>
             </div>
             <div class="form-row">
-              <label>脅迫力</label>
-              <input type="number" id="power" min="0" placeholder="0">
-            </div>
-            <div class="form-row">
-              <label>耐久力</label>
-              <input type="number" id="hp" min="0" placeholder="0">
-            </div>
-            <div class="form-row">
-              <label>スキル</label>
+              <label class="form-label">スキル</label>
               <select id="cardSkill" class="form-select">
                 <option value="">なし</option>
               </select>
             </div>
             <div class="form-row">
-              <label>奥義</label>
+              <label class="form-label">奥義</label>
               <select id="cardOugi" class="form-select">
                 <option value="">なし</option>
               </select>
             </div>
+
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" id="cardSubmitBtn">登録する</button>
-              <button type="button" class="btn btn-secondary" id="cardCancelBtn" style="display:none">キャンセル</button>
+              <button type="submit" class="btn btn-primary">登録する</button>
+              <button type="button" class="btn btn-secondary" id="cardCancelBtn" hidden>キャンセル</button>
             </div>
           </form>
         </div>
+
         <div class="list-panel">
-          <h3>登録済みカード</h3>
-          <div class="filter-bar">
-            <input type="text" id="cardListFilter" placeholder="検索..." class="filter-input">
-          </div>
+          <h3 class="panel-title">登録済みカード</h3>
+          <input type="text" id="cardListSearch" class="filter-input" placeholder="検索...">
           <div class="registered-list" id="cardList"></div>
         </div>
+
       </div>
     </section>
 
-    <!-- スキル/奥義登録 -->
+    <!-- ページ: スキル / 奥義登録 -->
     <section id="page-skills" class="page">
-      <h2>スキル / 奥義登録</h2>
-      <div class="skills-layout">
-        <!-- スキル登録 -->
-        <div class="skill-section">
-          <h3>スキル登録</h3>
-          <div class="split-layout">
-            <div class="form-panel">
-              <h4 id="skillFormTitle">新規スキル登録</h4>
-              <form id="skillForm" class="form">
-                <input type="hidden" id="skillId">
+      <h2 class="page-title">スキル / 奥義登録</h2>
 
-                <div class="form-row">
-                  <label>スキル名 <span class="required">*</span></label>
-                  <input type="text" id="skillName" required placeholder="スキル名を入力">
+      <!-- スキル登録 -->
+      <div class="sub-section">
+        <h3 class="sub-section-title">スキル登録</h3>
+        <div class="split-layout">
+
+          <div class="form-panel">
+            <h4 class="panel-title" id="skillFormTitle">新規スキル登録</h4>
+            <form id="skillForm" class="form" novalidate>
+              <input type="hidden" id="skillId">
+
+              <div class="form-row">
+                <label class="form-label">スキル名 <span class="req">*</span></label>
+                <input type="text" id="skillName" class="form-input" placeholder="スキル名を入力" required>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">発動条件（複数設定時は AND）</label>
+                <div class="cond-add-row">
+                  <select id="condType" class="form-select cond-type-sel">
+                    <option value="character">キャラクター名</option>
+                    <option value="work">作品</option>
+                    <option value="attribute">属性</option>
+                  </select>
+                  <span class="sep">:</span>
+                  <input type="text" id="condValue" class="form-input cond-value-input" placeholder="値" list="condValueSuggestions" autocomplete="off">
+                  <datalist id="condValueSuggestions"></datalist>
+                  <input type="number" id="condMinCount" class="form-input cond-count-input" min="1" max="5" value="1">
+                  <span class="sep">枚以上</span>
+                  <button type="button" id="btnAddCond" class="btn btn-sm">追加</button>
                 </div>
-
-                <!-- 発動条件 -->
-                <div class="form-row">
-                  <label>発動条件（デッキに◯枚以上・複数設定時はすべてAND）</label>
-                  <div class="cond-builder-row">
-                    <select id="condType" class="cond-type-sel">
-                      <option value="character">キャラクター名</option>
-                      <option value="work">作品</option>
-                      <option value="attribute">属性</option>
-                    </select>
-                    <span class="cond-sep">：</span>
-                    <div id="condValueWrap" class="cond-value-wrap">
-                      <input type="text" id="condValueText" placeholder="値を入力" list="condCharList" autocomplete="off" class="cond-value-input">
-                      <datalist id="condCharList"></datalist>
-                    </div>
-                    <span class="cond-sep">が</span>
-                    <input type="number" id="condMinCount" min="1" max="5" value="1" class="cond-count-inp">
-                    <span class="cond-sep">枚以上</span>
-                    <button type="button" id="addCond" class="btn btn-sm">追加</button>
-                  </div>
-                  <div class="conditions-display" id="conditionsDisplay">
-                    <span class="no-cond">条件なし（常時発動）</span>
-                  </div>
+                <div id="condList" class="cond-list">
+                  <span class="empty-hint">条件なし（常時発動）</span>
                 </div>
+              </div>
 
-                <!-- 発動対象 -->
-                <div class="form-row">
-                  <label>発動対象</label>
-                  <div class="radio-group" id="targetTypeGroup">
-                    <label class="radio-label"><input type="radio" name="targetType" value="all" checked> 全体</label>
-                    <label class="radio-label"><input type="radio" name="targetType" value="character"> キャラクター名</label>
-                    <label class="radio-label"><input type="radio" name="targetType" value="work"> 作品</label>
-                    <label class="radio-label"><input type="radio" name="targetType" value="attribute"> 属性</label>
-                  </div>
-                  <div id="targetValueWrap" class="target-value-wrap" style="display:none; margin-top:0.4rem"></div>
+              <div class="form-row">
+                <label class="form-label">発動対象</label>
+                <div class="radio-group" id="targetTypeGroup">
+                  <label class="radio-label"><input type="radio" name="targetType" value="all" checked> 全体</label>
+                  <label class="radio-label"><input type="radio" name="targetType" value="character"> キャラクター名</label>
+                  <label class="radio-label"><input type="radio" name="targetType" value="work"> 作品</label>
+                  <label class="radio-label"><input type="radio" name="targetType" value="attribute"> 属性</label>
                 </div>
+                <div id="targetValueWrap" class="target-value-wrap" hidden></div>
+              </div>
 
-                <!-- 効果 -->
-                <div class="form-row">
-                  <label>効果</label>
-                  <div class="effect-rows">
-                    <div class="effect-row">
-                      <span class="effect-stat-label">脅迫力</span>
-                      <input type="number" id="effectThreat" min="0" max="9999" step="1" value="0" class="effect-num-input">
-                      <span class="effect-unit">% 上昇</span>
-                    </div>
-                    <div class="effect-row">
-                      <span class="effect-stat-label">耐久力</span>
-                      <input type="number" id="effectEndurance" min="0" max="9999" step="1" value="0" class="effect-num-input">
-                      <span class="effect-unit">% 上昇</span>
-                    </div>
+              <div class="form-row">
+                <label class="form-label">効果</label>
+                <div class="effect-grid">
+                  <div class="effect-row">
+                    <span class="effect-label">脅迫力</span>
+                    <input type="number" id="effectThreat" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <span class="sep">% 上昇</span>
+                  </div>
+                  <div class="effect-row">
+                    <span class="effect-label">耐久力</span>
+                    <input type="number" id="effectEndurance" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <span class="sep">% 上昇</span>
                   </div>
                 </div>
+              </div>
 
-                <div class="form-actions">
-                  <button type="submit" class="btn btn-primary">登録する</button>
-                  <button type="button" class="btn btn-secondary" id="skillCancelBtn" style="display:none">キャンセル</button>
-                </div>
-              </form>
-            </div>
-            <div class="list-panel">
-              <h4>登録済みスキル</h4>
-              <div class="registered-list" id="skillList"></div>
-            </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">登録する</button>
+                <button type="button" class="btn btn-secondary" id="skillCancelBtn" hidden>キャンセル</button>
+              </div>
+            </form>
           </div>
-        </div>
 
-        <!-- 奥義登録 -->
-        <div class="skill-section">
-          <h3>奥義登録</h3>
-          <div class="split-layout">
-            <div class="form-panel">
-              <h4 id="ougiFormTitle">新規奥義登録</h4>
-              <form id="ougiForm" class="form">
-                <input type="hidden" id="ougiId">
-                <div class="form-row">
-                  <label>奥義名 <span class="required">*</span></label>
-                  <input type="text" id="ougiName" required placeholder="奥義名を入力">
-                </div>
-                <div class="form-row">
-                  <label>説明</label>
-                  <textarea id="ougiDesc" rows="2" placeholder="説明を入力（任意）"></textarea>
-                </div>
-                <div class="form-actions">
-                  <button type="submit" class="btn btn-primary">登録する</button>
-                  <button type="button" class="btn btn-secondary" id="ougiCancelBtn" style="display:none">キャンセル</button>
-                </div>
-              </form>
-            </div>
-            <div class="list-panel">
-              <h4>登録済み奥義</h4>
-              <div class="registered-list" id="ougiList"></div>
-            </div>
+          <div class="list-panel">
+            <h4 class="panel-title">登録済みスキル</h4>
+            <div class="registered-list" id="skillList"></div>
           </div>
+
         </div>
       </div>
+
+      <!-- 奥義登録 -->
+      <div class="sub-section">
+        <h3 class="sub-section-title">奥義登録</h3>
+        <div class="split-layout">
+
+          <div class="form-panel">
+            <h4 class="panel-title" id="ougiFormTitle">新規奥義登録</h4>
+            <form id="ougiForm" class="form" novalidate>
+              <input type="hidden" id="ougiId">
+
+              <div class="form-row">
+                <label class="form-label">奥義名 <span class="req">*</span></label>
+                <input type="text" id="ougiName" class="form-input" placeholder="奥義名を入力" required>
+              </div>
+              <div class="form-row">
+                <label class="form-label">説明</label>
+                <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">登録する</button>
+                <button type="button" class="btn btn-secondary" id="ougiCancelBtn" hidden>キャンセル</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="list-panel">
+            <h4 class="panel-title">登録済み奥義</h4>
+            <div class="registered-list" id="ougiList"></div>
+          </div>
+
+        </div>
+      </div>
+
     </section>
+
   </main>
 
   <!-- カード詳細モーダル -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal" id="cardModal">
-      <button class="modal-close" id="modalClose">&times;</button>
-      <div class="modal-content" id="modalContent"></div>
+  <div class="modal-overlay" id="cardModalOverlay">
+    <div class="modal" id="cardModal" role="dialog" aria-modal="true">
+      <button class="modal-close" id="cardModalClose" aria-label="閉じる">&times;</button>
+      <div id="cardModalContent"></div>
     </div>
   </div>
 
   <!-- 削除確認モーダル -->
   <div class="modal-overlay" id="confirmOverlay">
-    <div class="modal modal-sm" id="confirmModal">
-      <p id="confirmMessage"></p>
+    <div class="modal modal-sm" id="confirmModal" role="dialog" aria-modal="true">
+      <p id="confirmMsg" class="confirm-msg"></p>
       <div class="form-actions">
         <button class="btn btn-danger" id="confirmYes">削除する</button>
         <button class="btn btn-secondary" id="confirmNo">キャンセル</button>
