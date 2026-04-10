@@ -532,6 +532,147 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+/* ===== Skill Condition Builder ===== */
+.cond-builder-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.cond-type-sel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.3rem 0.4rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.cond-type-sel:focus { outline: none; border-color: var(--primary); }
+.cond-value-wrap { display: flex; align-items: center; flex: 1; min-width: 100px; }
+.cond-value-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  width: 100%;
+}
+.cond-value-input:focus { outline: none; border-color: var(--primary); }
+.cond-value-select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.3rem 0.4rem;
+  font-size: 0.8rem;
+  width: 100%;
+  cursor: pointer;
+}
+.cond-value-select:focus { outline: none; border-color: var(--primary); }
+.cond-count-inp {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.3rem 0.4rem;
+  font-size: 0.8rem;
+  width: 52px;
+  text-align: center;
+}
+.cond-count-inp:focus { outline: none; border-color: var(--primary); }
+.cond-sep { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+
+/* ===== Skill Effects ===== */
+.effect-rows { display: flex; flex-direction: column; gap: 0.4rem; }
+.effect-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.effect-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+.effect-num-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  width: 80px;
+  text-align: right;
+}
+.effect-num-input:focus { outline: none; border-color: var(--primary); }
+.effect-unit { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ===== Target Value Wrap ===== */
+.target-value-wrap input[type="text"],
+.target-value-wrap select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+  width: 100%;
+}
+.target-value-wrap input[type="text"]:focus,
+.target-value-wrap select:focus { outline: none; border-color: var(--primary); }
+
+/* ===== Skill List Item Extended ===== */
+.list-item-effect {
+  font-size: 0.72rem;
+  color: var(--success);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-item-target {
+  font-size: 0.72rem;
+  color: var(--attr-aiai);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Deck Stats Buffs ===== */
+.stat-value-buff { color: var(--success); font-size: 0.8rem; margin-left: 0.25rem; }
+.stat-value-base { color: var(--text-muted); font-size: 0.8rem; }
+
+/* ===== Skill Preview Enhanced ===== */
+.skill-preview-item.active { border-left: 3px solid var(--success); }
+.skill-preview-item.inactive { border-left: 3px solid var(--border); opacity: 0.5; }
+.sp-status-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+}
+.sp-status-badge.on { background: rgba(22,163,74,0.2); color: var(--success); }
+.sp-status-badge.off { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+.sp-effect-nums { color: var(--success); margin-top: 2px; font-size: 0.78rem; }
+.sp-target-info { color: var(--attr-aiai); margin-top: 1px; font-size: 0.75rem; }
+.sp-cond-detail { color: var(--text-muted); margin-top: 1px; font-size: 0.72rem; }
+
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
   .deck-area { grid-template-columns: 1fr; }
@@ -545,6 +686,7 @@ body {
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .filter-bar { flex-direction: column; }
   .filter-input, .filter-select { width: 100%; }
+  .cond-builder-row { gap: 0.3rem; }
 }
 
 @media (max-width: 400px) {

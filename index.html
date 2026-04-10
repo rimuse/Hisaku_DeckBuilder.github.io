@@ -113,6 +113,10 @@
               </div>
             </div>
             <div class="form-row">
+              <label>Lv</label>
+              <input type="number" id="cardLv" min="1" placeholder="1">
+            </div>
+            <div class="form-row">
               <label>脅迫力</label>
               <input type="number" id="power" min="0" placeholder="0">
             </div>
@@ -160,50 +164,65 @@
               <h4 id="skillFormTitle">新規スキル登録</h4>
               <form id="skillForm" class="form">
                 <input type="hidden" id="skillId">
+
                 <div class="form-row">
                   <label>スキル名 <span class="required">*</span></label>
                   <input type="text" id="skillName" required placeholder="スキル名を入力">
                 </div>
+
+                <!-- 発動条件 -->
                 <div class="form-row">
-                  <label>効果説明</label>
-                  <textarea id="skillEffect" rows="3" placeholder="効果を入力"></textarea>
+                  <label>発動条件（デッキに◯枚以上・複数設定時はすべてAND）</label>
+                  <div class="cond-builder-row">
+                    <select id="condType" class="cond-type-sel">
+                      <option value="character">キャラクター名</option>
+                      <option value="work">作品</option>
+                      <option value="attribute">属性</option>
+                    </select>
+                    <span class="cond-sep">：</span>
+                    <div id="condValueWrap" class="cond-value-wrap">
+                      <input type="text" id="condValueText" placeholder="値を入力" list="condCharList" autocomplete="off" class="cond-value-input">
+                      <datalist id="condCharList"></datalist>
+                    </div>
+                    <span class="cond-sep">が</span>
+                    <input type="number" id="condMinCount" min="1" max="5" value="1" class="cond-count-inp">
+                    <span class="cond-sep">枚以上</span>
+                    <button type="button" id="addCond" class="btn btn-sm">追加</button>
+                  </div>
+                  <div class="conditions-display" id="conditionsDisplay">
+                    <span class="no-cond">条件なし（常時発動）</span>
+                  </div>
                 </div>
+
+                <!-- 発動対象 -->
                 <div class="form-row">
-                  <label>発動条件（複数選択可）</label>
-                  <div class="condition-builder" id="conditionBuilder">
-                    <div class="condition-type-tabs">
-                      <button type="button" class="cond-tab active" data-type="character">キャラクター名</button>
-                      <button type="button" class="cond-tab" data-type="work">作品</button>
-                      <button type="button" class="cond-tab" data-type="attribute">属性</button>
+                  <label>発動対象</label>
+                  <div class="radio-group" id="targetTypeGroup">
+                    <label class="radio-label"><input type="radio" name="targetType" value="all" checked> 全体</label>
+                    <label class="radio-label"><input type="radio" name="targetType" value="character"> キャラクター名</label>
+                    <label class="radio-label"><input type="radio" name="targetType" value="work"> 作品</label>
+                    <label class="radio-label"><input type="radio" name="targetType" value="attribute"> 属性</label>
+                  </div>
+                  <div id="targetValueWrap" class="target-value-wrap" style="display:none; margin-top:0.4rem"></div>
+                </div>
+
+                <!-- 効果 -->
+                <div class="form-row">
+                  <label>効果</label>
+                  <div class="effect-rows">
+                    <div class="effect-row">
+                      <span class="effect-stat-label">脅迫力</span>
+                      <input type="number" id="effectThreat" min="0" max="9999" step="1" value="0" class="effect-num-input">
+                      <span class="effect-unit">% 上昇</span>
                     </div>
-                    <div class="condition-input-area" id="conditionInputArea">
-                      <div class="cond-panel active" data-type="character">
-                        <div class="input-with-add">
-                          <input type="text" id="condCharInput" placeholder="キャラクター名を入力" list="condCharList" autocomplete="off">
-                          <datalist id="condCharList"></datalist>
-                          <button type="button" class="btn btn-sm" id="addCondChar">追加</button>
-                        </div>
-                      </div>
-                      <div class="cond-panel" data-type="work">
-                        <div class="input-with-add">
-                          <input type="text" id="condWorkInput" placeholder="作品名を入力" list="condWorkList" autocomplete="off">
-                          <datalist id="condWorkList"></datalist>
-                          <button type="button" class="btn btn-sm" id="addCondWork">追加</button>
-                        </div>
-                      </div>
-                      <div class="cond-panel" data-type="attribute">
-                        <div class="attr-checkboxes">
-                          <label><input type="checkbox" class="cond-attr" value="親愛"> 親愛</label>
-                          <label><input type="checkbox" class="cond-attr" value="調教"> 調教</label>
-                          <label><input type="checkbox" class="cond-attr" value="従順"> 従順</label>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="conditions-display" id="conditionsDisplay">
-                      <span class="no-cond">条件なし（全カードに効果）</span>
+                    <div class="effect-row">
+                      <span class="effect-stat-label">耐久力</span>
+                      <input type="number" id="effectEndurance" min="0" max="9999" step="1" value="0" class="effect-num-input">
+                      <span class="effect-unit">% 上昇</span>
                     </div>
                   </div>
                 </div>
+
                 <div class="form-actions">
                   <button type="submit" class="btn btn-primary">登録する</button>
                   <button type="button" class="btn btn-secondary" id="skillCancelBtn" style="display:none">キャンセル</button>
