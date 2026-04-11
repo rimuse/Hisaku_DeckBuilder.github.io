@@ -69,16 +69,31 @@ function makeStore(key) {
     /** キャッシュから1件返す（同期） */
     get(id)  { return _cache[key].find(x => x.id === id) || null; },
 
-    /** Firebase に書き込む（非同期）。id がなければ採番して返す */
+    /** Firebase に書き込む（非同期）。キャッシュを即時楽観的更新する */
     save(item) {
       if (!item.id) item.id = _uid();
-      _db.ref(`hisaku/${key}/${item.id}`).set(item);
+
+      /* 楽観的更新: Firebase の応答を待たずキャッシュに反映 */
+      const idx = _cache[key].findIndex(x => x.id === item.id);
+      if (idx >= 0) _cache[key][idx] = item;
+      else _cache[key].push(item);
+
+      _db.ref(`hisaku/${key}/${item.id}`).set(item).catch(err => {
+        console.error('Firebase write error:', err);
+        alert(`保存に失敗しました。\n${err.message}`);
+      });
       return item;
     },
 
-    /** Firebase から削除する（非同期） */
+    /** Firebase から削除する（非同期）。キャッシュを即時楽観的更新する */
     delete(id) {
-      _db.ref(`hisaku/${key}/${id}`).remove();
+      /* 楽観的更新 */
+      _cache[key] = _cache[key].filter(x => x.id !== id);
+
+      _db.ref(`hisaku/${key}/${id}`).remove().catch(err => {
+        console.error('Firebase delete error:', err);
+        alert(`削除に失敗しました。\n${err.message}`);
+      });
     }
   };
 }
