@@ -17,3 +17,14 @@ function fmt(v) { return num(v).toLocaleString(); }
 /** 条件タイプの日本語ラベル */
 const COND_LABELS = { character: 'キャラ', work: '作品', attribute: '属性' };
 function condLabel(type) { return COND_LABELS[type] || type; }
+
+/** トースト通知（画面下部に3秒間表示） */
+function showToast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'toast' + (isError ? ' toast-error' : '');
+  el.hidden      = false;
+  clearTimeout(el._hideTimer);
+  el._hideTimer  = setTimeout(() => { el.hidden = true; }, 3000);
+}

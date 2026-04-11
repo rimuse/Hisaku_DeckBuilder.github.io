@@ -119,6 +119,29 @@ function makeStore(key) {
     },
 
     /**
+     * 複数アイテムを一括で Firebase に書き込む（認証済み管理者のみ）。
+     * _db.ref().update() で単一の書き込みにまとめるため onValue は1回しか発火しない。
+     */
+    saveAll(items) {
+      if (!firebase.auth().currentUser) {
+        alert('データの保存には管理者ログインが必要です。');
+        return;
+      }
+      const updates = {};
+      items.forEach(item => {
+        if (!item.id) item.id = _uid();
+        const idx = _cache[key].findIndex(x => x.id === item.id);
+        if (idx >= 0) _cache[key][idx] = item;
+        else _cache[key].push(item);
+        updates[`hisaku/${key}/${item.id}`] = item;
+      });
+      _db.ref().update(updates).catch(err => {
+        console.error('Firebase batch write error:', err);
+        alert(`一括保存に失敗しました。\n${err.message}`);
+      });
+    },
+
+    /**
      * Firebase から削除する（認証済み管理者のみ）。
      * キャッシュを即時楽観的更新する。
      */

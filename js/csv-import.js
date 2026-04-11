@@ -169,6 +169,7 @@ function runPreview(text) {
 function executeImport() {
   const mode = document.getElementById('csvDupHandling').value;
   let imported = 0, skipped = 0, overwritten = 0, errored = 0;
+  const toSave = [];
 
   _parsedRows.forEach(r => {
     if (r.errors.length > 0) { errored++; return; }
@@ -188,13 +189,18 @@ function executeImport() {
 
     if (r.dup) {
       if (mode === 'skip') { skipped++; return; }
-      Storage.cards.save({ ...cardData, id: r.dup.card.id });
+      toSave.push({ ...cardData, id: r.dup.card.id });
       overwritten++;
     } else {
-      Storage.cards.save(cardData);
+      toSave.push(cardData);
       imported++;
     }
   });
+
+  /* 全件を1回の Firebase 書き込みにまとめる（onValue の多重発火を防ぐ） */
+  if (toSave.length > 0) {
+    Storage.cards.saveAll(toSave);
+  }
 
   const parts = [];
   if (imported)    parts.push(`新規登録 ${imported} 件`);
@@ -202,8 +208,10 @@ function executeImport() {
   if (skipped)     parts.push(`スキップ（重複） ${skipped} 件`);
   if (errored)     parts.push(`エラースキップ ${errored} 件`);
 
+  const resultText = parts.join('　／　') || '0 件';
+
   const el = document.getElementById('csvResult');
-  el.textContent = parts.join('　／　') || '0 件';
+  el.textContent = resultText;
   el.hidden = false;
   document.getElementById('csvPreview').hidden = true;
 
@@ -211,6 +219,8 @@ function executeImport() {
   renderCardList();
   refreshWorkSuggestions();
   refreshTokutsuboSelect();
+
+  if (toSave.length > 0) showToast(`インポート完了：${resultText}`);
 }
 
 /* ----------------------------------------------------------------

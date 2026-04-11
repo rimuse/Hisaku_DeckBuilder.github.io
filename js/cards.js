@@ -133,6 +133,7 @@ function saveCard(data) {
   resetCardForm();
   renderCardList();
   refreshWorkSuggestions();
+  showToast('カードを登録しました');
 }
 
 /* ----------------------------------------------------------------
