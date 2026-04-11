@@ -22,7 +22,7 @@
  * ※ Firebase の設定値（apiKey 等）は公開しても安全な値です。
  *   セキュリティはルールで制御されます。
  */
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBGJcRIGfdBal5JQZhnrtrrDawhxEAnVEU",
   authDomain: "hisaku-f2818.firebaseapp.com",
   databaseURL: "https://hisaku-f2818-default-rtdb.firebaseio.com",
