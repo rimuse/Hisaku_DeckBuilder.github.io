@@ -22,13 +22,13 @@
  * ※ Firebase の設定値（apiKey 等）は公開しても安全な値です。
  *   セキュリティはルールで制御されます。
  */
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyBGJcRIGfdBal5JQZhnrtrrDawhxEAnVEU",
-  authDomain:        "hisaku-f2818.firebaseapp.com",
-  databaseURL:       "https://hisaku-f2818-default-rtdb.firebaseio.com",
-  projectId:         "hisaku-f2818",
-  storageBucket:     "hisaku-f2818.firebasestorage.app",
+const firebaseConfig = {
+  apiKey: "AIzaSyBGJcRIGfdBal5JQZhnrtrrDawhxEAnVEU",
+  authDomain: "hisaku-f2818.firebaseapp.com",
+  databaseURL: "https://hisaku-f2818-default-rtdb.firebaseio.com",
+  projectId: "hisaku-f2818",
+  storageBucket: "hisaku-f2818.firebasestorage.app",
   messagingSenderId: "730399990359",
-  appId:             "1:730399990359:web:4557bfeaba69406c517912",
-  measurementId:     "G-LLL7RGMK9V"
+  appId: "1:730399990359:web:4557bfeaba69406c517912",
+  measurementId: "G-LLL7RGMK9V"
 };
