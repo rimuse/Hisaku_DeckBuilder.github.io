@@ -22,7 +22,7 @@
       <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
         <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
-        <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
+        <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
       </nav>
       <button class="btn btn-secondary btn-sm" id="btnLogout" hidden>ログアウト</button>
       <button class="hamburger" id="hamburger" aria-label="メニューを開く">
@@ -32,7 +32,7 @@
     <nav class="nav-mobile" id="navMobile">
       <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
       <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
-      <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
+      <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
     </nav>
   </header>
 
@@ -156,7 +156,7 @@
               </div>
             </div>
             <div class="form-row">
-              <label class="form-label">スキル</label>
+              <label class="form-label">特技</label>
               <select id="cardSkill" class="form-select">
                 <option value="">なし</option>
               </select>
@@ -191,7 +191,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,スキル,奥義</code>
+              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,特技,奥義</code>
               <button id="csvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
           </div>
@@ -236,23 +236,23 @@
 
     </section>
 
-    <!-- ページ: スキル / 奥義登録 -->
+    <!-- ページ: 特技 / 奥義登録 -->
     <section id="page-skills" class="page">
-      <h2 class="page-title">スキル / 奥義登録</h2>
+      <h2 class="page-title">特技 / 奥義登録</h2>
 
-      <!-- スキル登録 -->
+      <!-- 特技登録 -->
       <div class="sub-section">
-        <h3 class="sub-section-title">スキル登録</h3>
+        <h3 class="sub-section-title">特技登録</h3>
         <div class="split-layout">
 
           <div class="form-panel">
-            <h4 class="panel-title" id="skillFormTitle">新規スキル登録</h4>
+            <h4 class="panel-title" id="skillFormTitle">新規特技登録</h4>
             <form id="skillForm" class="form" novalidate>
               <input type="hidden" id="skillId">
 
               <div class="form-row">
-                <label class="form-label">スキル名 <span class="req">*</span></label>
-                <input type="text" id="skillName" class="form-input" placeholder="スキル名を入力" required>
+                <label class="form-label">特技名 <span class="req">*</span></label>
+                <input type="text" id="skillName" class="form-input" placeholder="特技名を入力" required>
               </div>
 
               <div class="form-row">
@@ -287,17 +287,57 @@
               </div>
 
               <div class="form-row">
-                <label class="form-label">効果</label>
+                <label class="form-label">最大特技Lv</label>
+                <div class="effect-row">
+                  <input type="number" id="maxSkillLv" class="form-input form-input-sm" min="1" max="99" value="1">
+                  <span class="sep">Lv</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">効果（初期値）</label>
                 <div class="effect-grid">
                   <div class="effect-row">
                     <span class="effect-label">脅迫力</span>
-                    <input type="number" id="effectThreat" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <input type="number" id="effectThreatInit" class="form-input form-input-sm" min="0" max="9999" value="0">
                     <span class="sep">% 上昇</span>
                   </div>
                   <div class="effect-row">
                     <span class="effect-label">耐久力</span>
-                    <input type="number" id="effectEndurance" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <input type="number" id="effectEnduranceInit" class="form-input form-input-sm" min="0" max="9999" value="0">
                     <span class="sep">% 上昇</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">効果（最大値）</label>
+                <div class="effect-grid">
+                  <div class="effect-row">
+                    <span class="effect-label">脅迫力</span>
+                    <input type="number" id="effectThreatMax" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <span class="sep">% 上昇</span>
+                  </div>
+                  <div class="effect-row">
+                    <span class="effect-label">耐久力</span>
+                    <input type="number" id="effectEnduranceMax" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <span class="sep">% 上昇</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">あがり幅（Lv上げ時）</label>
+                <div class="effect-grid">
+                  <div class="effect-row">
+                    <span class="effect-label">脅迫力</span>
+                    <input type="number" id="effectThreatRise" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <span class="sep">% / Lv</span>
+                  </div>
+                  <div class="effect-row">
+                    <span class="effect-label">耐久力</span>
+                    <input type="number" id="effectEnduranceRise" class="form-input form-input-sm" min="0" max="9999" value="0">
+                    <span class="sep">% / Lv</span>
                   </div>
                 </div>
               </div>
@@ -310,7 +350,7 @@
           </div>
 
           <div class="list-panel">
-            <h4 class="panel-title">登録済みスキル</h4>
+            <h4 class="panel-title">登録済み特技</h4>
             <div class="registered-list" id="skillList"></div>
           </div>
 

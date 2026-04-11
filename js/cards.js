@@ -158,7 +158,7 @@ function openDupModal(existing, newData, reason) {
       ['属性',     c.attribute  || '—'],
       ['脅迫力',   fmt(c.power)],
       ['耐久力',   fmt(c.hp)],
-      ['スキル',   skillName(c.skillId)],
+      ['特技',   skillName(c.skillId)],
       ['奥義',     ougiName(c.ougiId)],
     ].map(([k, v]) => `<div class="dup-row"><span class="dup-key">${esc(k)}</span><span class="dup-val">${esc(String(v))}</span></div>`).join('');
   }

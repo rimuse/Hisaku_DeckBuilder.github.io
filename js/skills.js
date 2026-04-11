@@ -105,7 +105,7 @@ function renderSkillList() {
   const skills = Storage.skills.getAll();
 
   if (!skills.length) {
-    el.innerHTML = '<div class="empty-state">スキルが登録されていません</div>';
+    el.innerHTML = '<div class="empty-state">特技が登録されていません</div>';
     return;
   }
 
@@ -113,14 +113,19 @@ function renderSkillList() {
     const conds = (s.conditions || [])
       .map(c => `${condLabel(c.type)}:${esc(c.value)}≥${c.minCount}`)
       .join(' AND ') || '常時発動';
+    const tInit = s.threatPctInit     ?? s.threatPct     ?? 0;
+    const tMax  = s.threatPctMax      ?? s.threatPct     ?? 0;
+    const eInit = s.endurancePctInit  ?? s.endurancePct  ?? 0;
+    const eMax  = s.endurancePctMax   ?? s.endurancePct  ?? 0;
+    const lvStr = s.maxSkillLv ? `最大Lv${s.maxSkillLv} / ` : '';
     const effs = [
-      s.threatPct    ? `脅${s.threatPct}%`    : '',
-      s.endurancePct ? `耐${s.endurancePct}%` : ''
+      (tInit || tMax) ? `脅${tInit}%→${tMax}%` : '',
+      (eInit || eMax) ? `耐${eInit}%→${eMax}%` : ''
     ].filter(Boolean).join('/') || '—';
 
     return `<div class="list-item">
       <div class="list-item-main">
-        <div class="list-item-name">${esc(s.name)}</div>
+        <div class="list-item-name">${esc(s.name)}${s.maxSkillLv ? `<span class="skill-lv-badge">最大Lv${s.maxSkillLv}</span>` : ''}</div>
         <div class="list-item-sub">${conds} → ${effs}</div>
       </div>
       <div class="list-item-actions">
@@ -149,20 +154,30 @@ function resetSkillForm() {
   const wrap = document.getElementById('targetValueWrap');
   wrap.hidden    = true;
   wrap.innerHTML = '';
-  document.getElementById('skillFormTitle').textContent = '新規スキル登録';
-  document.getElementById('skillCancelBtn').hidden      = true;
-  document.getElementById('effectThreat').value         = 0;
-  document.getElementById('effectEndurance').value      = 0;
+  document.getElementById('skillFormTitle').textContent          = '新規特技登録';
+  document.getElementById('skillCancelBtn').hidden               = true;
+  document.getElementById('maxSkillLv').value                    = 1;
+  document.getElementById('effectThreatInit').value              = 0;
+  document.getElementById('effectEnduranceInit').value           = 0;
+  document.getElementById('effectThreatMax').value               = 0;
+  document.getElementById('effectEnduranceMax').value            = 0;
+  document.getElementById('effectThreatRise').value              = 0;
+  document.getElementById('effectEnduranceRise').value           = 0;
 }
 
 function editSkill(id) {
   const s = Storage.skills.get(id);
   if (!s) return;
 
-  document.getElementById('skillId').value         = s.id;
-  document.getElementById('skillName').value       = s.name          || '';
-  document.getElementById('effectThreat').value    = s.threatPct     || 0;
-  document.getElementById('effectEndurance').value = s.endurancePct  || 0;
+  document.getElementById('skillId').value              = s.id;
+  document.getElementById('skillName').value            = s.name             || '';
+  document.getElementById('maxSkillLv').value           = s.maxSkillLv       || 1;
+  document.getElementById('effectThreatInit').value     = s.threatPctInit    ?? s.threatPct    ?? 0;
+  document.getElementById('effectEnduranceInit').value  = s.endurancePctInit ?? s.endurancePct ?? 0;
+  document.getElementById('effectThreatMax').value      = s.threatPctMax     ?? s.threatPct    ?? 0;
+  document.getElementById('effectEnduranceMax').value   = s.endurancePctMax  ?? s.endurancePct ?? 0;
+  document.getElementById('effectThreatRise').value     = s.threatRise       || 0;
+  document.getElementById('effectEnduranceRise').value  = s.enduranceRise    || 0;
   skillConditions = (s.conditions || []).slice();
   renderCondList();
 
@@ -181,7 +196,7 @@ function editSkill(id) {
     }
   }
 
-  document.getElementById('skillFormTitle').textContent = 'スキル編集';
+  document.getElementById('skillFormTitle').textContent = '特技編集';
   document.getElementById('skillCancelBtn').hidden = false;
   document.getElementById('skillForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -209,12 +224,17 @@ document.getElementById('skillForm').addEventListener('submit', e => {
   }
 
   Storage.skills.save({
-    id:           document.getElementById('skillId').value || undefined,
-    name:         document.getElementById('skillName').value.trim(),
-    conditions:   skillConditions.slice(),
-    target:       { type: targetType, value: targetValue },
-    threatPct:    num(document.getElementById('effectThreat').value),
-    endurancePct: num(document.getElementById('effectEndurance').value),
+    id:               document.getElementById('skillId').value || undefined,
+    name:             document.getElementById('skillName').value.trim(),
+    conditions:       skillConditions.slice(),
+    target:           { type: targetType, value: targetValue },
+    maxSkillLv:       num(document.getElementById('maxSkillLv').value) || 1,
+    threatPctInit:    num(document.getElementById('effectThreatInit').value),
+    endurancePctInit: num(document.getElementById('effectEnduranceInit').value),
+    threatPctMax:     num(document.getElementById('effectThreatMax').value),
+    endurancePctMax:  num(document.getElementById('effectEnduranceMax').value),
+    threatRise:       num(document.getElementById('effectThreatRise').value),
+    enduranceRise:    num(document.getElementById('effectEnduranceRise').value),
   });
   resetSkillForm();
   renderSkillList();
