@@ -39,15 +39,28 @@ _db.ref('hisaku').on('value', snapshot => {
 });
 
 /* ----------------------------------------------------------------
-   エラーハンドリング（設定値が未入力の場合など）
+   接続状態監視
+   .info/connected はページ読み込み直後は必ず false から始まるため、
+   初期 false をエラーと誤判定しないようタイムアウト方式で検知する
 ---------------------------------------------------------------- */
-_db.ref('.info/connected').on('value', snapshot => {
-  if (snapshot.val() === false) {
+let _everConnected = false;
+const _connErrorTimer = setTimeout(() => {
+  if (!_everConnected) {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) {
       overlay.querySelector('.loading-msg').textContent =
-        'Firebase に接続できません。firebase-config.js の設定を確認してください。';
+        'Firebase に接続できません。\n' +
+        '① Realtime Database が Firebase コンソールで作成済みか\n' +
+        '② セキュリティルールが読み取りを許可しているか\n' +
+        '③ ネットワーク環境を確認してください。';
     }
+  }
+}, 10000); // 10秒以内に接続できなければエラー表示
+
+_db.ref('.info/connected').on('value', snapshot => {
+  if (snapshot.val() === true) {
+    _everConnected = true;
+    clearTimeout(_connErrorTimer);
   }
 });
 
