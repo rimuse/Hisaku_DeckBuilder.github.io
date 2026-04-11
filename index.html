@@ -8,6 +8,14 @@
 </head>
 <body>
 
+  <!-- ローディングオーバーレイ（Firebase 接続待ち） -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <p class="loading-msg">データを読み込み中...</p>
+    </div>
+  </div>
+
   <header class="header">
     <div class="header-inner">
       <h1 class="site-title">Hisaku DeckBuilder</h1>
@@ -292,7 +300,12 @@
     </div>
   </div>
 
-  <!-- 読み込み順序: 基盤 → UI共通 → 機能別 → ナビ → 起動 -->
+  <!-- Firebase SDK (compat版: モジュールバンドラー不要) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <!-- 読み込み順序: Firebase設定 → 基盤 → UI共通 → 機能別 → ナビ → 起動 -->
+  <script src="js/firebase-config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/modal.js"></script>
