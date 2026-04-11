@@ -20,8 +20,7 @@
    Firebase 初期化
 ---------------------------------------------------------------- */
 firebase.initializeApp(FIREBASE_CONFIG);
-const _db   = firebase.database();
-const _auth = firebase.auth();
+const _db = firebase.database();
 
 /* ----------------------------------------------------------------
    ローカルキャッシュ（読み取りはここから行う）
@@ -101,7 +100,7 @@ function makeStore(key) {
      * キャッシュを即時楽観的更新して UI に即反映する。
      */
     save(item) {
-      if (!_auth.currentUser) {
+      if (!firebase.auth().currentUser) {
         alert('データの保存には管理者ログインが必要です。');
         return item;
       }
@@ -124,7 +123,7 @@ function makeStore(key) {
      * キャッシュを即時楽観的更新する。
      */
     delete(id) {
-      if (!_auth.currentUser) {
+      if (!firebase.auth().currentUser) {
         alert('データの削除には管理者ログインが必要です。');
         return;
       }
