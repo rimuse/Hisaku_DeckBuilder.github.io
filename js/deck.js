@@ -1,10 +1,27 @@
 /**
  * deck.js — デッキシミュレーションページ
  * 依存: storage.js / utils.js / modal.js
+ *
+ * デッキの各スロットは { card: CardObject, lbLv: number } で管理する。
+ * 限界突破Lv はカードのベース情報ではなく、デッキ構築時の可変項目。
  */
 
-/* デッキ状態（5スロット） */
+/* ----------------------------------------------------------------
+   デッキ状態（5スロット）
+   null | { card, lbLv }
+---------------------------------------------------------------- */
 let deck = Array(5).fill(null);
+
+/* ----------------------------------------------------------------
+   限界突破補正
+---------------------------------------------------------------- */
+const LIMIT_BREAK_BONUS = { N: 3, R: 6, SR: 9, SSR: 12 };
+
+function lbBonus(card, lbLv) {
+  return num(lbLv) * (LIMIT_BREAK_BONUS[card.rarity] || 0);
+}
+function slotPower(slot) { return num(slot.card.power) + lbBonus(slot.card, slot.lbLv); }
+function slotHp(slot)    { return num(slot.card.hp)    + lbBonus(slot.card, slot.lbLv); }
 
 /* ----------------------------------------------------------------
    ページ初期化
@@ -22,15 +39,21 @@ function initDeckPage() {
 function renderDeckSlots() {
   const container = document.getElementById('deckSlots');
   container.innerHTML = '';
-  deck.forEach((card, i) => {
+
+  deck.forEach((slot, i) => {
     const el = document.createElement('div');
-    if (card) {
+    if (slot) {
+      const { card, lbLv } = slot;
       el.className = 'deck-slot';
       el.innerHTML = `
         <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
         <div class="slot-info">
           <div class="slot-card-name">${esc(card.cardName)}</div>
           <div class="slot-char-name">${esc(card.charName)}${card.workName ? ' / ' + esc(card.workName) : ''}</div>
+        </div>
+        <div class="slot-lb-wrap">
+          <span class="slot-lb-label">限突Lv</span>
+          <input type="number" class="slot-lb-input" min="0" max="200" value="${num(lbLv)}" data-slot="${i}">
         </div>
         <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>`;
     } else {
@@ -40,6 +63,7 @@ function renderDeckSlots() {
     container.appendChild(el);
   });
 
+  /* 取り外しボタン */
   container.querySelectorAll('.slot-remove').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -47,6 +71,24 @@ function renderDeckSlots() {
       renderDeckSlots();
       renderCardGrid();
       renderDeckStats();
+    });
+  });
+
+  /* 限突Lv 入力 — スロット再描画せず統計だけ更新（フォーカスを維持） */
+  container.querySelectorAll('.slot-lb-input').forEach(input => {
+    input.addEventListener('input', e => {
+      const idx = +e.target.dataset.slot;
+      if (deck[idx]) {
+        deck[idx].lbLv = Math.min(200, Math.max(0, num(e.target.value)));
+        renderDeckStats();
+      }
+    });
+    /* フォーカスを外したときに値を正規化 */
+    input.addEventListener('blur', e => {
+      const idx = +e.target.dataset.slot;
+      if (deck[idx]) {
+        e.target.value = deck[idx].lbLv;
+      }
     });
   });
 }
@@ -72,7 +114,7 @@ function renderCardGrid() {
     return;
   }
 
-  const inDeckIds = new Set(deck.filter(Boolean).map(c => c.id));
+  const inDeckIds = new Set(deck.filter(Boolean).map(s => s.card.id));
   grid.innerHTML = cards.map(c => `
     <div class="card-thumb${inDeckIds.has(c.id) ? ' in-deck' : ''}" data-id="${esc(c.id)}" title="${esc(c.cardName)}">
       <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
@@ -91,11 +133,11 @@ function onCardThumbClick(cardId) {
   const card = Storage.cards.get(cardId);
   if (!card) return;
   /* すでにデッキにある or 空きスロットなし → 詳細表示 */
-  if (deck.some(c => c && c.id === cardId) || deck.indexOf(null) === -1) {
+  if (deck.some(s => s && s.card.id === cardId) || deck.indexOf(null) === -1) {
     openCardDetail(card);
     return;
   }
-  deck[deck.indexOf(null)] = card;
+  deck[deck.indexOf(null)] = { card, lbLv: 0 };
   renderDeckSlots();
   renderCardGrid();
   renderDeckStats();
@@ -113,8 +155,9 @@ function openCardDetail(card) {
     ${detailRow('作品', card.workName || '—')}
     ${detailRow('レア度', `<span class="rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>`)}
     ${detailRow('属性', `<span class="attr-${esc(card.attribute)}">${esc(card.attribute)}</span>`)}
-    ${detailRow('脅迫力', fmt(card.power))}
-    ${detailRow('耐久力', fmt(card.hp))}
+    ${detailRow('脅迫力 (Lv100)', fmt(card.power))}
+    ${detailRow('耐久力 (Lv100)', fmt(card.hp))}
+    ${detailRow('限突補正/Lv', `+${LIMIT_BREAK_BONUS[card.rarity] || 0}`)}
     ${detailRow('スキル', skill ? esc(skill.name) : '—')}
     ${detailRow('奥義',   ougi  ? esc(ougi.name)  : '—')}`;
   cardModal.open();
@@ -126,32 +169,44 @@ function detailRow(key, val) {
 
 /* ----------------------------------------------------------------
    デッキ統計 & スキル発動状況
-   ※ 脅迫力・耐久力は限界突破補正後の値を使用
 ---------------------------------------------------------------- */
 function renderDeckStats() {
-  const cards   = deck.filter(Boolean);
+  const slots   = deck.filter(Boolean);
   const statsEl = document.getElementById('deckStats');
   const skillEl = document.getElementById('deckSkillStatus');
 
-  if (!cards.length) {
+  if (!slots.length) {
     statsEl.innerHTML = '<div class="empty-state">カードを選択してください</div>';
     skillEl.innerHTML = '';
     return;
   }
 
-  const activations = calcSkillActivations(cards);
-  const threatBuff  = activations.filter(a => a.active).reduce((s, a) => s + a.threatBuff, 0);
-  const hpBuff      = activations.filter(a => a.active).reduce((s, a) => s + a.hpBuff,     0);
-  const baseThreat  = cards.reduce((s, c) => s + num(c.power), 0);
-  const baseHp      = cards.reduce((s, c) => s + num(c.hp),    0);
-  const attrStr     = Object.entries(
-    cards.reduce((acc, c) => { acc[c.attribute] = (acc[c.attribute] || 0) + 1; return acc; }, {})
+  const activations = calcSkillActivations(slots);
+  const skillThreat = activations.filter(a => a.active).reduce((s, a) => s + a.threatBuff, 0);
+  const skillHp     = activations.filter(a => a.active).reduce((s, a) => s + a.hpBuff,     0);
+
+  const baseThreat = slots.reduce((s, slot) => s + num(slot.card.power), 0);
+  const baseHp     = slots.reduce((s, slot) => s + num(slot.card.hp),    0);
+  const lbThreat   = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
+  const lbHp       = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
+  const totalThreat = baseThreat + lbThreat + skillThreat;
+  const totalHp     = baseHp     + lbHp     + skillHp;
+
+  const attrStr = Object.entries(
+    slots.reduce((acc, s) => { acc[s.card.attribute] = (acc[s.card.attribute] || 0) + 1; return acc; }, {})
   ).map(([k, v]) => `${k}×${v}`).join(' / ');
 
+  function buffParts(lb, skill) {
+    const parts = [];
+    if (lb    > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
+    if (skill > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} スキル</span>`);
+    return parts.join('');
+  }
+
   statsEl.innerHTML = `
-    <div class="stat-row"><span class="stat-label">カード枚数</span><span class="stat-value">${cards.length} / 5</span></div>
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(baseThreat + threatBuff)}${threatBuff > 0 ? `<span class="stat-buff">(+${fmt(threatBuff)})</span>` : ''}</span></div>
-    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(baseHp + hpBuff)}${hpBuff > 0 ? `<span class="stat-buff">(+${fmt(hpBuff)})</span>` : ''}</span></div>
+    <div class="stat-row"><span class="stat-label">カード枚数</span><span class="stat-value">${slots.length} / 5</span></div>
+    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat)}</span></div>
+    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
@@ -178,17 +233,18 @@ function renderDeckStats() {
 
 /* ----------------------------------------------------------------
    スキル発動計算（純粋関数）
-   ※ バフ計算のベースに限界突破補正後の値を使用
+   ※ バフ計算のベースは 限界突破補正後の実効値
 ---------------------------------------------------------------- */
-function calcSkillActivations(cards) {
+function calcSkillActivations(slots) {
   const allSkills  = Storage.skills.getAll();
-  const skillIds   = [...new Set(cards.map(c => c.skillId).filter(Boolean))];
-  const deckSkills = allSkills.filter(s => skillIds.includes(s.id));
+  const skillIds   = [...new Set(slots.map(s => s.card.skillId).filter(Boolean))];
+  const deckSkills = allSkills.filter(skill => skillIds.includes(skill.id));
 
   return deckSkills.map(skill => {
     const conditions = skill.conditions || [];
     const active = conditions.length === 0 || conditions.every(cond => {
-      const count = cards.filter(c => {
+      const count = slots.filter(s => {
+        const c = s.card;
         if (cond.type === 'character') return c.charName  === cond.value;
         if (cond.type === 'work')      return c.workName  === cond.value;
         if (cond.type === 'attribute') return c.attribute === cond.value;
@@ -198,7 +254,8 @@ function calcSkillActivations(cards) {
     });
 
     const target      = skill.target || { type: 'all' };
-    const targetCards = active ? cards.filter(c => {
+    const targetSlots = active ? slots.filter(s => {
+      const c = s.card;
       if (!target || target.type === 'all') return true;
       if (target.type === 'character') return c.charName  === target.value;
       if (target.type === 'work')      return c.workName  === target.value;
@@ -211,8 +268,8 @@ function calcSkillActivations(cards) {
     return {
       skill,
       active,
-      threatBuff: Math.round(targetCards.reduce((s, c) => s + num(c.power) * tPct / 100, 0)),
-      hpBuff:     Math.round(targetCards.reduce((s, c) => s + num(c.hp)    * ePct / 100, 0))
+      threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
+      hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
     };
   });
 }
