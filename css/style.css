@@ -556,6 +556,69 @@ body {
   vertical-align: middle;
 }
 
+/* ===== 内部IDバッジ（カード一覧） ===== */
+.internal-id-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(124,58,237,0.18);
+  color: var(--primary-light);
+  border: 1px solid rgba(124,58,237,0.35);
+  margin-left: 0.4em;
+  vertical-align: middle;
+}
+
+/* ===== 重複確認モーダル ===== */
+.modal-dup { max-width: 680px; }
+.dup-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f87171;
+  margin-bottom: 0.5rem;
+}
+.dup-modal-msg {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+.dup-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.dup-col-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+}
+.dup-row {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  padding: 0.18rem 0;
+}
+.dup-key {
+  color: var(--text-muted);
+  width: 60px;
+  flex-shrink: 0;
+}
+.dup-val {
+  font-weight: 500;
+  word-break: break-all;
+}
+@media (max-width: 560px) {
+  .dup-compare { grid-template-columns: 1fr; }
+}
+
 /* ===== Empty States ===== */
 .empty-state {
   color: var(--text-muted);

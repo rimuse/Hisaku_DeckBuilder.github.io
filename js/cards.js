@@ -50,7 +50,7 @@ function renderCardList() {
   const query = (document.getElementById('cardListSearch').value || '').toLowerCase();
   let cards = Storage.cards.getAll();
   if (query) cards = cards.filter(c =>
-    [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
+    [c.internalId, c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
   );
 
   const el = document.getElementById('cardList');
@@ -63,7 +63,7 @@ function renderCardList() {
     <div class="list-item">
       <span class="slot-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
       <div class="list-item-main">
-        <div class="list-item-name">${esc(c.cardName)}</div>
+        <div class="list-item-name">${esc(c.cardName)}${c.internalId ? `<span class="internal-id-badge">${esc(c.internalId)}</span>` : ''}</div>
         <div class="list-item-sub">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''} — 脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
       </div>
       <div class="list-item-actions">
@@ -96,14 +96,15 @@ function editCard(id) {
   const c = Storage.cards.get(id);
   if (!c) return;
 
-  document.getElementById('cardId').value    = c.id;
-  document.getElementById('cardName').value  = c.cardName || '';
-  document.getElementById('charName').value  = c.charName || '';
-  document.getElementById('workName').value  = c.workName || '';
-  document.getElementById('cardPower').value = c.power    || '';
-  document.getElementById('cardHp').value    = c.hp       || '';
-  document.getElementById('cardSkill').value = c.skillId  || '';
-  document.getElementById('cardOugi').value  = c.ougiId   || '';
+  document.getElementById('cardId').value         = c.id;
+  document.getElementById('internalId').value     = c.internalId || '';
+  document.getElementById('cardName').value       = c.cardName   || '';
+  document.getElementById('charName').value       = c.charName   || '';
+  document.getElementById('workName').value       = c.workName   || '';
+  document.getElementById('cardPower').value      = c.power      || '';
+  document.getElementById('cardHp').value         = c.hp         || '';
+  document.getElementById('cardSkill').value      = c.skillId    || '';
+  document.getElementById('cardOugi').value       = c.ougiId     || '';
   document.querySelector(`input[name="rarity"][value="${c.rarity}"]`).checked       = true;
   document.querySelector(`input[name="attribute"][value="${c.attribute}"]`).checked = true;
 
@@ -118,33 +119,124 @@ function deleteCard(id) {
   openConfirm(`「${c.cardName}」を削除しますか？`, () => {
     Storage.cards.delete(id);
     /* デッキからも除去（deck は deck.js のグローバル変数） */
-    deck = deck.map(d => (d && d.id === id) ? null : d);
+    deck = deck.map(d => (d && d.card && d.card.id === id) ? null : d);
     renderCardList();
     refreshWorkSuggestions();
   });
 }
 
+/* ----------------------------------------------------------------
+   カード保存（共通）
+---------------------------------------------------------------- */
+function saveCard(data) {
+  Storage.cards.save(data);
+  resetCardForm();
+  renderCardList();
+  refreshWorkSuggestions();
+}
+
+/* ----------------------------------------------------------------
+   重複確認モーダル
+---------------------------------------------------------------- */
+let _pendingOverwrite = null;
+
+function openDupModal(existing, newData, reason) {
+  document.getElementById('dupModalMsg').textContent = reason;
+
+  function skillName(id) { const s = id ? Storage.skills.get(id) : null; return s ? s.name : '—'; }
+  function ougiName(id)  { const o = id ? Storage.ougi.get(id)   : null; return o ? o.name : '—'; }
+
+  function renderDupCard(c) {
+    return [
+      ['内部ID',   c.internalId || '—'],
+      ['カード名', c.cardName   || '—'],
+      ['キャラ',   c.charName   || '—'],
+      ['レア度',   c.rarity     || '—'],
+      ['作品',     c.workName   || '—'],
+      ['属性',     c.attribute  || '—'],
+      ['脅迫力',   fmt(c.power)],
+      ['耐久力',   fmt(c.hp)],
+      ['スキル',   skillName(c.skillId)],
+      ['奥義',     ougiName(c.ougiId)],
+    ].map(([k, v]) => `<div class="dup-row"><span class="dup-key">${esc(k)}</span><span class="dup-val">${esc(String(v))}</span></div>`).join('');
+  }
+
+  document.getElementById('dupCurrentContent').innerHTML = renderDupCard(existing);
+  document.getElementById('dupNewContent').innerHTML     = renderDupCard(newData);
+
+  _pendingOverwrite = { existing, newData };
+  dupModal.open();
+}
+
+document.getElementById('dupOverwriteBtn').addEventListener('click', () => {
+  if (_pendingOverwrite) {
+    const { existing, newData } = _pendingOverwrite;
+    saveCard({ ...newData, id: existing.id });
+    _pendingOverwrite = null;
+    dupModal.close();
+  }
+});
+
+document.getElementById('dupCancelBtn').addEventListener('click', () => {
+  _pendingOverwrite = null;
+  dupModal.close();
+});
+
+/* ----------------------------------------------------------------
+   フォーム送信（重複チェック付き）
+---------------------------------------------------------------- */
 document.getElementById('cardForm').addEventListener('submit', e => {
   e.preventDefault();
   const rarity    = document.querySelector('input[name="rarity"]:checked');
   const attribute = document.querySelector('input[name="attribute"]:checked');
   if (!rarity || !attribute) { alert('レア度と属性は必須です'); return; }
 
-  Storage.cards.save({
-    id:        document.getElementById('cardId').value || undefined,
-    cardName:  document.getElementById('cardName').value.trim(),
-    charName:  document.getElementById('charName').value.trim(),
-    rarity:    rarity.value,
-    workName:  document.getElementById('workName').value.trim(),
-    attribute: attribute.value,
-    power:     document.getElementById('cardPower').value,
-    hp:        document.getElementById('cardHp').value,
-    skillId:   document.getElementById('cardSkill').value || undefined,
-    ougiId:    document.getElementById('cardOugi').value  || undefined,
-  });
-  resetCardForm();
-  renderCardList();
-  refreshWorkSuggestions();
+  const editingId = document.getElementById('cardId').value || undefined;
+
+  const newData = {
+    id:         editingId,
+    internalId: document.getElementById('internalId').value.trim() || undefined,
+    cardName:   document.getElementById('cardName').value.trim(),
+    charName:   document.getElementById('charName').value.trim(),
+    rarity:     rarity.value,
+    workName:   document.getElementById('workName').value.trim(),
+    attribute:  attribute.value,
+    power:      document.getElementById('cardPower').value,
+    hp:         document.getElementById('cardHp').value,
+    skillId:    document.getElementById('cardSkill').value || undefined,
+    ougiId:     document.getElementById('cardOugi').value  || undefined,
+  };
+
+  const allCards = Storage.cards.getAll();
+  let duplicate = null;
+  let dupReason = '';
+
+  /* チェック１: 内部ID重複 */
+  if (newData.internalId) {
+    duplicate = allCards.find(c => c.internalId === newData.internalId && c.id !== editingId);
+    if (duplicate) {
+      dupReason = `内部ID「${newData.internalId}」がすでに登録されています`;
+    }
+  }
+
+  /* チェック２: カード名＋キャラクター名重複 */
+  if (!duplicate) {
+    duplicate = allCards.find(c =>
+      c.cardName === newData.cardName &&
+      c.charName === newData.charName &&
+      c.id !== editingId
+    );
+    if (duplicate) {
+      dupReason = `カード名「${newData.cardName}」＋キャラクター「${newData.charName}」がすでに登録されています`;
+    }
+  }
+
+  if (duplicate) {
+    openDupModal(duplicate, newData, dupReason);
+    return;
+  }
+
+  saveCard(newData);
 });
 
 document.getElementById('cardCancelBtn').addEventListener('click', resetCardForm);

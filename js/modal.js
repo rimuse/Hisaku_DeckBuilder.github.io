@@ -22,6 +22,9 @@ const cardModal = setupModal('cardModalOverlay', 'cardModalClose');
 
 /* 削除確認モーダル */
 const confirmModal = setupModal('confirmOverlay');
+
+/* 重複確認モーダル */
+const dupModal = setupModal('dupOverlay');
 let _confirmCb = null;
 
 document.getElementById('confirmYes').addEventListener('click', () => {

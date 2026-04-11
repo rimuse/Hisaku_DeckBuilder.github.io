@@ -111,6 +111,10 @@
             <input type="hidden" id="cardId">
 
             <div class="form-row">
+              <label class="form-label">内部ID</label>
+              <input type="text" id="internalId" class="form-input" placeholder="任意の識別子（省略可）" autocomplete="off">
+            </div>
+            <div class="form-row">
               <label class="form-label">カード名 <span class="req">*</span></label>
               <input type="text" id="cardName" class="form-input" placeholder="カード名を入力" required>
             </div>
@@ -314,6 +318,28 @@
       <div class="form-actions">
         <button class="btn btn-danger" id="confirmYes">削除する</button>
         <button class="btn btn-secondary" id="confirmNo">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重複確認モーダル -->
+  <div class="modal-overlay" id="dupOverlay">
+    <div class="modal modal-dup" id="dupModal" role="dialog" aria-modal="true">
+      <h3 class="dup-modal-title">重複が検出されました</h3>
+      <p class="dup-modal-msg" id="dupModalMsg"></p>
+      <div class="dup-compare" id="dupCompare">
+        <div class="dup-col">
+          <div class="dup-col-title">登録済みの内容</div>
+          <div id="dupCurrentContent"></div>
+        </div>
+        <div class="dup-col">
+          <div class="dup-col-title">新しい内容</div>
+          <div id="dupNewContent"></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-danger" id="dupOverwriteBtn">上書き登録する</button>
+        <button class="btn btn-secondary" id="dupCancelBtn">キャンセル</button>
       </div>
     </div>
   </div>
