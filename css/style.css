@@ -198,6 +198,31 @@ body {
 }
 .slot-remove:hover { color: var(--danger); background: rgba(220,38,38,0.12); }
 
+.slot-lb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.slot-lb-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.slot-lb-input {
+  width: 58px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.slot-lb-input:focus { border-color: var(--primary); }
+
 /* ===== Deck Stats ===== */
 .deck-stats {
   background: var(--bg3);
@@ -210,7 +235,23 @@ body {
 .stat-row { display: flex; justify-content: space-between; padding: 0.2rem 0; }
 .stat-label { color: var(--text-muted); }
 .stat-value { font-weight: 600; }
-.stat-buff { color: #4ade80; font-size: 0.8rem; margin-left: 0.3rem; }
+.stat-buff        { font-size: 0.8rem; margin-left: 0.3rem; }
+.stat-buff.skill  { color: #4ade80; }
+.stat-buff.lb     { color: #fbbf24; }
+.stat-buff.tokubo { color: #38bdf8; }
+
+/* ===== 特壺 ===== */
+.tokutsubo-section { margin-bottom: 0.75rem; }
+.tokutsubo-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+.tokutsubo-row { display: flex; gap: 0.5rem; }
+.tokutsubo-char-sel { flex: 1; min-width: 0; }
+.tokutsubo-lv-sel { width: 72px; flex-shrink: 0; }
 
 /* ===== Deck Skill Status ===== */
 .deck-skill-status { margin-bottom: 0.75rem; }
@@ -332,6 +373,7 @@ body {
 .form-row-inline { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
 .form-row-inline > div { display: flex; flex-direction: column; gap: 0.3rem; }
 .form-label { font-size: 0.82rem; color: var(--text-muted); }
+.form-note  { font-size: 0.78rem; color: #fbbf24; margin-bottom: 0.1rem; }
 .req { color: var(--danger); }
 .form-input,
 .form-select,
@@ -497,8 +539,200 @@ body {
 .card-detail-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
 .card-detail-row  { display: flex; gap: 0.5rem; font-size: 0.85rem; padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
 .card-detail-row:last-child { border-bottom: none; }
-.card-detail-key   { color: var(--text-muted); width: 80px; flex-shrink: 0; }
+.card-detail-key   { color: var(--text-muted); width: 90px; flex-shrink: 0; }
 .card-detail-value { font-weight: 500; }
+.detail-lb-note    { font-size: 0.78rem; color: var(--text-muted); font-weight: 400; }
+
+/* ===== Limit Break Badge (card grid) ===== */
+.lb-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(251,191,36,0.2);
+  color: #fbbf24;
+  margin-left: 0.3em;
+  vertical-align: middle;
+}
+
+/* ===== ゲーム内IDバッジ（カード一覧） ===== */
+.internal-id-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(124,58,237,0.18);
+  color: var(--primary-light);
+  border: 1px solid rgba(124,58,237,0.35);
+  margin-left: 0.4em;
+  vertical-align: middle;
+}
+
+/* ===== 重複確認モーダル ===== */
+.modal-dup { max-width: 680px; }
+.dup-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f87171;
+  margin-bottom: 0.5rem;
+}
+.dup-modal-msg {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+.dup-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.dup-col-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+}
+.dup-row {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  padding: 0.18rem 0;
+}
+.dup-key {
+  color: var(--text-muted);
+  width: 60px;
+  flex-shrink: 0;
+}
+.dup-val {
+  font-weight: 500;
+  word-break: break-all;
+}
+@media (max-width: 560px) {
+  .dup-compare { grid-template-columns: 1fr; }
+}
+
+/* ===== CSV Import ===== */
+.csv-import-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.csv-hint { font-size: 0.82rem; color: var(--text-muted); }
+.csv-format-code-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+}
+.csv-format-code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  color: #a5f3fc;
+  white-space: nowrap;
+  overflow-x: auto;
+  flex: 1;
+}
+.csv-input-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+.csv-or-sep { text-align: center; font-size: 0.82rem; color: var(--text-muted); padding: 0.1rem 0; }
+.csv-file-input { font-size: 0.85rem; color: var(--text-muted); }
+.csv-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.csv-dup-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.csv-dup-sel { width: 120px; }
+
+/* Preview summary counts */
+.csv-preview-summary { font-size: 0.85rem; }
+.csv-cnt        { font-weight: 700; }
+.csv-cnt.ok     { color: #4ade80; }
+.csv-cnt.dup    { color: #fbbf24; }
+.csv-cnt.err    { color: #f87171; }
+
+/* Preview table */
+.csv-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.csv-table th {
+  background: var(--bg3);
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 0.4rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.csv-table td {
+  padding: 0.35rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.csv-table tr:last-child td { border-bottom: none; }
+.csv-table .row-err { background: rgba(239,68,68,0.08); }
+.csv-table .row-dup { background: rgba(251,191,36,0.08); }
+.csv-table .csv-note {
+  color: var(--text-muted);
+  white-space: normal;
+  max-width: 220px;
+  word-break: break-all;
+}
+
+/* Badges */
+.csv-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.csv-badge.ok  { background: rgba(74,222,128,0.18); color: #4ade80; }
+.csv-badge.dup { background: rgba(251,191,36,0.18); color: #fbbf24; }
+.csv-badge.err { background: rgba(239,68,68,0.18);  color: #f87171; }
+
+.csv-import-actions { margin-top: 0.25rem; }
+
+/* Result message */
+.csv-result-msg {
+  padding: 0.6rem 0.9rem;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.3);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: #4ade80;
+}
 
 /* ===== Empty States ===== */
 .empty-state {
@@ -506,6 +740,72 @@ body {
   font-size: 0.85rem;
   text-align: center;
   padding: 1.5rem 0;
+}
+
+/* ===== Logout Button (header) ===== */
+#btnLogout {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  #btnLogout { display: none; } /* モバイルではハンバーガーメニュー内に表示しない（ログアウトはPCのみ） */
+}
+
+/* ===== Admin Nav Button indicator ===== */
+.nav-btn[data-admin="true"]::after {
+  content: '🔒';
+  font-size: 0.65em;
+  margin-left: 0.3em;
+  opacity: 0.6;
+}
+.nav-btn[data-admin="true"].admin-authed::after {
+  content: '🔓';
+  opacity: 0.8;
+}
+
+/* ===== Login Modal ===== */
+.login-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--primary-light);
+}
+.login-error {
+  color: #f87171;
+  font-size: 0.82rem;
+  margin-top: -0.25rem;
+}
+
+/* ===== Loading Overlay ===== */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loading-overlay[hidden] { display: none; }
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-msg {
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* ===== Responsive ===== */
@@ -523,3 +823,23 @@ body {
   .main { padding: 1rem 0.75rem; }
   .form-input-sm { width: 70px; }
 }
+
+/* ===== Toast Notification ===== */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #22c55e;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 9999;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast[hidden] { display: none; }
+.toast.toast-error { background: #ef4444; }

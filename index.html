@@ -8,22 +8,31 @@
 </head>
 <body>
 
+  <!-- ローディングオーバーレイ（Firebase 接続待ち） -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <p class="loading-msg">データを読み込み中...</p>
+    </div>
+  </div>
+
   <header class="header">
     <div class="header-inner">
       <h1 class="site-title">Hisaku DeckBuilder</h1>
       <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
-        <button class="nav-btn" data-page="cards">カード情報登録</button>
-        <button class="nav-btn" data-page="skills">スキル / 奥義登録</button>
+        <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
+        <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
       </nav>
+      <button class="btn btn-secondary btn-sm" id="btnLogout" hidden>ログアウト</button>
       <button class="hamburger" id="hamburger" aria-label="メニューを開く">
         <span></span><span></span><span></span>
       </button>
     </div>
     <nav class="nav-mobile" id="navMobile">
       <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
-      <button class="nav-btn" data-page="cards">カード情報登録</button>
-      <button class="nav-btn" data-page="skills">スキル / 奥義登録</button>
+      <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
+      <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
     </nav>
   </header>
 
@@ -39,6 +48,26 @@
           <div class="deck-slots" id="deckSlots"></div>
           <div class="deck-stats" id="deckStats"></div>
           <div class="deck-skill-status" id="deckSkillStatus"></div>
+          <div class="tokutsubo-section">
+            <div class="tokutsubo-title">特壺</div>
+            <div class="tokutsubo-row">
+              <select id="tokutsuboChar" class="filter-select tokutsubo-char-sel">
+                <option value="">キャラクター: なし</option>
+              </select>
+              <select id="tokutsuboLv" class="filter-select tokutsubo-lv-sel">
+                <option value="1">Lv 1</option>
+                <option value="2">Lv 2</option>
+                <option value="3">Lv 3</option>
+                <option value="4">Lv 4</option>
+                <option value="5">Lv 5</option>
+                <option value="6">Lv 6</option>
+                <option value="7">Lv 7</option>
+                <option value="8">Lv 8</option>
+                <option value="9">Lv 9</option>
+                <option value="10">Lv 10</option>
+              </select>
+            </div>
+          </div>
           <div class="panel-actions">
             <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
           </div>
@@ -82,6 +111,10 @@
             <input type="hidden" id="cardId">
 
             <div class="form-row">
+              <label class="form-label">ゲーム内ID</label>
+              <input type="text" id="internalId" class="form-input" placeholder="ゲーム内のカード番号（省略可）" autocomplete="off">
+            </div>
+            <div class="form-row">
               <label class="form-label">カード名 <span class="req">*</span></label>
               <input type="text" id="cardName" class="form-input" placeholder="カード名を入力" required>
             </div>
@@ -111,11 +144,8 @@
                 <label class="radio-label"><input type="radio" name="attribute" value="従順"> 従順</label>
               </div>
             </div>
+            <div class="form-note">※ 脅迫力・耐久力は Lv100 の値を入力してください</div>
             <div class="form-row form-row-inline">
-              <div>
-                <label class="form-label">Lv</label>
-                <input type="number" id="cardLv" class="form-input form-input-sm" min="1" placeholder="1">
-              </div>
               <div>
                 <label class="form-label">脅迫力</label>
                 <input type="number" id="cardPower" class="form-input form-input-sm" min="0" placeholder="0">
@@ -152,6 +182,58 @@
         </div>
 
       </div>
+
+      <!-- CSVインポート -->
+      <div class="sub-section">
+        <h3 class="sub-section-title">CSVインポート</h3>
+        <div class="csv-import-panel">
+
+          <div class="csv-format-info">
+            <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
+            <div class="csv-format-code-wrap">
+              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,スキル,奥義</code>
+              <button id="csvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
+            </div>
+          </div>
+
+          <div class="csv-input-wrap">
+            <div class="form-row">
+              <label class="form-label">CSVファイル（UTF-8）</label>
+              <input type="file" id="csvFile" accept=".csv,text/csv" class="csv-file-input">
+            </div>
+            <div class="csv-or-sep">または</div>
+            <div class="form-row">
+              <label class="form-label">テキスト貼り付け</label>
+              <textarea id="csvText" class="form-input form-textarea" rows="5" placeholder="ヘッダー行を含むCSVテキストをここに貼り付け..."></textarea>
+            </div>
+          </div>
+
+          <div class="csv-controls">
+            <label class="csv-dup-label">
+              重複時
+              <select id="csvDupHandling" class="form-select csv-dup-sel">
+                <option value="skip">スキップ</option>
+                <option value="overwrite">上書き</option>
+              </select>
+            </label>
+            <button id="csvParseBtn" class="btn btn-secondary">解析・プレビュー</button>
+          </div>
+
+          <div id="csvPreview" hidden>
+            <div class="csv-preview-summary" id="csvPreviewSummary"></div>
+            <div class="csv-table-wrap">
+              <table class="csv-table" id="csvPreviewTable"></table>
+            </div>
+            <div class="csv-import-actions">
+              <button id="csvImportBtn" class="btn btn-primary" disabled>インポート実行</button>
+            </div>
+          </div>
+
+          <div id="csvResult" class="csv-result-msg" hidden></div>
+
+        </div>
+      </div>
+
     </section>
 
     <!-- ページ: スキル / 奥義登録 -->
@@ -292,7 +374,60 @@
     </div>
   </div>
 
-  <!-- 読み込み順序: 基盤 → UI共通 → 機能別 → ナビ → 起動 -->
+  <!-- 重複確認モーダル -->
+  <div class="modal-overlay" id="dupOverlay">
+    <div class="modal modal-dup" id="dupModal" role="dialog" aria-modal="true">
+      <h3 class="dup-modal-title">重複が検出されました</h3>
+      <p class="dup-modal-msg" id="dupModalMsg"></p>
+      <div class="dup-compare" id="dupCompare">
+        <div class="dup-col">
+          <div class="dup-col-title">登録済みの内容</div>
+          <div id="dupCurrentContent"></div>
+        </div>
+        <div class="dup-col">
+          <div class="dup-col-title">新しい内容</div>
+          <div id="dupNewContent"></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-danger" id="dupOverwriteBtn">上書き登録する</button>
+        <button class="btn btn-secondary" id="dupCancelBtn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ログインモーダル -->
+  <div class="modal-overlay" id="loginOverlay">
+    <div class="modal modal-sm" id="loginModal" role="dialog" aria-modal="true">
+      <h3 class="login-title">管理者ログイン</h3>
+      <form id="loginForm" class="form" novalidate>
+        <div class="form-row">
+          <label class="form-label">メールアドレス</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="admin@example.com" required autocomplete="email">
+        </div>
+        <div class="form-row">
+          <label class="form-label">パスワード</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="パスワード" required autocomplete="current-password">
+        </div>
+        <p id="loginError" class="login-error" hidden></p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="loginSubmitBtn">ログイン</button>
+          <button type="button" class="btn btn-secondary" id="loginCancelBtn">キャンセル</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Firebase SDK (compat版: モジュールバンドラー不要) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <!-- 読み込み順序: Firebase設定 → 基盤 → UI共通 → 機能別 → ナビ → 認証 → 起動 -->
+  <script src="js/firebase-config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/modal.js"></script>
@@ -300,7 +435,9 @@
   <script src="js/cards.js"></script>
   <script src="js/ougi.js"></script>
   <script src="js/skills.js"></script>
+  <script src="js/csv-import.js"></script>
   <script src="js/nav.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
