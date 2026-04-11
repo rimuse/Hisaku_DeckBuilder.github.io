@@ -148,7 +148,7 @@ function openDupModal(existing, newData, reason) {
 
   function renderDupCard(c) {
     return [
-      ['内部ID',   c.internalId || '—'],
+      ['ゲーム内ID',   c.internalId || '—'],
       ['カード名', c.cardName   || '—'],
       ['キャラ',   c.charName   || '—'],
       ['レア度',   c.rarity     || '—'],
@@ -211,11 +211,11 @@ document.getElementById('cardForm').addEventListener('submit', e => {
   let duplicate = null;
   let dupReason = '';
 
-  /* チェック１: 内部ID重複 */
+  /* チェック１: ゲーム内ID重複 */
   if (newData.internalId) {
     duplicate = allCards.find(c => c.internalId === newData.internalId && c.id !== editingId);
     if (duplicate) {
-      dupReason = `内部ID「${newData.internalId}」がすでに登録されています`;
+      dupReason = `ゲーム内ID「${newData.internalId}」がすでに登録されています`;
     }
   }
 

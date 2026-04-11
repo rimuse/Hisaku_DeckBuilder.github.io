@@ -556,7 +556,7 @@ body {
   vertical-align: middle;
 }
 
-/* ===== 内部IDバッジ（カード一覧） ===== */
+/* ===== ゲーム内IDバッジ（カード一覧） ===== */
 .internal-id-badge {
   display: inline-block;
   font-size: 0.68rem;
