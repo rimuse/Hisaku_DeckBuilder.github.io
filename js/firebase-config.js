@@ -23,11 +23,12 @@
  *   セキュリティはルールで制御されます。
  */
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey:            "AIzaSyBGJcRIGfdBal5JQZhnrtrrDawhxEAnVEU",
+  authDomain:        "hisaku-f2818.firebaseapp.com",
+  databaseURL:       "https://hisaku-f2818-default-rtdb.firebaseio.com",
+  projectId:         "hisaku-f2818",
+  storageBucket:     "hisaku-f2818.firebasestorage.app",
+  messagingSenderId: "730399990359",
+  appId:             "1:730399990359:web:4557bfeaba69406c517912",
+  measurementId:     "G-LLL7RGMK9V"
 };
