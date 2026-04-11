@@ -508,6 +508,41 @@ body {
   padding: 1.5rem 0;
 }
 
+/* ===== Logout Button (header) ===== */
+#btnLogout {
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  #btnLogout { display: none; } /* モバイルではハンバーガーメニュー内に表示しない（ログアウトはPCのみ） */
+}
+
+/* ===== Admin Nav Button indicator ===== */
+.nav-btn[data-admin="true"]::after {
+  content: '🔒';
+  font-size: 0.65em;
+  margin-left: 0.3em;
+  opacity: 0.6;
+}
+.nav-btn[data-admin="true"].admin-authed::after {
+  content: '🔓';
+  opacity: 0.8;
+}
+
+/* ===== Login Modal ===== */
+.login-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--primary-light);
+}
+.login-error {
+  color: #f87171;
+  font-size: 0.82rem;
+  margin-top: -0.25rem;
+}
+
 /* ===== Loading Overlay ===== */
 .loading-overlay {
   position: fixed;

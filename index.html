@@ -21,17 +21,18 @@
       <h1 class="site-title">Hisaku DeckBuilder</h1>
       <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
-        <button class="nav-btn" data-page="cards">カード情報登録</button>
-        <button class="nav-btn" data-page="skills">スキル / 奥義登録</button>
+        <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
+        <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
       </nav>
+      <button class="btn btn-secondary btn-sm" id="btnLogout" hidden>ログアウト</button>
       <button class="hamburger" id="hamburger" aria-label="メニューを開く">
         <span></span><span></span><span></span>
       </button>
     </div>
     <nav class="nav-mobile" id="navMobile">
       <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
-      <button class="nav-btn" data-page="cards">カード情報登録</button>
-      <button class="nav-btn" data-page="skills">スキル / 奥義登録</button>
+      <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
+      <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
     </nav>
   </header>
 
@@ -300,11 +301,34 @@
     </div>
   </div>
 
+  <!-- ログインモーダル -->
+  <div class="modal-overlay" id="loginOverlay">
+    <div class="modal modal-sm" id="loginModal" role="dialog" aria-modal="true">
+      <h3 class="login-title">管理者ログイン</h3>
+      <form id="loginForm" class="form" novalidate>
+        <div class="form-row">
+          <label class="form-label">メールアドレス</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="admin@example.com" required autocomplete="email">
+        </div>
+        <div class="form-row">
+          <label class="form-label">パスワード</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="パスワード" required autocomplete="current-password">
+        </div>
+        <p id="loginError" class="login-error" hidden></p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="loginSubmitBtn">ログイン</button>
+          <button type="button" class="btn btn-secondary" id="loginCancelBtn">キャンセル</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Firebase SDK (compat版: モジュールバンドラー不要) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-  <!-- 読み込み順序: Firebase設定 → 基盤 → UI共通 → 機能別 → ナビ → 起動 -->
+  <!-- 読み込み順序: Firebase設定 → 基盤 → UI共通 → 機能別 → ナビ → 認証 → 起動 -->
   <script src="js/firebase-config.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/utils.js"></script>
@@ -314,6 +338,7 @@
   <script src="js/ougi.js"></script>
   <script src="js/skills.js"></script>
   <script src="js/nav.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
