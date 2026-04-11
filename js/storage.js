@@ -85,6 +85,15 @@ function _uid() {
 }
 
 /* ----------------------------------------------------------------
+   undefined プロパティ除去
+   Firebase RTDB は undefined 値を含むオブジェクトを拒否するため、
+   書き込み前にすべての undefined プロパティを除去する
+---------------------------------------------------------------- */
+function _clean(obj) {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}
+
+/* ----------------------------------------------------------------
    汎用ストアファクトリー
 ---------------------------------------------------------------- */
 function makeStore(key) {
@@ -108,15 +117,16 @@ function makeStore(key) {
         return false;
       }
       if (!item.id) item.id = _uid();
+      const clean = _clean(item);   // undefined を除去（Firebase が拒否するため）
 
       /* 楽観的更新 */
-      const idx = _cache[key].findIndex(x => x.id === item.id);
-      if (idx >= 0) _cache[key][idx] = item;
-      else _cache[key].push(item);
+      const idx = _cache[key].findIndex(x => x.id === clean.id);
+      if (idx >= 0) _cache[key][idx] = clean;
+      else _cache[key].push(clean);
 
-      const path = `hisaku/${key}/${item.id}`;
+      const path = `hisaku/${key}/${clean.id}`;
       console.log(`[Storage.save] Writing to ${path}`);
-      _db.ref(path).set(item)
+      _db.ref(path).set(clean)
         .then(() => console.log(`[Storage.save] OK: ${path}`))
         .catch(err => {
           console.error(`[Storage.save] FAILED: ${path}`, err);
@@ -140,10 +150,11 @@ function makeStore(key) {
       const updates = {};
       items.forEach(item => {
         if (!item.id) item.id = _uid();
-        const idx = _cache[key].findIndex(x => x.id === item.id);
-        if (idx >= 0) _cache[key][idx] = item;
-        else _cache[key].push(item);
-        updates[`hisaku/${key}/${item.id}`] = item;
+        const clean = _clean(item);   // undefined を除去（Firebase が拒否するため）
+        const idx = _cache[key].findIndex(x => x.id === clean.id);
+        if (idx >= 0) _cache[key][idx] = clean;
+        else _cache[key].push(clean);
+        updates[`hisaku/${key}/${clean.id}`] = clean;
       });
       console.log(`[Storage.saveAll] Paths:`, Object.keys(updates));
       _db.ref().update(updates)
