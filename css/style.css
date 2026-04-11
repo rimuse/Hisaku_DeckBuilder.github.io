@@ -238,6 +238,20 @@ body {
 .stat-buff        { font-size: 0.8rem; margin-left: 0.3rem; }
 .stat-buff.skill  { color: #4ade80; }
 .stat-buff.lb     { color: #fbbf24; }
+.stat-buff.tokubo { color: #38bdf8; }
+
+/* ===== 特壺 ===== */
+.tokutsubo-section { margin-bottom: 0.75rem; }
+.tokutsubo-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+.tokutsubo-row { display: flex; gap: 0.5rem; }
+.tokutsubo-char-sel { flex: 1; min-width: 0; }
+.tokutsubo-lv-sel { width: 72px; flex-shrink: 0; }
 
 /* ===== Deck Skill Status ===== */
 .deck-skill-status { margin-bottom: 0.75rem; }

@@ -27,6 +27,7 @@ function slotHp(slot)    { return num(slot.card.hp)    + lbBonus(slot.card, slot
    ページ初期化
 ---------------------------------------------------------------- */
 function initDeckPage() {
+  refreshTokutsuboSelect();
   renderDeckSlots();
   renderCardGrid();
   renderDeckStats();
@@ -189,24 +190,28 @@ function renderDeckStats() {
   const baseHp     = slots.reduce((s, slot) => s + num(slot.card.hp),    0);
   const lbThreat   = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
   const lbHp       = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
-  const totalThreat = baseThreat + lbThreat + skillThreat;
-  const totalHp     = baseHp     + lbHp     + skillHp;
+
+  const { threat: tokuboThreat, hp: tokuboHp } = calcTokutsuboBonus(slots);
+
+  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat;
+  const totalHp     = baseHp     + lbHp     + skillHp     + tokuboHp;
 
   const attrStr = Object.entries(
     slots.reduce((acc, s) => { acc[s.card.attribute] = (acc[s.card.attribute] || 0) + 1; return acc; }, {})
   ).map(([k, v]) => `${k}×${v}`).join(' / ');
 
-  function buffParts(lb, skill) {
+  function buffParts(lb, skill, tokubo) {
     const parts = [];
-    if (lb    > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
-    if (skill > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} スキル</span>`);
+    if (lb     > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
+    if (skill  > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} スキル</span>`);
+    if (tokubo > 0) parts.push(`<span class="stat-buff tokubo">+${fmt(tokubo)} 特壺</span>`);
     return parts.join('');
   }
 
   statsEl.innerHTML = `
     <div class="stat-row"><span class="stat-label">カード枚数</span><span class="stat-value">${slots.length} / 5</span></div>
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat)}</span></div>
-    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp)}</span></div>
+    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat)}</span></div>
+    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
@@ -275,6 +280,32 @@ function calcSkillActivations(slots) {
 }
 
 /* ----------------------------------------------------------------
+   特壺計算（純粋関数）
+   対象キャラクターの限突補正後ステータスに特壺Lv%を加算
+---------------------------------------------------------------- */
+function calcTokutsuboBonus(slots) {
+  const charName = document.getElementById('tokutsuboChar').value;
+  const lv       = +document.getElementById('tokutsuboLv').value || 1;
+  if (!charName) return { threat: 0, hp: 0 };
+  const targets = slots.filter(s => s.card.charName === charName);
+  return {
+    threat: Math.round(targets.reduce((s, slot) => s + slotPower(slot) * lv / 100, 0)),
+    hp:     Math.round(targets.reduce((s, slot) => s + slotHp(slot)    * lv / 100, 0))
+  };
+}
+
+/* ----------------------------------------------------------------
+   特壺キャラクター選択肢更新
+---------------------------------------------------------------- */
+function refreshTokutsuboSelect() {
+  const sel   = document.getElementById('tokutsuboChar');
+  const chars = [...new Set(Storage.cards.getAll().map(c => c.charName).filter(Boolean))].sort();
+  const prev  = sel.value;
+  sel.innerHTML = '<option value="">キャラクター: なし</option>' +
+    chars.map(c => `<option value="${esc(c)}"${c === prev ? ' selected' : ''}>${esc(c)}</option>`).join('');
+}
+
+/* ----------------------------------------------------------------
    作品フィルター更新
 ---------------------------------------------------------------- */
 function refreshWorkFilter() {
@@ -298,3 +329,6 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 ['filterText', 'filterRarity', 'filterAttribute', 'filterWork'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderCardGrid);
 });
+
+document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
+document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);
