@@ -182,6 +182,58 @@
         </div>
 
       </div>
+
+      <!-- CSVインポート -->
+      <div class="sub-section">
+        <h3 class="sub-section-title">CSVインポート</h3>
+        <div class="csv-import-panel">
+
+          <div class="csv-format-info">
+            <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
+            <div class="csv-format-code-wrap">
+              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,スキル,奥義</code>
+              <button id="csvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
+            </div>
+          </div>
+
+          <div class="csv-input-wrap">
+            <div class="form-row">
+              <label class="form-label">CSVファイル（UTF-8）</label>
+              <input type="file" id="csvFile" accept=".csv,text/csv" class="csv-file-input">
+            </div>
+            <div class="csv-or-sep">または</div>
+            <div class="form-row">
+              <label class="form-label">テキスト貼り付け</label>
+              <textarea id="csvText" class="form-input form-textarea" rows="5" placeholder="ヘッダー行を含むCSVテキストをここに貼り付け..."></textarea>
+            </div>
+          </div>
+
+          <div class="csv-controls">
+            <label class="csv-dup-label">
+              重複時
+              <select id="csvDupHandling" class="form-select csv-dup-sel">
+                <option value="skip">スキップ</option>
+                <option value="overwrite">上書き</option>
+              </select>
+            </label>
+            <button id="csvParseBtn" class="btn btn-secondary">解析・プレビュー</button>
+          </div>
+
+          <div id="csvPreview" hidden>
+            <div class="csv-preview-summary" id="csvPreviewSummary"></div>
+            <div class="csv-table-wrap">
+              <table class="csv-table" id="csvPreviewTable"></table>
+            </div>
+            <div class="csv-import-actions">
+              <button id="csvImportBtn" class="btn btn-primary" disabled>インポート実行</button>
+            </div>
+          </div>
+
+          <div id="csvResult" class="csv-result-msg" hidden></div>
+
+        </div>
+      </div>
+
     </section>
 
     <!-- ページ: スキル / 奥義登録 -->
@@ -380,6 +432,7 @@
   <script src="js/cards.js"></script>
   <script src="js/ougi.js"></script>
   <script src="js/skills.js"></script>
+  <script src="js/csv-import.js"></script>
   <script src="js/nav.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
