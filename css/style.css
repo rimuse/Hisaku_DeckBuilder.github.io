@@ -497,8 +497,22 @@ body {
 .card-detail-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
 .card-detail-row  { display: flex; gap: 0.5rem; font-size: 0.85rem; padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
 .card-detail-row:last-child { border-bottom: none; }
-.card-detail-key   { color: var(--text-muted); width: 80px; flex-shrink: 0; }
+.card-detail-key   { color: var(--text-muted); width: 90px; flex-shrink: 0; }
 .card-detail-value { font-weight: 500; }
+.detail-lb-note    { font-size: 0.78rem; color: var(--text-muted); font-weight: 400; }
+
+/* ===== Limit Break Badge (card grid) ===== */
+.lb-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(251,191,36,0.2);
+  color: #fbbf24;
+  margin-left: 0.3em;
+  vertical-align: middle;
+}
 
 /* ===== Empty States ===== */
 .empty-state {
