@@ -100,7 +100,6 @@ function editCard(id) {
   document.getElementById('cardName').value  = c.cardName || '';
   document.getElementById('charName').value  = c.charName || '';
   document.getElementById('workName').value  = c.workName || '';
-  document.getElementById('cardLv').value    = c.lv       || '';
   document.getElementById('cardPower').value = c.power    || '';
   document.getElementById('cardHp').value    = c.hp       || '';
   document.getElementById('cardSkill').value = c.skillId  || '';
@@ -138,7 +137,6 @@ document.getElementById('cardForm').addEventListener('submit', e => {
     rarity:    rarity.value,
     workName:  document.getElementById('workName').value.trim(),
     attribute: attribute.value,
-    lv:        document.getElementById('cardLv').value,
     power:     document.getElementById('cardPower').value,
     hp:        document.getElementById('cardHp').value,
     skillId:   document.getElementById('cardSkill').value || undefined,

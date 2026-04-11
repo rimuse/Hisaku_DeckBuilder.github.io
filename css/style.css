@@ -332,6 +332,7 @@ body {
 .form-row-inline { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
 .form-row-inline > div { display: flex; flex-direction: column; gap: 0.3rem; }
 .form-label { font-size: 0.82rem; color: var(--text-muted); }
+.form-note  { font-size: 0.78rem; color: #fbbf24; margin-bottom: 0.1rem; }
 .req { color: var(--danger); }
 .form-input,
 .form-select,

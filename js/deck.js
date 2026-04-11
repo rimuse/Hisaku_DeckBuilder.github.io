@@ -7,19 +7,6 @@
 let deck = Array(5).fill(null);
 
 /* ----------------------------------------------------------------
-   限界突破補正
-   レア度ごとの 1Lv あたりの脅迫力・耐久力への加算値
----------------------------------------------------------------- */
-const LIMIT_BREAK_BONUS = { N: 3, R: 6, SR: 9, SSR: 12 };
-
-function limitBreakAdd(card) {
-  return num(card.lv) * (LIMIT_BREAK_BONUS[card.rarity] || 0);
-}
-
-function effectivePower(card) { return num(card.power) + limitBreakAdd(card); }
-function effectiveHp(card)    { return num(card.hp)    + limitBreakAdd(card); }
-
-/* ----------------------------------------------------------------
    ページ初期化
 ---------------------------------------------------------------- */
 function initDeckPage() {
@@ -38,13 +25,12 @@ function renderDeckSlots() {
   deck.forEach((card, i) => {
     const el = document.createElement('div');
     if (card) {
-      const lbLv = num(card.lv) > 0 ? ` 限突Lv.${card.lv}` : '';
       el.className = 'deck-slot';
       el.innerHTML = `
         <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
         <div class="slot-info">
           <div class="slot-card-name">${esc(card.cardName)}</div>
-          <div class="slot-char-name">${esc(card.charName)}${card.workName ? ' / ' + esc(card.workName) : ''}${lbLv}</div>
+          <div class="slot-char-name">${esc(card.charName)}${card.workName ? ' / ' + esc(card.workName) : ''}</div>
         </div>
         <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>`;
     } else {
@@ -87,19 +73,14 @@ function renderCardGrid() {
   }
 
   const inDeckIds = new Set(deck.filter(Boolean).map(c => c.id));
-  grid.innerHTML = cards.map(c => {
-    const ep = effectivePower(c);
-    const eh = effectiveHp(c);
-    const hasLb = num(c.lv) > 0;
-    return `
+  grid.innerHTML = cards.map(c => `
     <div class="card-thumb${inDeckIds.has(c.id) ? ' in-deck' : ''}" data-id="${esc(c.id)}" title="${esc(c.cardName)}">
       <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
       <span class="card-thumb-attr attr-${esc(c.attribute)}">${esc(c.attribute)}</span>
       <div class="card-thumb-name">${esc(c.cardName)}</div>
       <div class="card-thumb-char">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''}</div>
-      <div class="card-thumb-stat">脅 ${fmt(ep)} / 耐 ${fmt(eh)}${hasLb ? `<span class="lb-badge">限突${c.lv}</span>` : ''}</div>
-    </div>`;
-  }).join('');
+      <div class="card-thumb-stat">脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
+    </div>`).join('');
 
   grid.querySelectorAll('.card-thumb').forEach(el => {
     el.addEventListener('click', () => onCardThumbClick(el.dataset.id));
@@ -124,29 +105,16 @@ function onCardThumbClick(cardId) {
    カード詳細モーダル
 ---------------------------------------------------------------- */
 function openCardDetail(card) {
-  const skill  = card.skillId ? Storage.skills.get(card.skillId) : null;
-  const ougi   = card.ougiId  ? Storage.ougi.get(card.ougiId)   : null;
-  const lb     = limitBreakAdd(card);
-  const ep     = effectivePower(card);
-  const eh     = effectiveHp(card);
-  const lbLv   = num(card.lv);
-
-  const powerVal = lb > 0
-    ? `${fmt(ep)} <span class="detail-lb-note">（基礎 ${fmt(card.power)} + 限突 ${fmt(lb)}）</span>`
-    : fmt(ep);
-  const hpVal = lb > 0
-    ? `${fmt(eh)} <span class="detail-lb-note">（基礎 ${fmt(card.hp)} + 限突 ${fmt(lb)}）</span>`
-    : fmt(eh);
-
+  const skill = card.skillId ? Storage.skills.get(card.skillId) : null;
+  const ougi  = card.ougiId  ? Storage.ougi.get(card.ougiId)   : null;
   document.getElementById('cardModalContent').innerHTML = `
     <div class="card-detail-name">${esc(card.cardName)}</div>
     ${detailRow('キャラクター', card.charName)}
     ${detailRow('作品', card.workName || '—')}
     ${detailRow('レア度', `<span class="rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>`)}
     ${detailRow('属性', `<span class="attr-${esc(card.attribute)}">${esc(card.attribute)}</span>`)}
-    ${detailRow('限界突破Lv', lbLv > 0 ? `${lbLv} <span class="detail-lb-note">（補正 +${LIMIT_BREAK_BONUS[card.rarity] || 0}/Lv）</span>` : '0')}
-    ${detailRow('脅迫力', powerVal)}
-    ${detailRow('耐久力', hpVal)}
+    ${detailRow('脅迫力', fmt(card.power))}
+    ${detailRow('耐久力', fmt(card.hp))}
     ${detailRow('スキル', skill ? esc(skill.name) : '—')}
     ${detailRow('奥義',   ougi  ? esc(ougi.name)  : '—')}`;
   cardModal.open();
@@ -174,8 +142,8 @@ function renderDeckStats() {
   const activations = calcSkillActivations(cards);
   const threatBuff  = activations.filter(a => a.active).reduce((s, a) => s + a.threatBuff, 0);
   const hpBuff      = activations.filter(a => a.active).reduce((s, a) => s + a.hpBuff,     0);
-  const baseThreat  = cards.reduce((s, c) => s + effectivePower(c), 0);
-  const baseHp      = cards.reduce((s, c) => s + effectiveHp(c),    0);
+  const baseThreat  = cards.reduce((s, c) => s + num(c.power), 0);
+  const baseHp      = cards.reduce((s, c) => s + num(c.hp),    0);
   const attrStr     = Object.entries(
     cards.reduce((acc, c) => { acc[c.attribute] = (acc[c.attribute] || 0) + 1; return acc; }, {})
   ).map(([k, v]) => `${k}×${v}`).join(' / ');
@@ -243,8 +211,8 @@ function calcSkillActivations(cards) {
     return {
       skill,
       active,
-      threatBuff: Math.round(targetCards.reduce((s, c) => s + effectivePower(c) * tPct / 100, 0)),
-      hpBuff:     Math.round(targetCards.reduce((s, c) => s + effectiveHp(c)    * ePct / 100, 0))
+      threatBuff: Math.round(targetCards.reduce((s, c) => s + num(c.power) * tPct / 100, 0)),
+      hpBuff:     Math.round(targetCards.reduce((s, c) => s + num(c.hp)    * ePct / 100, 0))
     };
   });
 }
