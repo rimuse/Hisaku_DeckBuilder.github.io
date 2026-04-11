@@ -129,11 +129,12 @@ function deleteCard(id) {
    カード保存（共通）
 ---------------------------------------------------------------- */
 function saveCard(data) {
-  Storage.cards.save(data);
+  const ok = Storage.cards.save(data);
+  if (!ok) return;            // 未認証 — Storage 側でエラートーストを表示済み
   resetCardForm();
   renderCardList();
   refreshWorkSuggestions();
-  showToast('カードを登録しました');
+  showToast('カードを登録しました（Firebase へ保存中...）');
 }
 
 /* ----------------------------------------------------------------

@@ -98,11 +98,14 @@ function makeStore(key) {
     /**
      * Firebase に書き込む（認証済み管理者のみ）。
      * キャッシュを即時楽観的更新して UI に即反映する。
+     * @returns {boolean} true = 書き込み試行済み、false = 未認証で中止
      */
     save(item) {
-      if (!firebase.auth().currentUser) {
-        alert('データの保存には管理者ログインが必要です。');
-        return item;
+      const user = firebase.auth().currentUser;
+      console.log(`[Storage.save] user=${user ? user.email : 'null'}, key=${key}`);
+      if (!user) {
+        showToast('保存できません: ログインが必要です', true);
+        return false;
       }
       if (!item.id) item.id = _uid();
 
@@ -111,21 +114,28 @@ function makeStore(key) {
       if (idx >= 0) _cache[key][idx] = item;
       else _cache[key].push(item);
 
-      _db.ref(`hisaku/${key}/${item.id}`).set(item).catch(err => {
-        console.error('Firebase write error:', err);
-        alert(`保存に失敗しました。\n${err.message}`);
-      });
-      return item;
+      const path = `hisaku/${key}/${item.id}`;
+      console.log(`[Storage.save] Writing to ${path}`);
+      _db.ref(path).set(item)
+        .then(() => console.log(`[Storage.save] OK: ${path}`))
+        .catch(err => {
+          console.error(`[Storage.save] FAILED: ${path}`, err);
+          showToast(`保存に失敗しました: ${err.message}`, true);
+        });
+      return true;
     },
 
     /**
      * 複数アイテムを一括で Firebase に書き込む（認証済み管理者のみ）。
      * _db.ref().update() で単一の書き込みにまとめるため onValue は1回しか発火しない。
+     * @returns {boolean} true = 書き込み試行済み、false = 未認証で中止
      */
     saveAll(items) {
-      if (!firebase.auth().currentUser) {
-        alert('データの保存には管理者ログインが必要です。');
-        return;
+      const user = firebase.auth().currentUser;
+      console.log(`[Storage.saveAll] user=${user ? user.email : 'null'}, count=${items.length}`);
+      if (!user) {
+        showToast('保存できません: ログインが必要です', true);
+        return false;
       }
       const updates = {};
       items.forEach(item => {
@@ -135,10 +145,14 @@ function makeStore(key) {
         else _cache[key].push(item);
         updates[`hisaku/${key}/${item.id}`] = item;
       });
-      _db.ref().update(updates).catch(err => {
-        console.error('Firebase batch write error:', err);
-        alert(`一括保存に失敗しました。\n${err.message}`);
-      });
+      console.log(`[Storage.saveAll] Paths:`, Object.keys(updates));
+      _db.ref().update(updates)
+        .then(() => console.log(`[Storage.saveAll] OK: ${items.length} items`))
+        .catch(err => {
+          console.error(`[Storage.saveAll] FAILED`, err);
+          showToast(`一括保存に失敗しました: ${err.message}`, true);
+        });
+      return true;
     },
 
     /**

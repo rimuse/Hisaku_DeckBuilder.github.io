@@ -199,7 +199,8 @@ function executeImport() {
 
   /* 全件を1回の Firebase 書き込みにまとめる（onValue の多重発火を防ぐ） */
   if (toSave.length > 0) {
-    Storage.cards.saveAll(toSave);
+    const ok = Storage.cards.saveAll(toSave);
+    if (!ok) return;   // 未認証 — Storage 側でエラートーストを表示済み
   }
 
   const parts = [];
@@ -220,7 +221,7 @@ function executeImport() {
   refreshWorkSuggestions();
   refreshTokutsuboSelect();
 
-  if (toSave.length > 0) showToast(`インポート完了：${resultText}`);
+  if (toSave.length > 0) showToast(`インポート（Firebase へ保存中...）：${resultText}`);
 }
 
 /* ----------------------------------------------------------------
