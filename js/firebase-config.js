@@ -14,10 +14,12 @@
  *      "rules": {
  *        "hisaku": {
  *          ".read": true,
- *          ".write": true
+ *          ".write": "auth != null"
  *        }
  *      }
  *    }
+ *    ※ .read  : 誰でも読み取り可（デッキシミュレーター利用者）
+ *    ※ .write : ログイン済み管理者のみ書き込み可
  *
  * ※ Firebase の設定値（apiKey 等）は公開しても安全な値です。
  *   セキュリティはルールで制御されます。
