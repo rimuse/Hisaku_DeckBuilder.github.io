@@ -22,7 +22,7 @@
       <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
         <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
-        <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
+        <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
       </nav>
       <button class="btn btn-secondary btn-sm" id="btnLogout" hidden>ログアウト</button>
       <button class="hamburger" id="hamburger" aria-label="メニューを開く">
@@ -32,7 +32,7 @@
     <nav class="nav-mobile" id="navMobile">
       <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
       <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
-      <button class="nav-btn" data-page="skills" data-admin="true">スキル / 奥義登録</button>
+      <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
     </nav>
   </header>
 
@@ -156,7 +156,7 @@
               </div>
             </div>
             <div class="form-row">
-              <label class="form-label">スキル</label>
+              <label class="form-label">特技</label>
               <select id="cardSkill" class="form-select">
                 <option value="">なし</option>
               </select>
@@ -191,7 +191,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,スキル,奥義</code>
+              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,特技,奥義</code>
               <button id="csvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
           </div>
@@ -236,23 +236,23 @@
 
     </section>
 
-    <!-- ページ: スキル / 奥義登録 -->
+    <!-- ページ: 特技 / 奥義登録 -->
     <section id="page-skills" class="page">
-      <h2 class="page-title">スキル / 奥義登録</h2>
+      <h2 class="page-title">特技 / 奥義登録</h2>
 
-      <!-- スキル登録 -->
+      <!-- 特技登録 -->
       <div class="sub-section">
-        <h3 class="sub-section-title">スキル登録</h3>
+        <h3 class="sub-section-title">特技登録</h3>
         <div class="split-layout">
 
           <div class="form-panel">
-            <h4 class="panel-title" id="skillFormTitle">新規スキル登録</h4>
+            <h4 class="panel-title" id="skillFormTitle">新規特技登録</h4>
             <form id="skillForm" class="form" novalidate>
               <input type="hidden" id="skillId">
 
               <div class="form-row">
-                <label class="form-label">スキル名 <span class="req">*</span></label>
-                <input type="text" id="skillName" class="form-input" placeholder="スキル名を入力" required>
+                <label class="form-label">特技名 <span class="req">*</span></label>
+                <input type="text" id="skillName" class="form-input" placeholder="特技名を入力" required>
               </div>
 
               <div class="form-row">
@@ -262,8 +262,11 @@
                     <option value="character">キャラクター名</option>
                     <option value="work">作品</option>
                     <option value="attribute">属性</option>
+                    <option value="owner_character">所有者キャラクター</option>
+                    <option value="owner_work">所有者作品</option>
+                    <option value="owner_attribute">所有者属性</option>
                   </select>
-                  <span class="sep">:</span>
+                  <span class="sep" id="condValueSep">:</span>
                   <input type="text" id="condValue" class="form-input cond-value-input" placeholder="値" list="condValueSuggestions" autocomplete="off">
                   <datalist id="condValueSuggestions"></datalist>
                   <input type="number" id="condMinCount" class="form-input cond-count-input" min="1" max="5" value="1">
@@ -277,29 +280,77 @@
 
               <div class="form-row">
                 <label class="form-label">発動対象</label>
-                <div class="radio-group" id="targetTypeGroup">
-                  <label class="radio-label"><input type="radio" name="targetType" value="all" checked> 全体</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="character"> キャラクター名</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="work"> 作品</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="attribute"> 属性</label>
+                <div class="cond-add-row">
+                  <select id="targetAddType" class="form-select form-select-sm cond-type-sel">
+                    <option value="character">キャラクター名</option>
+                    <option value="work">作品</option>
+                    <option value="attribute">属性</option>
+                    <option value="owner_character">所有者キャラクター</option>
+                    <option value="owner_work">所有者作品</option>
+                    <option value="owner_attribute">所有者属性</option>
+                  </select>
+                  <span id="targetAddValueSep" class="sep">：</span>
+                  <input type="text" id="targetAddValue" class="form-input form-input-sm cond-value-input" placeholder="値を入力" autocomplete="off" list="targetAddValueSuggestions">
+                  <datalist id="targetAddValueSuggestions"></datalist>
+                  <div id="targetAddAttrGroup" class="radio-group" hidden>
+                    <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="親愛"> 親愛</label>
+                    <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="調教"> 調教</label>
+                    <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="従順"> 従順</label>
+                  </div>
+                  <button type="button" id="btnAddTarget" class="btn btn-sm btn-secondary">追加</button>
                 </div>
-                <div id="targetValueWrap" class="target-value-wrap" hidden></div>
+                <div id="targetList" class="cond-list target-list"></div>
               </div>
 
               <div class="form-row">
-                <label class="form-label">効果</label>
-                <div class="effect-grid">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="skillNoEffect">
+                  効果なし（数値効果なし）
+                </label>
+              </div>
+
+              <div id="skillEffectSection">
+                <div class="form-row">
+                  <label class="form-label">最大特技Lv</label>
                   <div class="effect-row">
-                    <span class="effect-label">脅迫力</span>
-                    <input type="number" id="effectThreat" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% 上昇</span>
-                  </div>
-                  <div class="effect-row">
-                    <span class="effect-label">耐久力</span>
-                    <input type="number" id="effectEndurance" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% 上昇</span>
+                    <input type="number" id="maxSkillLv" class="form-input form-input-sm" min="1" max="99" value="1">
+                    <span class="sep">Lv</span>
                   </div>
                 </div>
+
+                <div class="form-row">
+                  <label class="form-label">効果（初期値）</label>
+                  <div class="effect-grid">
+                    <div class="effect-row">
+                      <span class="effect-label">脅迫力</span>
+                      <input type="number" id="effectThreatInit" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
+                    <div class="effect-row">
+                      <span class="effect-label">耐久力</span>
+                      <input type="number" id="effectEnduranceInit" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <label class="form-label">効果（最大値）</label>
+                  <div class="effect-grid">
+                    <div class="effect-row">
+                      <span class="effect-label">脅迫力</span>
+                      <input type="number" id="effectThreatMax" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
+                    <div class="effect-row">
+                      <span class="effect-label">耐久力</span>
+                      <input type="number" id="effectEnduranceMax" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
+                  </div>
+                </div>
+
+
               </div>
 
               <div class="form-actions">
@@ -310,9 +361,62 @@
           </div>
 
           <div class="list-panel">
-            <h4 class="panel-title">登録済みスキル</h4>
+            <h4 class="panel-title">登録済み特技</h4>
             <div class="registered-list" id="skillList"></div>
           </div>
+
+        </div>
+      </div>
+
+      <!-- 特技CSVインポート -->
+      <div class="sub-section">
+        <h3 class="sub-section-title">特技CSVインポート</h3>
+        <div class="csv-import-panel">
+
+          <div class="csv-format-info">
+            <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
+            <div class="csv-format-code-wrap">
+              <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%</code>
+              <button id="skillCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
+            </div>
+            <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値:枚数」をセミコロン区切りで記述（例: キャラクター名:キャラA:2;作品:作品B:1）</p>
+            <p class="csv-hint csv-hint-sm">発動対象タイプ: 全体 / キャラクター名 / 作品 / 属性</p>
+          </div>
+
+          <div class="csv-input-wrap">
+            <div class="form-row">
+              <label class="form-label">CSVファイル（UTF-8）</label>
+              <input type="file" id="skillCsvFile" accept=".csv,text/csv" class="csv-file-input">
+            </div>
+            <div class="csv-or-sep">または</div>
+            <div class="form-row">
+              <label class="form-label">テキスト貼り付け</label>
+              <textarea id="skillCsvText" class="form-input form-textarea" rows="5" placeholder="ヘッダー行を含むCSVテキストをここに貼り付け..."></textarea>
+            </div>
+          </div>
+
+          <div class="csv-controls">
+            <label class="csv-dup-label">
+              重複時
+              <select id="skillCsvDupHandling" class="form-select csv-dup-sel">
+                <option value="skip">スキップ</option>
+                <option value="overwrite">上書き</option>
+              </select>
+            </label>
+            <button id="skillCsvParseBtn" class="btn btn-secondary">解析・プレビュー</button>
+          </div>
+
+          <div id="skillCsvPreview" hidden>
+            <div class="csv-preview-summary" id="skillCsvPreviewSummary"></div>
+            <div class="csv-table-wrap">
+              <table class="csv-table" id="skillCsvPreviewTable"></table>
+            </div>
+            <div class="csv-import-actions">
+              <button id="skillCsvImportBtn" class="btn btn-primary" disabled>インポート実行</button>
+            </div>
+          </div>
+
+          <div id="skillCsvResult" class="csv-result-msg" hidden></div>
 
         </div>
       </div>
@@ -332,8 +436,16 @@
                 <input type="text" id="ougiName" class="form-input" placeholder="奥義名を入力" required>
               </div>
               <div class="form-row">
-                <label class="form-label">説明</label>
-                <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ougiNoEffect">
+                  効果なし
+                </label>
+              </div>
+              <div id="ougiDescSection">
+                <div class="form-row">
+                  <label class="form-label">説明</label>
+                  <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
+                </div>
               </div>
 
               <div class="form-actions">
@@ -347,6 +459,57 @@
             <h4 class="panel-title">登録済み奥義</h4>
             <div class="registered-list" id="ougiList"></div>
           </div>
+
+        </div>
+      </div>
+
+      <!-- 奥義CSVインポート -->
+      <div class="sub-section">
+        <h3 class="sub-section-title">奥義CSVインポート</h3>
+        <div class="csv-import-panel">
+
+          <div class="csv-format-info">
+            <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
+            <div class="csv-format-code-wrap">
+              <code class="csv-format-code">奥義名,効果なし,説明</code>
+              <button id="ougiCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
+            </div>
+          </div>
+
+          <div class="csv-input-wrap">
+            <div class="form-row">
+              <label class="form-label">CSVファイル（UTF-8）</label>
+              <input type="file" id="ougiCsvFile" accept=".csv,text/csv" class="csv-file-input">
+            </div>
+            <div class="csv-or-sep">または</div>
+            <div class="form-row">
+              <label class="form-label">テキスト貼り付け</label>
+              <textarea id="ougiCsvText" class="form-input form-textarea" rows="5" placeholder="ヘッダー行を含むCSVテキストをここに貼り付け..."></textarea>
+            </div>
+          </div>
+
+          <div class="csv-controls">
+            <label class="csv-dup-label">
+              重複時
+              <select id="ougiCsvDupHandling" class="form-select csv-dup-sel">
+                <option value="skip">スキップ</option>
+                <option value="overwrite">上書き</option>
+              </select>
+            </label>
+            <button id="ougiCsvParseBtn" class="btn btn-secondary">解析・プレビュー</button>
+          </div>
+
+          <div id="ougiCsvPreview" hidden>
+            <div class="csv-preview-summary" id="ougiCsvPreviewSummary"></div>
+            <div class="csv-table-wrap">
+              <table class="csv-table" id="ougiCsvPreviewTable"></table>
+            </div>
+            <div class="csv-import-actions">
+              <button id="ougiCsvImportBtn" class="btn btn-primary" disabled>インポート実行</button>
+            </div>
+          </div>
+
+          <div id="ougiCsvResult" class="csv-result-msg" hidden></div>
 
         </div>
       </div>

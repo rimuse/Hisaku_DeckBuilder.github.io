@@ -45,6 +45,8 @@ function renderDeckSlots() {
     const el = document.createElement('div');
     if (slot) {
       const { card, lbLv } = slot;
+      const skillObj   = card.skillId ? Storage.skills.get(card.skillId) : null;
+      const maxSkillLv = skillObj && skillObj.maxSkillLv ? num(skillObj.maxSkillLv) : 1;
       el.className = 'deck-slot';
       el.innerHTML = `
         <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
@@ -56,6 +58,11 @@ function renderDeckSlots() {
           <span class="slot-lb-label">限突Lv</span>
           <input type="number" class="slot-lb-input" min="0" max="200" value="${num(lbLv)}" data-slot="${i}">
         </div>
+        ${skillObj ? `
+        <div class="slot-skill-wrap">
+          <span class="slot-skill-label">特技Lv</span>
+          <input type="number" class="slot-skill-input" min="1" max="${maxSkillLv}" value="${num(slot.skillLv) || 1}" data-slot="${i}">
+        </div>` : ''}
         <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>`;
     } else {
       el.className = 'deck-slot empty';
@@ -89,6 +96,24 @@ function renderDeckSlots() {
       const idx = +e.target.dataset.slot;
       if (deck[idx]) {
         e.target.value = deck[idx].lbLv;
+      }
+    });
+  });
+
+  /* 特技Lv 入力 */
+  container.querySelectorAll('.slot-skill-input').forEach(input => {
+    input.addEventListener('input', e => {
+      const idx = +e.target.dataset.slot;
+      if (deck[idx]) {
+        const maxLv = num(e.target.max) || 1;
+        deck[idx].skillLv = Math.min(maxLv, Math.max(1, num(e.target.value)));
+        renderDeckStats();
+      }
+    });
+    input.addEventListener('blur', e => {
+      const idx = +e.target.dataset.slot;
+      if (deck[idx]) {
+        e.target.value = deck[idx].skillLv || 1;
       }
     });
   });
@@ -138,7 +163,7 @@ function onCardThumbClick(cardId) {
     openCardDetail(card);
     return;
   }
-  deck[deck.indexOf(null)] = { card, lbLv: 0 };
+  deck[deck.indexOf(null)] = { card, lbLv: 0, skillLv: 1 };
   renderDeckSlots();
   renderCardGrid();
   renderDeckStats();
@@ -159,7 +184,7 @@ function openCardDetail(card) {
     ${detailRow('脅迫力 (Lv100)', fmt(card.power))}
     ${detailRow('耐久力 (Lv100)', fmt(card.hp))}
     ${detailRow('限突補正/Lv', `+${LIMIT_BREAK_BONUS[card.rarity] || 0}`)}
-    ${detailRow('スキル', skill ? esc(skill.name) : '—')}
+    ${detailRow('特技', skill ? esc(skill.name) : '—')}
     ${detailRow('奥義',   ougi  ? esc(ougi.name)  : '—')}`;
   cardModal.open();
 }
@@ -203,7 +228,7 @@ function renderDeckStats() {
   function buffParts(lb, skill, tokubo) {
     const parts = [];
     if (lb     > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
-    if (skill  > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} スキル</span>`);
+    if (skill  > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} 特技</span>`);
     if (tokubo > 0) parts.push(`<span class="stat-buff tokubo">+${fmt(tokubo)} 特壺</span>`);
     return parts.join('');
   }
@@ -216,20 +241,24 @@ function renderDeckStats() {
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
 
-  skillEl.innerHTML = '<div class="skill-status-title">スキル発動状況</div>' +
+  skillEl.innerHTML = '<div class="skill-status-title">特技発動状況</div>' +
     activations.map(a => {
       const badge = a.active
         ? '<span class="status-badge on">発動中</span>'
         : '<span class="status-badge off">未発動</span>';
-      const effects = [
-        a.skill.threatPct    ? `脅迫力 +${a.skill.threatPct}%`    : '',
-        a.skill.endurancePct ? `耐久力 +${a.skill.endurancePct}%` : ''
-      ].filter(Boolean).join(' / ') || '効果なし';
-      const targetStr = !a.skill.target || a.skill.target.type === 'all'
-        ? '全体' : `${condLabel(a.skill.target.type)}: ${esc(a.skill.target.value)}`;
+      const lvLabel = (!a.skill.noEffect && a.skill.maxSkillLv) ? ` (特技Lv${a.skillLv})` : '';
+      const effects = a.skill.noEffect
+        ? '効果なし'
+        : ([
+            a.tPct ? `脅迫力 +${a.tPct}%` : '',
+            a.ePct ? `耐久力 +${a.ePct}%` : ''
+          ].filter(Boolean).join(' / ') || '効果なし');
+      const targetStr = !a.resolvedTargets?.length
+        ? '全体'
+        : a.resolvedTargets.map(t => `${condLabel(t.type)}: ${esc(t.value)}`).join(' または ');
       return `<div class="skill-status-item${a.active ? ' active' : ''}">
         <div class="skill-status-header">
-          <span class="skill-status-name">${esc(a.skill.name)}</span>${badge}
+          <span class="skill-status-name">${esc(a.skill.name)}${lvLabel}</span>${badge}
         </div>
         <div class="skill-status-detail">${effects}（対象: ${targetStr}）</div>
       </div>`;
@@ -237,16 +266,47 @@ function renderDeckStats() {
 }
 
 /* ----------------------------------------------------------------
-   スキル発動計算（純粋関数）
+   特技発動計算（純粋関数）
    ※ バフ計算のベースは 限界突破補正後の実効値
+   ※ owner_character / owner_attribute は所有カードの値で動的解決
 ---------------------------------------------------------------- */
 function calcSkillActivations(slots) {
-  const allSkills  = Storage.skills.getAll();
-  const skillIds   = [...new Set(slots.map(s => s.card.skillId).filter(Boolean))];
-  const deckSkills = allSkills.filter(skill => skillIds.includes(skill.id));
+  const allSkills = Storage.skills.getAll();
+
+  /* skillId ごとに最初に登場したスロットの情報を記録 */
+  const skillInfoMap = {};
+  slots.forEach(s => {
+    if (s.card.skillId && !(s.card.skillId in skillInfoMap)) {
+      skillInfoMap[s.card.skillId] = {
+        skillLv:   s.skillLv       || 1,
+        ownerChar: s.card.charName  || '',
+        ownerWork: s.card.workName  || '',
+        ownerAttr: s.card.attribute || '',
+      };
+    }
+  });
+
+  const deckSkills = allSkills.filter(skill => skill.id in skillInfoMap);
 
   return deckSkills.map(skill => {
-    const conditions = skill.conditions || [];
+    const { skillLv, ownerChar, ownerWork, ownerAttr } = skillInfoMap[skill.id];
+
+    /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
+    const tPct = skill.threatPctInit !== undefined
+      ? num(skill.threatPctInit) + num(skill.threatRise) * (skillLv - 1)
+      : num(skill.threatPct);
+    const ePct = skill.endurancePctInit !== undefined
+      ? num(skill.endurancePctInit) + num(skill.enduranceRise) * (skillLv - 1)
+      : num(skill.endurancePct);
+
+    /* 条件の owner タイプを所有者情報で解決 */
+    const conditions = (skill.conditions || []).map(cond => {
+      if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
+      if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
+      if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
+      return cond;
+    });
+
     const active = conditions.length === 0 || conditions.every(cond => {
       const count = slots.filter(s => {
         const c = s.card;
@@ -258,21 +318,35 @@ function calcSkillActivations(slots) {
       return count >= num(cond.minCount || 1);
     });
 
-    const target      = skill.target || { type: 'all' };
+    /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
+    const rawTargets = skill.targets?.length ? skill.targets
+      : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
+    const resolvedTargets = rawTargets.map(t => {
+      if (t.type === 'owner_character') return { type: 'character', value: ownerChar };
+      if (t.type === 'owner_work')      return { type: 'work',      value: ownerWork };
+      if (t.type === 'owner_attribute') return { type: 'attribute', value: ownerAttr };
+      return t;
+    });
+
+    /* 対象スロット抽出（空 = 全体、複数要素は OR） */
     const targetSlots = active ? slots.filter(s => {
+      if (!resolvedTargets.length) return true;
       const c = s.card;
-      if (!target || target.type === 'all') return true;
-      if (target.type === 'character') return c.charName  === target.value;
-      if (target.type === 'work')      return c.workName  === target.value;
-      if (target.type === 'attribute') return c.attribute === target.value;
-      return false;
+      return resolvedTargets.some(rt => {
+        if (rt.type === 'character') return c.charName  === rt.value;
+        if (rt.type === 'work')      return c.workName  === rt.value;
+        if (rt.type === 'attribute') return c.attribute === rt.value;
+        return false;
+      });
     }) : [];
 
-    const tPct = num(skill.threatPct);
-    const ePct = num(skill.endurancePct);
     return {
       skill,
       active,
+      skillLv,
+      tPct,
+      ePct,
+      resolvedTargets,
       threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
       hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
     };

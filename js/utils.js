@@ -15,7 +15,14 @@ function num(v) { return +v || 0; }
 function fmt(v) { return num(v).toLocaleString(); }
 
 /** 条件タイプの日本語ラベル */
-const COND_LABELS = { character: 'キャラ', work: '作品', attribute: '属性' };
+const COND_LABELS = {
+  character:       'キャラ',
+  work:            '作品',
+  attribute:       '属性',
+  owner_character: '所有者キャラ',
+  owner_work:      '所有者作品',
+  owner_attribute: '所有者属性',
+};
 function condLabel(type) { return COND_LABELS[type] || type; }
 
 /** トースト通知（画面下部に3秒間表示） */
