@@ -232,10 +232,12 @@
     <section id="page-skills" class="page">
       <h2 class="page-title">特技 / 奥義登録</h2>
 
-      <!-- 特技登録 -->
-      <div class="sub-section">
-        <h3 class="sub-section-title">特技登録</h3>
+      <!-- 特技・奥義フォーム（横並び） -->
+      <div class="skills-forms-row">
 
+        <!-- 特技登録 -->
+        <div class="sub-section">
+          <h3 class="sub-section-title">特技登録</h3>
           <div class="form-panel">
             <h4 class="panel-title" id="skillFormTitle">新規特技登録</h4>
             <form id="skillForm" class="form" novalidate>
@@ -340,8 +342,6 @@
                     </div>
                   </div>
                 </div>
-
-
               </div>
 
               <div class="form-actions">
@@ -351,8 +351,43 @@
               </div>
             </form>
           </div>
+        </div>
 
-      </div>
+        <!-- 奥義登録 -->
+        <div class="sub-section">
+          <h3 class="sub-section-title">奥義登録</h3>
+          <div class="form-panel">
+            <h4 class="panel-title" id="ougiFormTitle">新規奥義登録</h4>
+            <form id="ougiForm" class="form" novalidate>
+              <input type="hidden" id="ougiId">
+
+              <div class="form-row">
+                <label class="form-label">奥義名 <span class="req">*</span></label>
+                <input type="text" id="ougiName" class="form-input" placeholder="奥義名を入力" required>
+              </div>
+              <div class="form-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ougiNoEffect">
+                  効果なし
+                </label>
+              </div>
+              <div id="ougiDescSection">
+                <div class="form-row">
+                  <label class="form-label">説明</label>
+                  <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">登録する</button>
+                <button type="button" class="btn btn-secondary" id="ougiCancelBtn" hidden>キャンセル</button>
+                <button type="button" class="btn btn-secondary" id="btnOpenOugiList">登録済み一覧</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div><!-- /.skills-forms-row -->
 
       <!-- 特技CSVインポート -->
       <div class="sub-section">
@@ -405,42 +440,6 @@
           <div id="skillCsvResult" class="csv-result-msg" hidden></div>
 
         </div>
-      </div>
-
-      <!-- 奥義登録 -->
-      <div class="sub-section">
-        <h3 class="sub-section-title">奥義登録</h3>
-
-          <div class="form-panel">
-            <h4 class="panel-title" id="ougiFormTitle">新規奥義登録</h4>
-            <form id="ougiForm" class="form" novalidate>
-              <input type="hidden" id="ougiId">
-
-              <div class="form-row">
-                <label class="form-label">奥義名 <span class="req">*</span></label>
-                <input type="text" id="ougiName" class="form-input" placeholder="奥義名を入力" required>
-              </div>
-              <div class="form-row">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="ougiNoEffect">
-                  効果なし
-                </label>
-              </div>
-              <div id="ougiDescSection">
-                <div class="form-row">
-                  <label class="form-label">説明</label>
-                  <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn btn-primary">登録する</button>
-                <button type="button" class="btn btn-secondary" id="ougiCancelBtn" hidden>キャンセル</button>
-                <button type="button" class="btn btn-secondary" id="btnOpenOugiList">登録済み一覧</button>
-              </div>
-            </form>
-          </div>
-
       </div>
 
       <!-- 奥義CSVインポート -->

@@ -123,6 +123,13 @@ body {
   gap: 1.25rem;
   align-items: start;
 }
+.skills-forms-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+  margin-bottom: 2rem;
+}
 .sub-section { margin-bottom: 2rem; }
 .sub-section-title {
   font-size: 1rem;
@@ -869,7 +876,8 @@ body {
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
   .deck-layout  { grid-template-columns: 1fr; }
-  .split-layout { grid-template-columns: 1fr; }
+  .split-layout       { grid-template-columns: 1fr; }
+  .skills-forms-row   { grid-template-columns: 1fr; }
   .card-grid    { max-height: none; }
 }
 
