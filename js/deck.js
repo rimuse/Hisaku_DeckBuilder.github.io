@@ -11,6 +11,8 @@
    null | { card, lbLv }
 ---------------------------------------------------------------- */
 let deck = Array(5).fill(null);
+let _pickingSlot = -1;
+const cardPickerModal = setupModal('cardPickerOverlay', 'cardPickerClose');
 
 /* ----------------------------------------------------------------
    限界突破補正
@@ -29,7 +31,6 @@ function slotHp(slot)    { return num(slot.card.hp)    + lbBonus(slot.card, slot
 function initDeckPage() {
   refreshTokutsuboSelect();
   renderDeckSlots();
-  renderCardGrid();
   renderDeckStats();
   refreshWorkFilter();
 }
@@ -66,8 +67,15 @@ function renderDeckSlots() {
         <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>`;
     } else {
       el.className = 'deck-slot empty';
-      el.textContent = 'スロット ' + (i + 1);
+      el.innerHTML = `<span class="slot-empty-label">スロット ${i + 1}</span><span class="slot-empty-hint">クリックでカードを選択</span>`;
     }
+
+    /* スロットクリック → カード選択ピッカーを開く（remove ボタン・数値入力欄は除外） */
+    el.addEventListener('click', e => {
+      if (e.target.closest('.slot-remove, .slot-lb-input, .slot-skill-input')) return;
+      openCardPicker(i);
+    });
+
     container.appendChild(el);
   });
 
@@ -77,7 +85,6 @@ function renderDeckSlots() {
       e.stopPropagation();
       deck[+btn.dataset.slot] = null;
       renderDeckSlots();
-      renderCardGrid();
       renderDeckStats();
     });
   });
@@ -120,7 +127,18 @@ function renderDeckSlots() {
 }
 
 /* ----------------------------------------------------------------
-   カードグリッド（デッキページ用）
+   カード選択ピッカーを開く
+---------------------------------------------------------------- */
+function openCardPicker(slotIndex) {
+  _pickingSlot = slotIndex;
+  document.getElementById('cardPickerSlotNum').textContent = slotIndex + 1;
+  refreshWorkFilter();
+  renderCardGrid();
+  cardPickerModal.open();
+}
+
+/* ----------------------------------------------------------------
+   カードグリッド（カード選択ピッカー内）
 ---------------------------------------------------------------- */
 function renderCardGrid() {
   const text = document.getElementById('filterText').value.trim().toLowerCase();
@@ -157,15 +175,11 @@ function renderCardGrid() {
 
 function onCardThumbClick(cardId) {
   const card = Storage.cards.get(cardId);
-  if (!card) return;
-  /* すでにデッキにある or 空きスロットなし → 詳細表示 */
-  if (deck.some(s => s && s.card.id === cardId) || deck.indexOf(null) === -1) {
-    openCardDetail(card);
-    return;
-  }
-  deck[deck.indexOf(null)] = { card, lbLv: 0, skillLv: 1 };
+  if (!card || _pickingSlot < 0) return;
+  deck[_pickingSlot] = { card, lbLv: 0, skillLv: 1 };
+  cardPickerModal.close();
+  _pickingSlot = -1;
   renderDeckSlots();
-  renderCardGrid();
   renderDeckStats();
 }
 
@@ -396,7 +410,6 @@ function refreshWorkFilter() {
 document.getElementById('btnClearDeck').addEventListener('click', () => {
   deck = Array(5).fill(null);
   renderDeckSlots();
-  renderCardGrid();
   renderDeckStats();
 });
 

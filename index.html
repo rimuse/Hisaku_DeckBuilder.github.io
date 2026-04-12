@@ -41,8 +41,6 @@
     <!-- ページ: デッキシミュレーション -->
     <section id="page-deck" class="page active">
       <h2 class="page-title">デッキシミュレーション</h2>
-      <div class="deck-layout">
-
         <div class="deck-panel">
           <h3 class="panel-title">デッキ（最大5枚）</h3>
           <div class="deck-slots" id="deckSlots"></div>
@@ -72,32 +70,6 @@
             <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
           </div>
         </div>
-
-        <div class="card-pool-panel">
-          <h3 class="panel-title">カード一覧</h3>
-          <div class="filter-bar">
-            <input type="text" id="filterText" class="filter-input" placeholder="カード名 / キャラクター名 / 作品名で検索">
-            <select id="filterRarity" class="filter-select">
-              <option value="">レア度: すべて</option>
-              <option value="N">N</option>
-              <option value="R">R</option>
-              <option value="SR">SR</option>
-              <option value="SSR">SSR</option>
-            </select>
-            <select id="filterAttribute" class="filter-select">
-              <option value="">属性: すべて</option>
-              <option value="親愛">親愛</option>
-              <option value="調教">調教</option>
-              <option value="従順">従順</option>
-            </select>
-            <select id="filterWork" class="filter-select">
-              <option value="">作品: すべて</option>
-            </select>
-          </div>
-          <div class="card-grid" id="cardGrid"></div>
-        </div>
-
-      </div>
     </section>
 
     <!-- ページ: カード情報登録 -->
@@ -585,6 +557,34 @@
       <button class="modal-close" id="ougiListClose" aria-label="閉じる">&times;</button>
       <h3 class="panel-title" style="margin-bottom:0.75rem">登録済み奥義</h3>
       <div class="registered-list" id="ougiList"></div>
+    </div>
+  </div>
+
+  <!-- カード選択ピッカーモーダル（デッキシミュレーション用） -->
+  <div class="modal-overlay" id="cardPickerOverlay">
+    <div class="modal modal-card-picker" role="dialog" aria-modal="true">
+      <button class="modal-close" id="cardPickerClose" aria-label="閉じる">&times;</button>
+      <h3 class="panel-title" style="margin-bottom:0.75rem">カードを選択 — スロット <span id="cardPickerSlotNum">1</span></h3>
+      <div class="filter-bar">
+        <input type="text" id="filterText" class="filter-input" placeholder="カード名 / キャラクター名 / 作品名で検索">
+        <select id="filterRarity" class="filter-select">
+          <option value="">レア度: すべて</option>
+          <option value="N">N</option>
+          <option value="R">R</option>
+          <option value="SR">SR</option>
+          <option value="SSR">SSR</option>
+        </select>
+        <select id="filterAttribute" class="filter-select">
+          <option value="">属性: すべて</option>
+          <option value="親愛">親愛</option>
+          <option value="調教">調教</option>
+          <option value="従順">従順</option>
+        </select>
+        <select id="filterWork" class="filter-select">
+          <option value="">作品: すべて</option>
+        </select>
+      </div>
+      <div class="card-grid" id="cardGrid"></div>
     </div>
   </div>
 

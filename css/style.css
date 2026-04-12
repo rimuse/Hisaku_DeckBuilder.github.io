@@ -171,14 +171,28 @@ body {
   border-radius: var(--radius);
   padding: 0.5rem 0.75rem;
   min-height: 52px;
-  cursor: default;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.deck-slot:not(.empty):hover {
+  border-color: var(--primary);
 }
 .deck-slot.empty {
   color: var(--text-muted);
   font-size: 0.85rem;
   justify-content: center;
-  cursor: default;
+  cursor: pointer;
   border-style: dashed;
+}
+.deck-slot.empty:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+}
+.slot-empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  opacity: 0.7;
 }
 .slot-rarity {
   font-size: 0.7rem;
@@ -580,8 +594,10 @@ body {
   overflow-y: auto;
   position: relative;
 }
-.modal-sm   { max-width: 340px; }
-.modal-list { max-width: 700px; }
+.modal-sm          { max-width: 340px; }
+.modal-list        { max-width: 700px; }
+.modal-card-picker { max-width: 900px; }
+.modal-card-picker .card-grid { max-height: calc(70vh - 120px); }
 .modal-close {
   position: absolute;
   top: 0.75rem;
