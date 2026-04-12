@@ -25,6 +25,27 @@ const confirmModal = setupModal('confirmOverlay');
 
 /* 重複確認モーダル */
 const dupModal = setupModal('dupOverlay');
+
+/* カード一覧モーダル */
+const cardListModal = setupModal('cardListOverlay', 'cardListClose');
+document.getElementById('btnOpenCardList').addEventListener('click', () => {
+  renderCardList();
+  cardListModal.open();
+});
+
+/* 特技一覧モーダル */
+const skillListModal = setupModal('skillListOverlay', 'skillListClose');
+document.getElementById('btnOpenSkillList').addEventListener('click', () => {
+  renderSkillList();
+  skillListModal.open();
+});
+
+/* 奥義一覧モーダル */
+const ougiListModal = setupModal('ougiListOverlay', 'ougiListClose');
+document.getElementById('btnOpenOugiList').addEventListener('click', () => {
+  renderOugiList();
+  ougiListModal.open();
+});
 let _confirmCb = null;
 
 document.getElementById('confirmYes').addEventListener('click', () => {

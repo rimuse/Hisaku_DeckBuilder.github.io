@@ -41,7 +41,7 @@ function renderOugiList() {
   }).join('');
 
   el.querySelectorAll('.icon-btn.edit').forEach(btn =>
-    btn.addEventListener('click', () => editOugi(btn.dataset.id))
+    btn.addEventListener('click', () => { ougiListModal.close(); editOugi(btn.dataset.id); })
   );
   el.querySelectorAll('.icon-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteOugi(btn.dataset.id))

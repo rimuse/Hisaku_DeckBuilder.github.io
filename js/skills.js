@@ -8,8 +8,6 @@
    ページ初期化
 ---------------------------------------------------------------- */
 function initSkillsPage() {
-  renderSkillList();
-  renderOugiList();    /* ougi.js */
   refreshCondSuggestions();
 }
 
@@ -221,7 +219,7 @@ function renderSkillList() {
   }).join('');
 
   el.querySelectorAll('.icon-btn.edit').forEach(btn =>
-    btn.addEventListener('click', () => editSkill(btn.dataset.id))
+    btn.addEventListener('click', () => { skillListModal.close(); editSkill(btn.dataset.id); })
   );
   el.querySelectorAll('.icon-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteSkill(btn.dataset.id))

@@ -573,7 +573,8 @@ body {
   overflow-y: auto;
   position: relative;
 }
-.modal-sm { max-width: 340px; }
+.modal-sm   { max-width: 340px; }
+.modal-list { max-width: 700px; }
 .modal-close {
   position: absolute;
   top: 0.75rem;

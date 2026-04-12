@@ -103,7 +103,6 @@
     <!-- ページ: カード情報登録 -->
     <section id="page-cards" class="page">
       <h2 class="page-title">カード情報登録</h2>
-      <div class="split-layout">
 
         <div class="form-panel">
           <h3 class="panel-title" id="cardFormTitle">新規カード登録</h3>
@@ -171,17 +170,10 @@
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">登録する</button>
               <button type="button" class="btn btn-secondary" id="cardCancelBtn" hidden>キャンセル</button>
+              <button type="button" class="btn btn-secondary" id="btnOpenCardList">登録済み一覧</button>
             </div>
           </form>
         </div>
-
-        <div class="list-panel">
-          <h3 class="panel-title">登録済みカード</h3>
-          <input type="text" id="cardListSearch" class="filter-input" placeholder="検索...">
-          <div class="registered-list" id="cardList"></div>
-        </div>
-
-      </div>
 
       <!-- CSVインポート -->
       <div class="sub-section">
@@ -243,7 +235,6 @@
       <!-- 特技登録 -->
       <div class="sub-section">
         <h3 class="sub-section-title">特技登録</h3>
-        <div class="split-layout">
 
           <div class="form-panel">
             <h4 class="panel-title" id="skillFormTitle">新規特技登録</h4>
@@ -356,16 +347,11 @@
               <div class="form-actions">
                 <button type="submit" class="btn btn-primary">登録する</button>
                 <button type="button" class="btn btn-secondary" id="skillCancelBtn" hidden>キャンセル</button>
+                <button type="button" class="btn btn-secondary" id="btnOpenSkillList">登録済み一覧</button>
               </div>
             </form>
           </div>
 
-          <div class="list-panel">
-            <h4 class="panel-title">登録済み特技</h4>
-            <div class="registered-list" id="skillList"></div>
-          </div>
-
-        </div>
       </div>
 
       <!-- 特技CSVインポート -->
@@ -424,7 +410,6 @@
       <!-- 奥義登録 -->
       <div class="sub-section">
         <h3 class="sub-section-title">奥義登録</h3>
-        <div class="split-layout">
 
           <div class="form-panel">
             <h4 class="panel-title" id="ougiFormTitle">新規奥義登録</h4>
@@ -451,16 +436,11 @@
               <div class="form-actions">
                 <button type="submit" class="btn btn-primary">登録する</button>
                 <button type="button" class="btn btn-secondary" id="ougiCancelBtn" hidden>キャンセル</button>
+                <button type="button" class="btn btn-secondary" id="btnOpenOugiList">登録済み一覧</button>
               </div>
             </form>
           </div>
 
-          <div class="list-panel">
-            <h4 class="panel-title">登録済み奥義</h4>
-            <div class="registered-list" id="ougiList"></div>
-          </div>
-
-        </div>
       </div>
 
       <!-- 奥義CSVインポート -->
@@ -578,6 +558,34 @@
           <button type="button" class="btn btn-secondary" id="loginCancelBtn">キャンセル</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- カード一覧モーダル -->
+  <div class="modal-overlay" id="cardListOverlay">
+    <div class="modal modal-list" role="dialog" aria-modal="true">
+      <button class="modal-close" id="cardListClose" aria-label="閉じる">&times;</button>
+      <h3 class="panel-title" style="margin-bottom:0.75rem">登録済みカード</h3>
+      <input type="text" id="cardListSearch" class="filter-input" placeholder="検索..." style="margin-bottom:0.5rem;width:100%">
+      <div class="registered-list" id="cardList"></div>
+    </div>
+  </div>
+
+  <!-- 特技一覧モーダル -->
+  <div class="modal-overlay" id="skillListOverlay">
+    <div class="modal modal-list" role="dialog" aria-modal="true">
+      <button class="modal-close" id="skillListClose" aria-label="閉じる">&times;</button>
+      <h3 class="panel-title" style="margin-bottom:0.75rem">登録済み特技</h3>
+      <div class="registered-list" id="skillList"></div>
+    </div>
+  </div>
+
+  <!-- 奥義一覧モーダル -->
+  <div class="modal-overlay" id="ougiListOverlay">
+    <div class="modal modal-list" role="dialog" aria-modal="true">
+      <button class="modal-close" id="ougiListClose" aria-label="閉じる">&times;</button>
+      <h3 class="panel-title" style="margin-bottom:0.75rem">登録済み奥義</h3>
+      <div class="registered-list" id="ougiList"></div>
     </div>
   </div>
 
