@@ -243,6 +243,7 @@ const COND_TYPE_MAP = {
   '作品':              'work',
   '属性':              'attribute',
   '所有者キャラクター': 'owner_character',
+  '所有者作品':        'owner_work',
   '所有者属性':        'owner_attribute',
 };
 const TARGET_TYPE_MAP = {
@@ -251,12 +252,13 @@ const TARGET_TYPE_MAP = {
   '作品':              'work',
   '属性':              'attribute',
   '所有者キャラクター': 'owner_character',
+  '所有者作品':        'owner_work',
   '所有者属性':        'owner_attribute',
 };
 
 /** 発動条件文字列 → conditions 配列
  * 通常: 「キャラクター名:キャラA:2」(type:value:count)
- * 所有者: 「所有者キャラクター:2」または「所有者属性:2」(type:count)
+ * 所有者: 「所有者キャラクター:2」「所有者作品:2」「所有者属性:2」(type:count)
  */
 function parseConditionsStr(str) {
   if (!str || !str.trim()) return [];
@@ -264,7 +266,7 @@ function parseConditionsStr(str) {
     const segs    = part.trim().split(':');
     const type    = COND_TYPE_MAP[segs[0]?.trim()];
     if (!type) return null;
-    const isOwner = type === 'owner_character' || type === 'owner_attribute';
+    const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
     const value   = isOwner ? '' : segs[1]?.trim();
     const minCount = isOwner
       ? parseInt(segs[1], 10) || 1
@@ -282,10 +284,10 @@ function validateConditionsStr(str) {
     const segs    = part.trim().split(':');
     const typeKey = COND_TYPE_MAP[segs[0]?.trim()];
     if (!typeKey) {
-      errors.push(`条件${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者属性）`);
+      errors.push(`条件${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者作品 / 所有者属性）`);
       return;
     }
-    const isOwner = typeKey === 'owner_character' || typeKey === 'owner_attribute';
+    const isOwner = typeKey === 'owner_character' || typeKey === 'owner_work' || typeKey === 'owner_attribute';
     if (!isOwner && (segs.length < 2 || !segs[1]?.trim())) {
       errors.push(`条件${i + 1}: フォーマット不正（例: キャラクター名:キャラA:2）`);
     }
@@ -301,9 +303,13 @@ function validateSkillRow(row) {
 
   if (row.targetType && row.targetType !== '全体') {
     if (!TARGET_TYPE_MAP[row.targetType]) {
-      errors.push(`発動対象タイプ「${row.targetType}」が無効（全体 / キャラクター名 / 作品 / 属性）`);
-    } else if (!row.targetValue) {
-      errors.push('発動対象値が必要です');
+      errors.push(`発動対象タイプ「${row.targetType}」が無効（全体 / キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者作品 / 所有者属性）`);
+    } else {
+      const mappedType = TARGET_TYPE_MAP[row.targetType];
+      const isOwner = mappedType === 'owner_character' || mappedType === 'owner_work' || mappedType === 'owner_attribute';
+      if (!isOwner && !row.targetValue) {
+        errors.push('発動対象値が必要です');
+      }
     }
   }
   return errors;
@@ -322,10 +328,11 @@ function _parseBool(str) {
 function skillRowToData(row) {
   const noEffect      = _parseBool(row.noEffectStr);
   const targetTypeKey = TARGET_TYPE_MAP[row.targetType?.trim()] || 'all';
+  const isOwnerTarget = targetTypeKey === 'owner_character' || targetTypeKey === 'owner_work' || targetTypeKey === 'owner_attribute';
   return {
     name:             row.name,
     conditions:       parseConditionsStr(row.conditionsStr),
-    target:           { type: targetTypeKey, value: targetTypeKey !== 'all' ? (row.targetValue || '') : '' },
+    target:           { type: targetTypeKey, value: (targetTypeKey !== 'all' && !isOwnerTarget) ? (row.targetValue || '') : '' },
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : (parseInt(row.maxSkillLv, 10) || 1),
     threatPctInit:    noEffect ? undefined : (parseFloat(row.threatPctInit)    || 0),

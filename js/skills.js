@@ -32,7 +32,7 @@ function renderCondList() {
     return;
   }
   el.innerHTML = skillConditions.map((c, i) => {
-    const isOwner = c.type === 'owner_character' || c.type === 'owner_attribute';
+    const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
     const valPart = isOwner ? '' : `: ${esc(c.value)}`;
     return `
     <span class="cond-tag">
@@ -51,7 +51,7 @@ function renderCondList() {
 /* 条件追加ボタン */
 document.getElementById('btnAddCond').addEventListener('click', () => {
   const type    = document.getElementById('condType').value;
-  const isOwner = type === 'owner_character' || type === 'owner_attribute';
+  const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
   const value   = isOwner ? '' : document.getElementById('condValue').value.trim();
   const count   = parseInt(document.getElementById('condMinCount').value, 10) || 1;
   if (!isOwner && !value) { alert('条件の値を入力してください'); return; }
@@ -64,7 +64,7 @@ document.getElementById('btnAddCond').addEventListener('click', () => {
 document.getElementById('condType').addEventListener('change', function () {
   const inp     = document.getElementById('condValue');
   const sepEl   = document.getElementById('condValueSep');
-  const isOwner = this.value === 'owner_character' || this.value === 'owner_attribute';
+  const isOwner = this.value === 'owner_character' || this.value === 'owner_work' || this.value === 'owner_attribute';
 
   inp.hidden   = isOwner;
   sepEl.hidden = isOwner;
@@ -96,7 +96,7 @@ function refreshCondSuggestions() {
 document.getElementById('targetTypeGroup').addEventListener('change', e => {
   const wrap = document.getElementById('targetValueWrap');
   const type = e.target.value;
-  if (type === 'all' || type === 'owner_character' || type === 'owner_attribute') {
+  if (type === 'all' || type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute') {
     wrap.hidden = true; wrap.innerHTML = ''; return;
   }
 
@@ -134,7 +134,7 @@ function renderSkillList() {
   el.innerHTML = skills.map(s => {
     const conds = (s.conditions || [])
       .map(c => {
-        const isOwner = c.type === 'owner_character' || c.type === 'owner_attribute';
+        const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
         return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount}`;
       })
       .join(' AND ') || '常時発動';
@@ -223,7 +223,7 @@ function editSkill(id) {
     radioEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  const isOwnerTarget = target.type === 'owner_character' || target.type === 'owner_attribute';
+  const isOwnerTarget = target.type === 'owner_character' || target.type === 'owner_work' || target.type === 'owner_attribute';
   if (target.type !== 'all' && !isOwnerTarget && target.value) {
     const wrap = document.getElementById('targetValueWrap');
     if (target.type === 'attribute') {
@@ -253,7 +253,7 @@ document.getElementById('skillForm').addEventListener('submit', e => {
   e.preventDefault();
 
   const targetType    = document.querySelector('input[name="targetType"]:checked')?.value || 'all';
-  const isOwnerTarget = targetType === 'owner_character' || targetType === 'owner_attribute';
+  const isOwnerTarget = targetType === 'owner_character' || targetType === 'owner_work' || targetType === 'owner_attribute';
   let targetValue     = '';
   if (targetType !== 'all' && !isOwnerTarget) {
     const wrap = document.getElementById('targetValueWrap');

@@ -20,6 +20,7 @@ const COND_LABELS = {
   work:            '作品',
   attribute:       '属性',
   owner_character: '所有者キャラ',
+  owner_work:      '所有者作品',
   owner_attribute: '所有者属性',
 };
 function condLabel(type) { return COND_LABELS[type] || type; }

@@ -279,6 +279,7 @@ function calcSkillActivations(slots) {
       skillInfoMap[s.card.skillId] = {
         skillLv:   s.skillLv       || 1,
         ownerChar: s.card.charName  || '',
+        ownerWork: s.card.workName  || '',
         ownerAttr: s.card.attribute || '',
       };
     }
@@ -287,7 +288,7 @@ function calcSkillActivations(slots) {
   const deckSkills = allSkills.filter(skill => skill.id in skillInfoMap);
 
   return deckSkills.map(skill => {
-    const { skillLv, ownerChar, ownerAttr } = skillInfoMap[skill.id];
+    const { skillLv, ownerChar, ownerWork, ownerAttr } = skillInfoMap[skill.id];
 
     /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
     const tPct = skill.threatPctInit !== undefined
@@ -300,6 +301,7 @@ function calcSkillActivations(slots) {
     /* 条件の owner タイプを所有者情報で解決 */
     const conditions = (skill.conditions || []).map(cond => {
       if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
+      if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
       if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
       return cond;
     });
@@ -319,6 +321,7 @@ function calcSkillActivations(slots) {
     const rawTarget = skill.target || { type: 'all' };
     let resolvedTarget = { ...rawTarget };
     if (rawTarget.type === 'owner_character') resolvedTarget = { type: 'character', value: ownerChar };
+    if (rawTarget.type === 'owner_work')      resolvedTarget = { type: 'work',      value: ownerWork };
     if (rawTarget.type === 'owner_attribute') resolvedTarget = { type: 'attribute', value: ownerAttr };
 
     const targetSlots = active ? slots.filter(s => {
