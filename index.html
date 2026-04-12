@@ -291,57 +291,66 @@
               </div>
 
               <div class="form-row">
-                <label class="form-label">最大特技Lv</label>
-                <div class="effect-row">
-                  <input type="number" id="maxSkillLv" class="form-input form-input-sm" min="1" max="99" value="1">
-                  <span class="sep">Lv</span>
-                </div>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="skillNoEffect">
+                  効果なし（数値効果なし）
+                </label>
               </div>
 
-              <div class="form-row">
-                <label class="form-label">効果（初期値）</label>
-                <div class="effect-grid">
+              <div id="skillEffectSection">
+                <div class="form-row">
+                  <label class="form-label">最大特技Lv</label>
                   <div class="effect-row">
-                    <span class="effect-label">脅迫力</span>
-                    <input type="number" id="effectThreatInit" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% 上昇</span>
-                  </div>
-                  <div class="effect-row">
-                    <span class="effect-label">耐久力</span>
-                    <input type="number" id="effectEnduranceInit" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% 上昇</span>
+                    <input type="number" id="maxSkillLv" class="form-input form-input-sm" min="1" max="99" value="1">
+                    <span class="sep">Lv</span>
                   </div>
                 </div>
-              </div>
 
-              <div class="form-row">
-                <label class="form-label">効果（最大値）</label>
-                <div class="effect-grid">
-                  <div class="effect-row">
-                    <span class="effect-label">脅迫力</span>
-                    <input type="number" id="effectThreatMax" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% 上昇</span>
-                  </div>
-                  <div class="effect-row">
-                    <span class="effect-label">耐久力</span>
-                    <input type="number" id="effectEnduranceMax" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% 上昇</span>
+                <div class="form-row">
+                  <label class="form-label">効果（初期値）</label>
+                  <div class="effect-grid">
+                    <div class="effect-row">
+                      <span class="effect-label">脅迫力</span>
+                      <input type="number" id="effectThreatInit" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
+                    <div class="effect-row">
+                      <span class="effect-label">耐久力</span>
+                      <input type="number" id="effectEnduranceInit" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="form-row">
-                <label class="form-label">あがり幅（Lv上げ時）</label>
-                <div class="effect-grid">
-                  <div class="effect-row">
-                    <span class="effect-label">脅迫力</span>
-                    <input type="number" id="effectThreatRise" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% / Lv</span>
+                <div class="form-row">
+                  <label class="form-label">効果（最大値）</label>
+                  <div class="effect-grid">
+                    <div class="effect-row">
+                      <span class="effect-label">脅迫力</span>
+                      <input type="number" id="effectThreatMax" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
+                    <div class="effect-row">
+                      <span class="effect-label">耐久力</span>
+                      <input type="number" id="effectEnduranceMax" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% 上昇</span>
+                    </div>
                   </div>
-                  <div class="effect-row">
-                    <span class="effect-label">耐久力</span>
-                    <input type="number" id="effectEnduranceRise" class="form-input form-input-sm" min="0" max="9999" value="0">
-                    <span class="sep">% / Lv</span>
+                </div>
+
+                <div class="form-row">
+                  <label class="form-label">あがり幅（Lv上げ時）</label>
+                  <div class="effect-grid">
+                    <div class="effect-row">
+                      <span class="effect-label">脅迫力</span>
+                      <input type="number" id="effectThreatRise" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% / Lv</span>
+                    </div>
+                    <div class="effect-row">
+                      <span class="effect-label">耐久力</span>
+                      <input type="number" id="effectEnduranceRise" class="form-input form-input-sm" min="0" max="9999" value="0">
+                      <span class="sep">% / Lv</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -369,7 +378,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">特技名,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,脅迫力あがり幅%,耐久力(初期値)%,耐久力(最大値)%,耐久力あがり幅%</code>
+              <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,脅迫力あがり幅%,耐久力(初期値)%,耐久力(最大値)%,耐久力あがり幅%</code>
               <button id="skillCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
             <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値:枚数」をセミコロン区切りで記述（例: キャラクター名:キャラA:2;作品:作品B:1）</p>
@@ -429,8 +438,16 @@
                 <input type="text" id="ougiName" class="form-input" placeholder="奥義名を入力" required>
               </div>
               <div class="form-row">
-                <label class="form-label">説明</label>
-                <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="ougiNoEffect">
+                  効果なし
+                </label>
+              </div>
+              <div id="ougiDescSection">
+                <div class="form-row">
+                  <label class="form-label">説明</label>
+                  <textarea id="ougiDesc" class="form-input form-textarea" rows="2" placeholder="説明（任意）"></textarea>
+                </div>
               </div>
 
               <div class="form-actions">
@@ -456,7 +473,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">奥義名,説明</code>
+              <code class="csv-format-code">奥義名,効果なし,説明</code>
               <button id="ougiCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
           </div>

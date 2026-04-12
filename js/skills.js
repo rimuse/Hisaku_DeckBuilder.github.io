@@ -14,6 +14,13 @@ function initSkillsPage() {
 }
 
 /* ----------------------------------------------------------------
+   効果なしチェックボックス
+---------------------------------------------------------------- */
+document.getElementById('skillNoEffect').addEventListener('change', function () {
+  document.getElementById('skillEffectSection').hidden = this.checked;
+});
+
+/* ----------------------------------------------------------------
    発動条件リスト（ローカル状態）
 ---------------------------------------------------------------- */
 let skillConditions = [];
@@ -131,19 +138,25 @@ function renderSkillList() {
         return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount}`;
       })
       .join(' AND ') || '常時発動';
+    const noEffect = !!s.noEffect;
     const tInit = s.threatPctInit     ?? s.threatPct     ?? 0;
     const tMax  = s.threatPctMax      ?? s.threatPct     ?? 0;
     const eInit = s.endurancePctInit  ?? s.endurancePct  ?? 0;
     const eMax  = s.endurancePctMax   ?? s.endurancePct  ?? 0;
-    const lvStr = s.maxSkillLv ? `最大Lv${s.maxSkillLv} / ` : '';
-    const effs = [
-      (tInit || tMax) ? `脅${tInit}%→${tMax}%` : '',
-      (eInit || eMax) ? `耐${eInit}%→${eMax}%` : ''
-    ].filter(Boolean).join('/') || '—';
+    const effs = noEffect ? '効果なし' : (
+      [
+        (tInit || tMax) ? `脅${tInit}%→${tMax}%` : '',
+        (eInit || eMax) ? `耐${eInit}%→${eMax}%` : ''
+      ].filter(Boolean).join('/') || '—'
+    );
+    const nameBadges = [
+      s.maxSkillLv && !noEffect ? `<span class="skill-lv-badge">最大Lv${s.maxSkillLv}</span>` : '',
+      noEffect                  ? `<span class="no-effect-badge">効果なし</span>` : '',
+    ].join('');
 
     return `<div class="list-item">
       <div class="list-item-main">
-        <div class="list-item-name">${esc(s.name)}${s.maxSkillLv ? `<span class="skill-lv-badge">最大Lv${s.maxSkillLv}</span>` : ''}</div>
+        <div class="list-item-name">${esc(s.name)}${nameBadges}</div>
         <div class="list-item-sub">${conds} → ${effs}</div>
       </div>
       <div class="list-item-actions">
@@ -172,6 +185,8 @@ function resetSkillForm() {
   const wrap = document.getElementById('targetValueWrap');
   wrap.hidden    = true;
   wrap.innerHTML = '';
+  document.getElementById('skillNoEffect').checked               = false;
+  document.getElementById('skillEffectSection').hidden           = false;
   document.getElementById('skillFormTitle').textContent          = '新規特技登録';
   document.getElementById('skillCancelBtn').hidden               = true;
   document.getElementById('maxSkillLv').value                    = 1;
@@ -189,6 +204,8 @@ function editSkill(id) {
 
   document.getElementById('skillId').value              = s.id;
   document.getElementById('skillName').value            = s.name             || '';
+  document.getElementById('skillNoEffect').checked      = !!s.noEffect;
+  document.getElementById('skillEffectSection').hidden  = !!s.noEffect;
   document.getElementById('maxSkillLv').value           = s.maxSkillLv       || 1;
   document.getElementById('effectThreatInit').value     = s.threatPctInit    ?? s.threatPct    ?? 0;
   document.getElementById('effectEnduranceInit').value  = s.endurancePctInit ?? s.endurancePct ?? 0;
@@ -246,18 +263,20 @@ document.getElementById('skillForm').addEventListener('submit', e => {
     if (!targetValue) { alert('発動対象の値を入力してください'); return; }
   }
 
+  const noEffect = document.getElementById('skillNoEffect').checked;
   Storage.skills.save({
     id:               document.getElementById('skillId').value || undefined,
     name:             document.getElementById('skillName').value.trim(),
     conditions:       skillConditions.slice(),
     target:           { type: targetType, value: targetValue },
-    maxSkillLv:       num(document.getElementById('maxSkillLv').value) || 1,
-    threatPctInit:    num(document.getElementById('effectThreatInit').value),
-    endurancePctInit: num(document.getElementById('effectEnduranceInit').value),
-    threatPctMax:     num(document.getElementById('effectThreatMax').value),
-    endurancePctMax:  num(document.getElementById('effectEnduranceMax').value),
-    threatRise:       num(document.getElementById('effectThreatRise').value),
-    enduranceRise:    num(document.getElementById('effectEnduranceRise').value),
+    noEffect:         noEffect || undefined,
+    maxSkillLv:       noEffect ? undefined : (num(document.getElementById('maxSkillLv').value) || 1),
+    threatPctInit:    noEffect ? undefined : num(document.getElementById('effectThreatInit').value),
+    endurancePctInit: noEffect ? undefined : num(document.getElementById('effectEnduranceInit').value),
+    threatPctMax:     noEffect ? undefined : num(document.getElementById('effectThreatMax').value),
+    endurancePctMax:  noEffect ? undefined : num(document.getElementById('effectEnduranceMax').value),
+    threatRise:       noEffect ? undefined : num(document.getElementById('effectThreatRise').value),
+    enduranceRise:    noEffect ? undefined : num(document.getElementById('effectEnduranceRise').value),
   });
   resetSkillForm();
   renderSkillList();

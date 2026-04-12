@@ -438,6 +438,22 @@ body {
 .radio-label { display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer; }
 .radio-label input[type="radio"] { accent-color: var(--primary); cursor: pointer; }
 
+.checkbox-label { display: flex; align-items: center; gap: 0.45rem; font-size: 0.875rem; cursor: pointer; }
+.checkbox-label input[type="checkbox"] { accent-color: var(--primary); cursor: pointer; width: 1rem; height: 1rem; flex-shrink: 0; }
+
+.no-effect-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(148,163,184,0.12);
+  border: 1px solid rgba(148,163,184,0.35);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
 .form-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
 
 /* ===== Buttons ===== */

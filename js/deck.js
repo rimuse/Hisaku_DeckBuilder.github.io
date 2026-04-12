@@ -246,11 +246,13 @@ function renderDeckStats() {
       const badge = a.active
         ? '<span class="status-badge on">発動中</span>'
         : '<span class="status-badge off">未発動</span>';
-      const lvLabel = a.skill.maxSkillLv ? ` (特技Lv${a.skillLv})` : '';
-      const effects = [
-        a.tPct ? `脅迫力 +${a.tPct}%` : '',
-        a.ePct ? `耐久力 +${a.ePct}%` : ''
-      ].filter(Boolean).join(' / ') || '効果なし';
+      const lvLabel = (!a.skill.noEffect && a.skill.maxSkillLv) ? ` (特技Lv${a.skillLv})` : '';
+      const effects = a.skill.noEffect
+        ? '効果なし'
+        : ([
+            a.tPct ? `脅迫力 +${a.tPct}%` : '',
+            a.ePct ? `耐久力 +${a.ePct}%` : ''
+          ].filter(Boolean).join(' / ') || '効果なし');
       const targetStr = !a.resolvedTarget || a.resolvedTarget.type === 'all'
         ? '全体' : `${condLabel(a.resolvedTarget.type)}: ${esc(a.resolvedTarget.value)}`;
       return `<div class="skill-status-item${a.active ? ' active' : ''}">

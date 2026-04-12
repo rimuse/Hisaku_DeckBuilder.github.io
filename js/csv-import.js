@@ -225,6 +225,7 @@ function downloadCardSampleCSV() {
 
 const SKILL_CSV_COL = {
   '特技名':          'name',
+  '効果なし':        'noEffectStr',
   '最大特技Lv':      'maxSkillLv',
   '発動条件':        'conditionsStr',
   '発動対象タイプ':  'targetType',
@@ -314,19 +315,25 @@ function findSkillDuplicate(row) {
   return null;
 }
 
+function _parseBool(str) {
+  return str && ['true', '1', '○', 'yes', '有'].includes(str.trim().toLowerCase());
+}
+
 function skillRowToData(row) {
+  const noEffect      = _parseBool(row.noEffectStr);
   const targetTypeKey = TARGET_TYPE_MAP[row.targetType?.trim()] || 'all';
   return {
     name:             row.name,
     conditions:       parseConditionsStr(row.conditionsStr),
     target:           { type: targetTypeKey, value: targetTypeKey !== 'all' ? (row.targetValue || '') : '' },
-    maxSkillLv:       parseInt(row.maxSkillLv, 10) || 1,
-    threatPctInit:    parseFloat(row.threatPctInit)    || 0,
-    threatPctMax:     parseFloat(row.threatPctMax)     || 0,
-    threatRise:       parseFloat(row.threatRise)       || 0,
-    endurancePctInit: parseFloat(row.endurancePctInit) || 0,
-    endurancePctMax:  parseFloat(row.endurancePctMax)  || 0,
-    enduranceRise:    parseFloat(row.enduranceRise)    || 0,
+    noEffect:         noEffect || undefined,
+    maxSkillLv:       noEffect ? undefined : (parseInt(row.maxSkillLv, 10) || 1),
+    threatPctInit:    noEffect ? undefined : (parseFloat(row.threatPctInit)    || 0),
+    threatPctMax:     noEffect ? undefined : (parseFloat(row.threatPctMax)     || 0),
+    threatRise:       noEffect ? undefined : (parseFloat(row.threatRise)       || 0),
+    endurancePctInit: noEffect ? undefined : (parseFloat(row.endurancePctInit) || 0),
+    endurancePctMax:  noEffect ? undefined : (parseFloat(row.endurancePctMax)  || 0),
+    enduranceRise:    noEffect ? undefined : (parseFloat(row.enduranceRise)    || 0),
   };
 }
 
@@ -427,8 +434,11 @@ function executeSkillImport() {
 
 /* --- 特技サンプルDL --- */
 function downloadSkillSampleCSV() {
-  const header = '特技名,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,脅迫力あがり幅%,耐久力(初期値)%,耐久力(最大値)%,耐久力あがり幅%';
-  const sample = 'サンプル特技,10,キャラクター名:キャラA:2;作品:作品B:1,キャラクター名,キャラA,10,20,1.1,5,10,0.5';
+  const header = '特技名,効果なし,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,脅迫力あがり幅%,耐久力(初期値)%,耐久力(最大値)%,耐久力あがり幅%';
+  const sample = [
+    'サンプル特技A,,10,キャラクター名:キャラA:2;作品:作品B:1,キャラクター名,キャラA,10,20,1.1,5,10,0.5',
+    'サンプル特技B（効果なし）,true,,,,,,,,,,'
+  ].join('\n');
   _downloadCSV(header + '\n' + sample, 'skill_import_sample.csv');
 }
 
@@ -438,6 +448,7 @@ function downloadSkillSampleCSV() {
 
 const OUGI_CSV_COL = {
   '奥義名': 'name',
+  '効果なし': 'noEffectStr',
   '説明':   'desc',
 };
 
@@ -521,9 +532,11 @@ function executeOugiImport() {
   _parsedOugiRows.forEach(r => {
     if (r.errors.length > 0) { errored++; return; }
 
+    const noEffect = _parseBool(r.data.noEffectStr);
     const ougiData = {
-      name: r.data.name,
-      desc: r.data.desc || undefined,
+      name:     r.data.name,
+      noEffect: noEffect || undefined,
+      desc:     noEffect ? undefined : (r.data.desc || undefined),
     };
 
     if (r.dup) {
@@ -548,8 +561,11 @@ function executeOugiImport() {
 
 /* --- 奥義サンプルDL --- */
 function downloadOugiSampleCSV() {
-  const header = '奥義名,説明';
-  const sample = 'サンプル奥義,サンプルの説明文';
+  const header = '奥義名,効果なし,説明';
+  const sample = [
+    'サンプル奥義A,,サンプルの説明文',
+    'サンプル奥義B（効果なし）,true,'
+  ].join('\n');
   _downloadCSV(header + '\n' + sample, 'ougi_import_sample.csv');
 }
 
