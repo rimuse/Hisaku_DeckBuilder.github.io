@@ -280,16 +280,26 @@
 
               <div class="form-row">
                 <label class="form-label">発動対象</label>
-                <div class="radio-group" id="targetTypeGroup">
-                  <label class="radio-label"><input type="radio" name="targetType" value="all" checked> 全体</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="character"> キャラクター名</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="work"> 作品</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="attribute"> 属性</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="owner_character"> 所有者キャラクター</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="owner_work"> 所有者作品</label>
-                  <label class="radio-label"><input type="radio" name="targetType" value="owner_attribute"> 所有者属性</label>
+                <div class="cond-add-row">
+                  <select id="targetAddType" class="form-select form-select-sm cond-type-sel">
+                    <option value="character">キャラクター名</option>
+                    <option value="work">作品</option>
+                    <option value="attribute">属性</option>
+                    <option value="owner_character">所有者キャラクター</option>
+                    <option value="owner_work">所有者作品</option>
+                    <option value="owner_attribute">所有者属性</option>
+                  </select>
+                  <span id="targetAddValueSep" class="sep">：</span>
+                  <input type="text" id="targetAddValue" class="form-input form-input-sm cond-value-input" placeholder="値を入力" autocomplete="off" list="targetAddValueSuggestions">
+                  <datalist id="targetAddValueSuggestions"></datalist>
+                  <div id="targetAddAttrGroup" class="radio-group" hidden>
+                    <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="親愛"> 親愛</label>
+                    <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="調教"> 調教</label>
+                    <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="従順"> 従順</label>
+                  </div>
+                  <button type="button" id="btnAddTarget" class="btn btn-sm btn-secondary">追加</button>
                 </div>
-                <div id="targetValueWrap" class="target-value-wrap" hidden></div>
+                <div id="targetList" class="cond-list target-list"></div>
               </div>
 
               <div class="form-row">
@@ -366,7 +376,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%</code>
+              <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%</code>
               <button id="skillCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
             <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値:枚数」をセミコロン区切りで記述（例: キャラクター名:キャラA:2;作品:作品B:1）</p>

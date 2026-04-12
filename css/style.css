@@ -518,6 +518,8 @@ body {
 .sep { font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; }
 
 .cond-list { display: flex; flex-direction: column; gap: 0.3rem; }
+.target-list { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.or-sep { font-size: 0.78rem; color: var(--text-muted); padding: 0 0.3rem; }
 .cond-tag {
   display: inline-flex;
   align-items: center;

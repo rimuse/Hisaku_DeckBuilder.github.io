@@ -91,33 +91,80 @@ function refreshCondSuggestions() {
 }
 
 /* ----------------------------------------------------------------
-   発動対象 ラジオ切り替え
+   発動対象リスト（ローカル状態）
 ---------------------------------------------------------------- */
-document.getElementById('targetTypeGroup').addEventListener('change', e => {
-  const wrap = document.getElementById('targetValueWrap');
-  const type = e.target.value;
-  if (type === 'all' || type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute') {
-    wrap.hidden = true; wrap.innerHTML = ''; return;
-  }
+let skillTargets = [];
 
-  wrap.hidden = false;
-  if (type === 'attribute') {
-    wrap.innerHTML = `
-      <div class="radio-group">
-        <label class="radio-label"><input type="radio" name="targetValue" value="親愛"> 親愛</label>
-        <label class="radio-label"><input type="radio" name="targetValue" value="調教"> 調教</label>
-        <label class="radio-label"><input type="radio" name="targetValue" value="従順"> 従順</label>
-      </div>`;
-  } else {
-    const cards = Storage.cards.getAll();
-    const vals  = type === 'work'
-      ? [...new Set(cards.map(c => c.workName).filter(Boolean))].sort()
-      : [...new Set(cards.map(c => c.charName).filter(Boolean))].sort();
-    wrap.innerHTML = `
-      <input type="text" id="targetValueInput" class="form-input" placeholder="値を入力" list="targetValList" autocomplete="off">
-      <datalist id="targetValList">${vals.map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
+/** 旧 target 単体形式との後方互換正規化 */
+function getSkillTargets(skill) {
+  if (skill.targets?.length) return skill.targets.slice();
+  if (skill.target && skill.target.type !== 'all') return [{ ...skill.target }];
+  return [];
+}
+
+function renderTargetList() {
+  const el = document.getElementById('targetList');
+  if (!skillTargets.length) {
+    el.innerHTML = '<span class="empty-hint">対象なし（全体）</span>';
+    return;
   }
+  el.innerHTML = skillTargets.map((t, i) => {
+    const isOwner = t.type === 'owner_character' || t.type === 'owner_work' || t.type === 'owner_attribute';
+    const valPart = isOwner ? '' : `：${esc(t.value)}`;
+    return `<span class="cond-tag">
+      ${condLabel(t.type)}${valPart}
+      <button type="button" class="cond-tag-remove" data-i="${i}">&times;</button>
+    </span>`;
+  }).join('<span class="or-sep">または</span>');
+  el.querySelectorAll('.cond-tag-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      skillTargets.splice(+btn.dataset.i, 1);
+      renderTargetList();
+    });
+  });
+}
+
+/* 対象追加ボタン */
+document.getElementById('btnAddTarget').addEventListener('click', () => {
+  const type    = document.getElementById('targetAddType').value;
+  const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
+  let value = '';
+  if (type === 'attribute') {
+    value = document.querySelector('input[name="targetAddAttrVal"]:checked')?.value || '';
+    if (!value) { alert('属性を選択してください'); return; }
+  } else if (!isOwner) {
+    value = document.getElementById('targetAddValue').value.trim();
+    if (!value) { alert('対象の値を入力してください'); return; }
+    document.getElementById('targetAddValue').value = '';
+  }
+  skillTargets.push({ type, value });
+  renderTargetList();
 });
+
+/* 対象タイプ変更 → 入力欄切り替え */
+document.getElementById('targetAddType').addEventListener('change', function () {
+  const inp    = document.getElementById('targetAddValue');
+  const sepEl  = document.getElementById('targetAddValueSep');
+  const attrGr = document.getElementById('targetAddAttrGroup');
+  const isOwner = this.value === 'owner_character' || this.value === 'owner_work' || this.value === 'owner_attribute';
+  const isAttr  = this.value === 'attribute';
+
+  inp.hidden    = isOwner || isAttr;
+  sepEl.hidden  = isOwner;
+  attrGr.hidden = !isAttr;
+
+  if (isOwner || isAttr) inp.value = '';
+  if (!isOwner && !isAttr) refreshTargetSuggestions();
+});
+
+function refreshTargetSuggestions() {
+  const cards = Storage.cards.getAll();
+  const chars = [...new Set(cards.map(c => c.charName).filter(Boolean))].sort();
+  const works = [...new Set(cards.map(c => c.workName).filter(Boolean))].sort();
+  const type  = document.getElementById('targetAddType').value;
+  document.getElementById('targetAddValueSuggestions').innerHTML =
+    (type === 'work' ? works : chars).map(v => `<option value="${esc(v)}">`).join('');
+}
 
 /* ----------------------------------------------------------------
    登録済みスキル一覧
@@ -149,6 +196,13 @@ function renderSkillList() {
         (eInit || eMax) ? `耐${eInit}%→${eMax}%` : ''
       ].filter(Boolean).join('/') || '—'
     );
+    const targets = getSkillTargets(s);
+    const targetStr = targets.length
+      ? targets.map(t => {
+          const isOwner = t.type === 'owner_character' || t.type === 'owner_work' || t.type === 'owner_attribute';
+          return condLabel(t.type) + (isOwner ? '' : ':' + esc(t.value));
+        }).join(' OR ')
+      : '全体';
     const nameBadges = [
       s.maxSkillLv && !noEffect ? `<span class="skill-lv-badge">最大Lv${s.maxSkillLv}</span>` : '',
       noEffect                  ? `<span class="no-effect-badge">効果なし</span>` : '',
@@ -157,7 +211,7 @@ function renderSkillList() {
     return `<div class="list-item">
       <div class="list-item-main">
         <div class="list-item-name">${esc(s.name)}${nameBadges}</div>
-        <div class="list-item-sub">${conds} → ${effs}</div>
+        <div class="list-item-sub">${conds} → [${targetStr}] ${effs}</div>
       </div>
       <div class="list-item-actions">
         <button class="icon-btn edit"   data-id="${esc(s.id)}">編集</button>
@@ -182,19 +236,17 @@ function resetSkillForm() {
   document.getElementById('skillId').value = '';
   skillConditions = [];
   renderCondList();
-  const wrap = document.getElementById('targetValueWrap');
-  wrap.hidden    = true;
-  wrap.innerHTML = '';
-  document.getElementById('skillNoEffect').checked               = false;
-  document.getElementById('skillEffectSection').hidden           = false;
-  document.getElementById('skillFormTitle').textContent          = '新規特技登録';
-  document.getElementById('skillCancelBtn').hidden               = true;
-  document.getElementById('maxSkillLv').value                    = 1;
-  document.getElementById('effectThreatInit').value              = 0;
-  document.getElementById('effectEnduranceInit').value           = 0;
-  document.getElementById('effectThreatMax').value               = 0;
-  document.getElementById('effectEnduranceMax').value            = 0;
-
+  skillTargets = [];
+  renderTargetList();
+  document.getElementById('skillNoEffect').checked      = false;
+  document.getElementById('skillEffectSection').hidden  = false;
+  document.getElementById('skillFormTitle').textContent = '新規特技登録';
+  document.getElementById('skillCancelBtn').hidden      = true;
+  document.getElementById('maxSkillLv').value           = 1;
+  document.getElementById('effectThreatInit').value     = 0;
+  document.getElementById('effectEnduranceInit').value  = 0;
+  document.getElementById('effectThreatMax').value      = 0;
+  document.getElementById('effectEnduranceMax').value   = 0;
 }
 
 function editSkill(id) {
@@ -214,24 +266,8 @@ function editSkill(id) {
   skillConditions = (s.conditions || []).slice();
   renderCondList();
 
-  const target   = s.target || { type: 'all' };
-  const radioEl  = document.querySelector(`input[name="targetType"][value="${target.type}"]`);
-  if (radioEl) {
-    radioEl.checked = true;
-    radioEl.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-
-  const isOwnerTarget = target.type === 'owner_character' || target.type === 'owner_work' || target.type === 'owner_attribute';
-  if (target.type !== 'all' && !isOwnerTarget && target.value) {
-    const wrap = document.getElementById('targetValueWrap');
-    if (target.type === 'attribute') {
-      const radio = wrap.querySelector(`input[name="targetValue"][value="${target.value}"]`);
-      if (radio) radio.checked = true;
-    } else {
-      const inp = wrap.querySelector('input[type="text"]');
-      if (inp) inp.value = target.value;
-    }
-  }
+  skillTargets = getSkillTargets(s);
+  renderTargetList();
 
   document.getElementById('skillFormTitle').textContent = '特技編集';
   document.getElementById('skillCancelBtn').hidden = false;
@@ -250,30 +286,19 @@ function deleteSkill(id) {
 document.getElementById('skillForm').addEventListener('submit', e => {
   e.preventDefault();
 
-  const targetType    = document.querySelector('input[name="targetType"]:checked')?.value || 'all';
-  const isOwnerTarget = targetType === 'owner_character' || targetType === 'owner_work' || targetType === 'owner_attribute';
-  let targetValue     = '';
-  if (targetType !== 'all' && !isOwnerTarget) {
-    const wrap = document.getElementById('targetValueWrap');
-    targetValue = targetType === 'attribute'
-      ? (wrap.querySelector('input[name="targetValue"]:checked')?.value || '')
-      : (wrap.querySelector('input[type="text"]')?.value.trim() || '');
-    if (!targetValue) { alert('発動対象の値を入力してください'); return; }
-  }
-
   const noEffect = document.getElementById('skillNoEffect').checked;
-  const maxLv           = noEffect ? 1 : (num(document.getElementById('maxSkillLv').value) || 1);
-  const tInit           = noEffect ? 0 : num(document.getElementById('effectThreatInit').value);
-  const tMax            = noEffect ? 0 : num(document.getElementById('effectThreatMax').value);
-  const eInit           = noEffect ? 0 : num(document.getElementById('effectEnduranceInit').value);
-  const eMax            = noEffect ? 0 : num(document.getElementById('effectEnduranceMax').value);
-  const calcRise        = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
+  const maxLv    = noEffect ? 1 : (num(document.getElementById('maxSkillLv').value) || 1);
+  const tInit    = noEffect ? 0 : num(document.getElementById('effectThreatInit').value);
+  const tMax     = noEffect ? 0 : num(document.getElementById('effectThreatMax').value);
+  const eInit    = noEffect ? 0 : num(document.getElementById('effectEnduranceInit').value);
+  const eMax     = noEffect ? 0 : num(document.getElementById('effectEnduranceMax').value);
+  const calcRise = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
 
   Storage.skills.save({
     id:               document.getElementById('skillId').value || undefined,
     name:             document.getElementById('skillName').value.trim(),
     conditions:       skillConditions.slice(),
-    target:           { type: targetType, value: targetValue },
+    targets:          skillTargets.slice(),
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : maxLv,
     threatPctInit:    noEffect ? undefined : tInit,

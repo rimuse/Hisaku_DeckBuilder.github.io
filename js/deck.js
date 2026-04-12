@@ -253,8 +253,9 @@ function renderDeckStats() {
             a.tPct ? `脅迫力 +${a.tPct}%` : '',
             a.ePct ? `耐久力 +${a.ePct}%` : ''
           ].filter(Boolean).join(' / ') || '効果なし');
-      const targetStr = !a.resolvedTarget || a.resolvedTarget.type === 'all'
-        ? '全体' : `${condLabel(a.resolvedTarget.type)}: ${esc(a.resolvedTarget.value)}`;
+      const targetStr = !a.resolvedTargets?.length
+        ? '全体'
+        : a.resolvedTargets.map(t => `${condLabel(t.type)}: ${esc(t.value)}`).join(' または ');
       return `<div class="skill-status-item${a.active ? ' active' : ''}">
         <div class="skill-status-header">
           <span class="skill-status-name">${esc(a.skill.name)}${lvLabel}</span>${badge}
@@ -317,20 +318,26 @@ function calcSkillActivations(slots) {
       return count >= num(cond.minCount || 1);
     });
 
-    /* 発動対象の owner タイプを解決 */
-    const rawTarget = skill.target || { type: 'all' };
-    let resolvedTarget = { ...rawTarget };
-    if (rawTarget.type === 'owner_character') resolvedTarget = { type: 'character', value: ownerChar };
-    if (rawTarget.type === 'owner_work')      resolvedTarget = { type: 'work',      value: ownerWork };
-    if (rawTarget.type === 'owner_attribute') resolvedTarget = { type: 'attribute', value: ownerAttr };
+    /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
+    const rawTargets = skill.targets?.length ? skill.targets
+      : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
+    const resolvedTargets = rawTargets.map(t => {
+      if (t.type === 'owner_character') return { type: 'character', value: ownerChar };
+      if (t.type === 'owner_work')      return { type: 'work',      value: ownerWork };
+      if (t.type === 'owner_attribute') return { type: 'attribute', value: ownerAttr };
+      return t;
+    });
 
+    /* 対象スロット抽出（空 = 全体、複数要素は OR） */
     const targetSlots = active ? slots.filter(s => {
+      if (!resolvedTargets.length) return true;
       const c = s.card;
-      if (resolvedTarget.type === 'all') return true;
-      if (resolvedTarget.type === 'character') return c.charName  === resolvedTarget.value;
-      if (resolvedTarget.type === 'work')      return c.workName  === resolvedTarget.value;
-      if (resolvedTarget.type === 'attribute') return c.attribute === resolvedTarget.value;
-      return false;
+      return resolvedTargets.some(rt => {
+        if (rt.type === 'character') return c.charName  === rt.value;
+        if (rt.type === 'work')      return c.workName  === rt.value;
+        if (rt.type === 'attribute') return c.attribute === rt.value;
+        return false;
+      });
     }) : [];
 
     return {
@@ -339,7 +346,7 @@ function calcSkillActivations(slots) {
       skillLv,
       tPct,
       ePct,
-      resolvedTarget,
+      resolvedTargets,
       threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
       hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
     };

@@ -228,8 +228,10 @@ const SKILL_CSV_COL = {
   '効果なし':        'noEffectStr',
   '最大特技Lv':      'maxSkillLv',
   '発動条件':        'conditionsStr',
-  '発動対象タイプ':  'targetType',
-  '発動対象値':      'targetValue',
+  '発動対象':        'targetsStr',
+  // 旧列名の後方互換
+  '発動対象タイプ':  'legacyTargetType',
+  '発動対象値':      'legacyTargetValue',
   '脅迫力(初期値)%': 'threatPctInit',
   '脅迫力(最大値)%': 'threatPctMax',
   '耐久力(初期値)%': 'endurancePctInit',
@@ -293,21 +295,58 @@ function validateConditionsStr(str) {
   return errors;
 }
 
+/** 発動対象文字列 → targets 配列
+ * 例: 「作品:臭作;キャラクター名:AAA」→ OR 条件
+ * 空 / 「全体」→ []（全体）
+ * 所有者系: 「所有者キャラクター」（値なし）
+ */
+function parseTargetsStr(str) {
+  if (!str || !str.trim() || str.trim() === '全体') return [];
+  return str.split(';').map(part => {
+    const segs  = part.trim().split(':');
+    const type  = TARGET_TYPE_MAP[segs[0]?.trim()];
+    if (!type || type === 'all') return null;
+    const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
+    const value = isOwner ? '' : (segs[1]?.trim() || '');
+    if (!isOwner && !value) return null;
+    return { type, value };
+  }).filter(Boolean);
+}
+
+function validateTargetsStr(str) {
+  if (!str || !str.trim() || str.trim() === '全体') return [];
+  const errors = [];
+  str.split(';').forEach((part, i) => {
+    const segs    = part.trim().split(':');
+    const typeKey = TARGET_TYPE_MAP[segs[0]?.trim()];
+    if (!typeKey) {
+      errors.push(`対象${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者作品 / 所有者属性）`);
+      return;
+    }
+    if (typeKey === 'all') return;
+    const isOwner = typeKey === 'owner_character' || typeKey === 'owner_work' || typeKey === 'owner_attribute';
+    if (!isOwner && (segs.length < 2 || !segs[1]?.trim())) {
+      errors.push(`対象${i + 1}: フォーマット不正（例: キャラクター名:キャラA）`);
+    }
+  });
+  return errors;
+}
+
 function validateSkillRow(row) {
   const errors = [];
   if (!row.name) errors.push('特技名は必須');
 
   errors.push(...validateConditionsStr(row.conditionsStr));
+  errors.push(...validateTargetsStr(row.targetsStr));
 
-  if (row.targetType && row.targetType !== '全体') {
-    if (!TARGET_TYPE_MAP[row.targetType]) {
-      errors.push(`発動対象タイプ「${row.targetType}」が無効（全体 / キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者作品 / 所有者属性）`);
+  /* 旧列名フォールバックのバリデーション */
+  if (!row.targetsStr && row.legacyTargetType && row.legacyTargetType !== '全体') {
+    if (!TARGET_TYPE_MAP[row.legacyTargetType]) {
+      errors.push(`発動対象タイプ「${row.legacyTargetType}」が無効`);
     } else {
-      const mappedType = TARGET_TYPE_MAP[row.targetType];
+      const mappedType = TARGET_TYPE_MAP[row.legacyTargetType];
       const isOwner = mappedType === 'owner_character' || mappedType === 'owner_work' || mappedType === 'owner_attribute';
-      if (!isOwner && !row.targetValue) {
-        errors.push('発動対象値が必要です');
-      }
+      if (!isOwner && !row.legacyTargetValue) errors.push('発動対象値が必要です');
     }
   }
   return errors;
@@ -324,19 +363,28 @@ function _parseBool(str) {
 }
 
 function skillRowToData(row) {
-  const noEffect      = _parseBool(row.noEffectStr);
-  const targetTypeKey = TARGET_TYPE_MAP[row.targetType?.trim()] || 'all';
-  const isOwnerTarget = targetTypeKey === 'owner_character' || targetTypeKey === 'owner_work' || targetTypeKey === 'owner_attribute';
-  const maxLv         = noEffect ? 1 : (parseInt(row.maxSkillLv, 10) || 1);
-  const tInit         = noEffect ? 0 : (parseFloat(row.threatPctInit)     || 0);
-  const tMax          = noEffect ? 0 : (parseFloat(row.threatPctMax)      || 0);
-  const eInit         = noEffect ? 0 : (parseFloat(row.endurancePctInit)  || 0);
-  const eMax          = noEffect ? 0 : (parseFloat(row.endurancePctMax)   || 0);
-  const calcRise      = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
+  const noEffect = _parseBool(row.noEffectStr);
+  const maxLv    = noEffect ? 1 : (parseInt(row.maxSkillLv, 10) || 1);
+  const tInit    = noEffect ? 0 : (parseFloat(row.threatPctInit)    || 0);
+  const tMax     = noEffect ? 0 : (parseFloat(row.threatPctMax)     || 0);
+  const eInit    = noEffect ? 0 : (parseFloat(row.endurancePctInit) || 0);
+  const eMax     = noEffect ? 0 : (parseFloat(row.endurancePctMax)  || 0);
+  const calcRise = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
+
+  /* 対象: 新形式（発動対象列）→ 旧形式（発動対象タイプ/値列）の順でフォールバック */
+  let targets = parseTargetsStr(row.targetsStr);
+  if (!targets.length && row.legacyTargetType) {
+    const typeKey = TARGET_TYPE_MAP[row.legacyTargetType?.trim()];
+    if (typeKey && typeKey !== 'all') {
+      const isOwner = typeKey === 'owner_character' || typeKey === 'owner_work' || typeKey === 'owner_attribute';
+      targets = [{ type: typeKey, value: isOwner ? '' : (row.legacyTargetValue || '') }];
+    }
+  }
+
   return {
     name:             row.name,
     conditions:       parseConditionsStr(row.conditionsStr),
-    target:           { type: targetTypeKey, value: (targetTypeKey !== 'all' && !isOwnerTarget) ? (row.targetValue || '') : '' },
+    targets,
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : maxLv,
     threatPctInit:    noEffect ? undefined : tInit,
@@ -388,9 +436,9 @@ function runSkillPreview(text) {
     }
     const cls = r.errors.length > 0 ? ' class="row-err"' : r.dup ? ' class="row-dup"' : '';
     const condDisplay = r.data.conditionsStr || '常時発動';
-    const targetDisplay = r.data.targetType
-      ? (r.data.targetType + (r.data.targetValue ? `:${r.data.targetValue}` : ''))
-      : '全体';
+    const targetDisplay = r.data.targetsStr || (r.data.legacyTargetType
+      ? (r.data.legacyTargetType + (r.data.legacyTargetValue ? `:${r.data.legacyTargetValue}` : ''))
+      : '全体');
     return `<tr${cls}>
       <td>${i + 2}</td>
       <td>${badge}</td>
@@ -445,10 +493,10 @@ function executeSkillImport() {
 
 /* --- 特技サンプルDL --- */
 function downloadSkillSampleCSV() {
-  const header = '特技名,効果なし,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%';
+  const header = '特技名,効果なし,最大特技Lv,発動条件,発動対象,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%';
   const sample = [
-    'サンプル特技A,,10,キャラクター名:キャラA:2;作品:作品B:1,キャラクター名,キャラA,10,20,5,10',
-    'サンプル特技B（効果なし）,true,,,,,,,,'
+    'サンプル特技A,,10,キャラクター名:キャラA:2,作品:臭作;キャラクター名:AAA,10,20,5,10',
+    'サンプル特技B（効果なし）,true,,,,,,,'
   ].join('\n');
   _downloadCSV(header + '\n' + sample, 'skill_import_sample.csv');
 }
