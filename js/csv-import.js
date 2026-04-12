@@ -238,27 +238,38 @@ const SKILL_CSV_COL = {
 };
 
 const COND_TYPE_MAP = {
-  'キャラクター名': 'character',
-  '作品':          'work',
-  '属性':          'attribute',
+  'キャラクター名':    'character',
+  '作品':              'work',
+  '属性':              'attribute',
+  '所有者キャラクター': 'owner_character',
+  '所有者属性':        'owner_attribute',
 };
 const TARGET_TYPE_MAP = {
-  '全体':          'all',
-  'キャラクター名': 'character',
-  '作品':          'work',
-  '属性':          'attribute',
+  '全体':              'all',
+  'キャラクター名':    'character',
+  '作品':              'work',
+  '属性':              'attribute',
+  '所有者キャラクター': 'owner_character',
+  '所有者属性':        'owner_attribute',
 };
 
-/** 発動条件文字列 → conditions 配列 */
+/** 発動条件文字列 → conditions 配列
+ * 通常: 「キャラクター名:キャラA:2」(type:value:count)
+ * 所有者: 「所有者キャラクター:2」または「所有者属性:2」(type:count)
+ */
 function parseConditionsStr(str) {
   if (!str || !str.trim()) return [];
   return str.split(';').map(part => {
-    const segs  = part.trim().split(':');
-    const type  = COND_TYPE_MAP[segs[0]?.trim()];
-    const value = segs[1]?.trim();
-    const minCount = parseInt(segs[2], 10) || 1;
-    if (!type || !value) return null;
-    return { type, value, minCount };
+    const segs    = part.trim().split(':');
+    const type    = COND_TYPE_MAP[segs[0]?.trim()];
+    if (!type) return null;
+    const isOwner = type === 'owner_character' || type === 'owner_attribute';
+    const value   = isOwner ? '' : segs[1]?.trim();
+    const minCount = isOwner
+      ? parseInt(segs[1], 10) || 1
+      : parseInt(segs[2], 10) || 1;
+    if (!isOwner && !value) return null;
+    return { type, value: value || '', minCount };
   }).filter(Boolean);
 }
 
@@ -267,13 +278,15 @@ function validateConditionsStr(str) {
   if (!str || !str.trim()) return [];
   const errors = [];
   str.split(';').forEach((part, i) => {
-    const segs = part.trim().split(':');
-    if (segs.length < 2 || !segs[1]?.trim()) {
-      errors.push(`条件${i + 1}: フォーマット不正（例: キャラクター名:キャラA:2）`);
+    const segs    = part.trim().split(':');
+    const typeKey = COND_TYPE_MAP[segs[0]?.trim()];
+    if (!typeKey) {
+      errors.push(`条件${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者属性）`);
       return;
     }
-    if (!COND_TYPE_MAP[segs[0]?.trim()]) {
-      errors.push(`条件${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性）`);
+    const isOwner = typeKey === 'owner_character' || typeKey === 'owner_attribute';
+    if (!isOwner && (segs.length < 2 || !segs[1]?.trim())) {
+      errors.push(`条件${i + 1}: フォーマット不正（例: キャラクター名:キャラA:2）`);
     }
   });
   return errors;

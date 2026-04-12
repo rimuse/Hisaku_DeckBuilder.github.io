@@ -251,8 +251,8 @@ function renderDeckStats() {
         a.tPct ? `脅迫力 +${a.tPct}%` : '',
         a.ePct ? `耐久力 +${a.ePct}%` : ''
       ].filter(Boolean).join(' / ') || '効果なし';
-      const targetStr = !a.skill.target || a.skill.target.type === 'all'
-        ? '全体' : `${condLabel(a.skill.target.type)}: ${esc(a.skill.target.value)}`;
+      const targetStr = !a.resolvedTarget || a.resolvedTarget.type === 'all'
+        ? '全体' : `${condLabel(a.resolvedTarget.type)}: ${esc(a.resolvedTarget.value)}`;
       return `<div class="skill-status-item${a.active ? ' active' : ''}">
         <div class="skill-status-header">
           <span class="skill-status-name">${esc(a.skill.name)}${lvLabel}</span>${badge}
@@ -265,22 +265,27 @@ function renderDeckStats() {
 /* ----------------------------------------------------------------
    特技発動計算（純粋関数）
    ※ バフ計算のベースは 限界突破補正後の実効値
+   ※ owner_character / owner_attribute は所有カードの値で動的解決
 ---------------------------------------------------------------- */
 function calcSkillActivations(slots) {
   const allSkills = Storage.skills.getAll();
 
-  /* skillId ごとに最初に登場したスロットの skillLv を使用 */
-  const skillLvMap = {};
+  /* skillId ごとに最初に登場したスロットの情報を記録 */
+  const skillInfoMap = {};
   slots.forEach(s => {
-    if (s.card.skillId && !(s.card.skillId in skillLvMap)) {
-      skillLvMap[s.card.skillId] = s.skillLv || 1;
+    if (s.card.skillId && !(s.card.skillId in skillInfoMap)) {
+      skillInfoMap[s.card.skillId] = {
+        skillLv:   s.skillLv       || 1,
+        ownerChar: s.card.charName  || '',
+        ownerAttr: s.card.attribute || '',
+      };
     }
   });
 
-  const deckSkills = allSkills.filter(skill => skill.id in skillLvMap);
+  const deckSkills = allSkills.filter(skill => skill.id in skillInfoMap);
 
   return deckSkills.map(skill => {
-    const skillLv = skillLvMap[skill.id] || 1;
+    const { skillLv, ownerChar, ownerAttr } = skillInfoMap[skill.id];
 
     /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
     const tPct = skill.threatPctInit !== undefined
@@ -290,7 +295,13 @@ function calcSkillActivations(slots) {
       ? num(skill.endurancePctInit) + num(skill.enduranceRise) * (skillLv - 1)
       : num(skill.endurancePct);
 
-    const conditions = skill.conditions || [];
+    /* 条件の owner タイプを所有者情報で解決 */
+    const conditions = (skill.conditions || []).map(cond => {
+      if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
+      if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
+      return cond;
+    });
+
     const active = conditions.length === 0 || conditions.every(cond => {
       const count = slots.filter(s => {
         const c = s.card;
@@ -302,13 +313,18 @@ function calcSkillActivations(slots) {
       return count >= num(cond.minCount || 1);
     });
 
-    const target      = skill.target || { type: 'all' };
+    /* 発動対象の owner タイプを解決 */
+    const rawTarget = skill.target || { type: 'all' };
+    let resolvedTarget = { ...rawTarget };
+    if (rawTarget.type === 'owner_character') resolvedTarget = { type: 'character', value: ownerChar };
+    if (rawTarget.type === 'owner_attribute') resolvedTarget = { type: 'attribute', value: ownerAttr };
+
     const targetSlots = active ? slots.filter(s => {
       const c = s.card;
-      if (!target || target.type === 'all') return true;
-      if (target.type === 'character') return c.charName  === target.value;
-      if (target.type === 'work')      return c.workName  === target.value;
-      if (target.type === 'attribute') return c.attribute === target.value;
+      if (resolvedTarget.type === 'all') return true;
+      if (resolvedTarget.type === 'character') return c.charName  === resolvedTarget.value;
+      if (resolvedTarget.type === 'work')      return c.workName  === resolvedTarget.value;
+      if (resolvedTarget.type === 'attribute') return c.attribute === resolvedTarget.value;
       return false;
     }) : [];
 
@@ -318,6 +334,7 @@ function calcSkillActivations(slots) {
       skillLv,
       tPct,
       ePct,
+      resolvedTarget,
       threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
       hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
     };

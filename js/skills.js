@@ -24,11 +24,15 @@ function renderCondList() {
     el.innerHTML = '<span class="empty-hint">条件なし（常時発動）</span>';
     return;
   }
-  el.innerHTML = skillConditions.map((c, i) => `
+  el.innerHTML = skillConditions.map((c, i) => {
+    const isOwner = c.type === 'owner_character' || c.type === 'owner_attribute';
+    const valPart = isOwner ? '' : `: ${esc(c.value)}`;
+    return `
     <span class="cond-tag">
-      ${condLabel(c.type)}: ${esc(c.value)} ≥ ${c.minCount}枚
+      ${condLabel(c.type)}${valPart} ≥ ${c.minCount}枚
       <button type="button" class="cond-tag-remove" data-i="${i}">&times;</button>
-    </span>`).join('');
+    </span>`;
+  }).join('');
   el.querySelectorAll('.cond-tag-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       skillConditions.splice(+btn.dataset.i, 1);
@@ -39,19 +43,28 @@ function renderCondList() {
 
 /* 条件追加ボタン */
 document.getElementById('btnAddCond').addEventListener('click', () => {
-  const type  = document.getElementById('condType').value;
-  const value = document.getElementById('condValue').value.trim();
-  const count = parseInt(document.getElementById('condMinCount').value, 10) || 1;
-  if (!value) { alert('条件の値を入力してください'); return; }
+  const type    = document.getElementById('condType').value;
+  const isOwner = type === 'owner_character' || type === 'owner_attribute';
+  const value   = isOwner ? '' : document.getElementById('condValue').value.trim();
+  const count   = parseInt(document.getElementById('condMinCount').value, 10) || 1;
+  if (!isOwner && !value) { alert('条件の値を入力してください'); return; }
   skillConditions.push({ type, value, minCount: count });
-  document.getElementById('condValue').value = '';
+  if (!isOwner) document.getElementById('condValue').value = '';
   renderCondList();
 });
 
-/* 条件タイプ変更 → サジェスト切り替え */
+/* 条件タイプ変更 → サジェスト・入力欄切り替え */
 document.getElementById('condType').addEventListener('change', function () {
-  const inp = document.getElementById('condValue');
-  if (this.value === 'attribute') {
+  const inp     = document.getElementById('condValue');
+  const sepEl   = document.getElementById('condValueSep');
+  const isOwner = this.value === 'owner_character' || this.value === 'owner_attribute';
+
+  inp.hidden   = isOwner;
+  sepEl.hidden = isOwner;
+
+  if (isOwner) {
+    inp.value = '';
+  } else if (this.value === 'attribute') {
     inp.setAttribute('list', '');
     inp.placeholder = '親愛 / 調教 / 従順';
   } else {
@@ -76,7 +89,9 @@ function refreshCondSuggestions() {
 document.getElementById('targetTypeGroup').addEventListener('change', e => {
   const wrap = document.getElementById('targetValueWrap');
   const type = e.target.value;
-  if (type === 'all') { wrap.hidden = true; wrap.innerHTML = ''; return; }
+  if (type === 'all' || type === 'owner_character' || type === 'owner_attribute') {
+    wrap.hidden = true; wrap.innerHTML = ''; return;
+  }
 
   wrap.hidden = false;
   if (type === 'attribute') {
@@ -111,7 +126,10 @@ function renderSkillList() {
 
   el.innerHTML = skills.map(s => {
     const conds = (s.conditions || [])
-      .map(c => `${condLabel(c.type)}:${esc(c.value)}≥${c.minCount}`)
+      .map(c => {
+        const isOwner = c.type === 'owner_character' || c.type === 'owner_attribute';
+        return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount}`;
+      })
       .join(' AND ') || '常時発動';
     const tInit = s.threatPctInit     ?? s.threatPct     ?? 0;
     const tMax  = s.threatPctMax      ?? s.threatPct     ?? 0;
@@ -181,11 +199,15 @@ function editSkill(id) {
   skillConditions = (s.conditions || []).slice();
   renderCondList();
 
-  const target = s.target || { type: 'all' };
-  document.querySelector(`input[name="targetType"][value="${target.type}"]`).checked = true;
-  document.getElementById('targetTypeGroup').dispatchEvent(new Event('change', { bubbles: true }));
+  const target   = s.target || { type: 'all' };
+  const radioEl  = document.querySelector(`input[name="targetType"][value="${target.type}"]`);
+  if (radioEl) {
+    radioEl.checked = true;
+    radioEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
 
-  if (target.type !== 'all' && target.value) {
+  const isOwnerTarget = target.type === 'owner_character' || target.type === 'owner_attribute';
+  if (target.type !== 'all' && !isOwnerTarget && target.value) {
     const wrap = document.getElementById('targetValueWrap');
     if (target.type === 'attribute') {
       const radio = wrap.querySelector(`input[name="targetValue"][value="${target.value}"]`);
@@ -213,9 +235,10 @@ function deleteSkill(id) {
 document.getElementById('skillForm').addEventListener('submit', e => {
   e.preventDefault();
 
-  const targetType = document.querySelector('input[name="targetType"]:checked')?.value || 'all';
-  let targetValue  = '';
-  if (targetType !== 'all') {
+  const targetType    = document.querySelector('input[name="targetType"]:checked')?.value || 'all';
+  const isOwnerTarget = targetType === 'owner_character' || targetType === 'owner_attribute';
+  let targetValue     = '';
+  if (targetType !== 'all' && !isOwnerTarget) {
     const wrap = document.getElementById('targetValueWrap');
     targetValue = targetType === 'attribute'
       ? (wrap.querySelector('input[name="targetValue"]:checked')?.value || '')
