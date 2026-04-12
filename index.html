@@ -340,21 +340,7 @@
                   </div>
                 </div>
 
-                <div class="form-row">
-                  <label class="form-label">あがり幅（Lv上げ時）</label>
-                  <div class="effect-grid">
-                    <div class="effect-row">
-                      <span class="effect-label">脅迫力</span>
-                      <input type="number" id="effectThreatRise" class="form-input form-input-sm" min="0" max="9999" value="0">
-                      <span class="sep">% / Lv</span>
-                    </div>
-                    <div class="effect-row">
-                      <span class="effect-label">耐久力</span>
-                      <input type="number" id="effectEnduranceRise" class="form-input form-input-sm" min="0" max="9999" value="0">
-                      <span class="sep">% / Lv</span>
-                    </div>
-                  </div>
-                </div>
+
               </div>
 
               <div class="form-actions">
@@ -380,7 +366,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,脅迫力あがり幅%,耐久力(初期値)%,耐久力(最大値)%,耐久力あがり幅%</code>
+              <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象タイプ,発動対象値,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%</code>
               <button id="skillCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
             <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値:枚数」をセミコロン区切りで記述（例: キャラクター名:キャラA:2;作品:作品B:1）</p>

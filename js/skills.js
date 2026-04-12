@@ -194,8 +194,7 @@ function resetSkillForm() {
   document.getElementById('effectEnduranceInit').value           = 0;
   document.getElementById('effectThreatMax').value               = 0;
   document.getElementById('effectEnduranceMax').value            = 0;
-  document.getElementById('effectThreatRise').value              = 0;
-  document.getElementById('effectEnduranceRise').value           = 0;
+
 }
 
 function editSkill(id) {
@@ -211,8 +210,7 @@ function editSkill(id) {
   document.getElementById('effectEnduranceInit').value  = s.endurancePctInit ?? s.endurancePct ?? 0;
   document.getElementById('effectThreatMax').value      = s.threatPctMax     ?? s.threatPct    ?? 0;
   document.getElementById('effectEnduranceMax').value   = s.endurancePctMax  ?? s.endurancePct ?? 0;
-  document.getElementById('effectThreatRise').value     = s.threatRise       || 0;
-  document.getElementById('effectEnduranceRise').value  = s.enduranceRise    || 0;
+
   skillConditions = (s.conditions || []).slice();
   renderCondList();
 
@@ -264,19 +262,26 @@ document.getElementById('skillForm').addEventListener('submit', e => {
   }
 
   const noEffect = document.getElementById('skillNoEffect').checked;
+  const maxLv           = noEffect ? 1 : (num(document.getElementById('maxSkillLv').value) || 1);
+  const tInit           = noEffect ? 0 : num(document.getElementById('effectThreatInit').value);
+  const tMax            = noEffect ? 0 : num(document.getElementById('effectThreatMax').value);
+  const eInit           = noEffect ? 0 : num(document.getElementById('effectEnduranceInit').value);
+  const eMax            = noEffect ? 0 : num(document.getElementById('effectEnduranceMax').value);
+  const calcRise        = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
+
   Storage.skills.save({
     id:               document.getElementById('skillId').value || undefined,
     name:             document.getElementById('skillName').value.trim(),
     conditions:       skillConditions.slice(),
     target:           { type: targetType, value: targetValue },
     noEffect:         noEffect || undefined,
-    maxSkillLv:       noEffect ? undefined : (num(document.getElementById('maxSkillLv').value) || 1),
-    threatPctInit:    noEffect ? undefined : num(document.getElementById('effectThreatInit').value),
-    endurancePctInit: noEffect ? undefined : num(document.getElementById('effectEnduranceInit').value),
-    threatPctMax:     noEffect ? undefined : num(document.getElementById('effectThreatMax').value),
-    endurancePctMax:  noEffect ? undefined : num(document.getElementById('effectEnduranceMax').value),
-    threatRise:       noEffect ? undefined : num(document.getElementById('effectThreatRise').value),
-    enduranceRise:    noEffect ? undefined : num(document.getElementById('effectEnduranceRise').value),
+    maxSkillLv:       noEffect ? undefined : maxLv,
+    threatPctInit:    noEffect ? undefined : tInit,
+    endurancePctInit: noEffect ? undefined : eInit,
+    threatPctMax:     noEffect ? undefined : tMax,
+    endurancePctMax:  noEffect ? undefined : eMax,
+    threatRise:       noEffect ? undefined : calcRise(tInit, tMax, maxLv),
+    enduranceRise:    noEffect ? undefined : calcRise(eInit, eMax, maxLv),
   });
   resetSkillForm();
   renderSkillList();
