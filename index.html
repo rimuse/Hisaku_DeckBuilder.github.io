@@ -41,35 +41,40 @@
     <!-- ページ: デッキシミュレーション -->
     <section id="page-deck" class="page active">
       <h2 class="page-title">デッキシミュレーション</h2>
-        <div class="deck-panel">
-          <h3 class="panel-title">デッキ（最大5枚）</h3>
-          <div class="deck-slots" id="deckSlots"></div>
-          <div class="deck-stats" id="deckStats"></div>
-          <div class="deck-skill-status" id="deckSkillStatus"></div>
-          <div class="tokutsubo-section">
-            <div class="tokutsubo-title">特壺</div>
-            <div class="tokutsubo-row">
-              <select id="tokutsuboChar" class="filter-select tokutsubo-char-sel">
-                <option value="">キャラクター: なし</option>
-              </select>
-              <select id="tokutsuboLv" class="filter-select tokutsubo-lv-sel">
-                <option value="1">Lv 1</option>
-                <option value="2">Lv 2</option>
-                <option value="3">Lv 3</option>
-                <option value="4">Lv 4</option>
-                <option value="5">Lv 5</option>
-                <option value="6">Lv 6</option>
-                <option value="7">Lv 7</option>
-                <option value="8">Lv 8</option>
-                <option value="9">Lv 9</option>
-                <option value="10">Lv 10</option>
-              </select>
-            </div>
-          </div>
-          <div class="panel-actions">
-            <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
-          </div>
-        </div>
+
+      <!-- デッキ全体情報 -->
+      <div class="deck-info-box">
+        <div id="deckStats"></div>
+        <div id="deckSkillStatus"></div>
+      </div>
+
+      <!-- 特壺設定 -->
+      <div class="tokutsubo-bar">
+        <select id="tokutsuboChar" class="filter-select tokutsubo-char-sel">
+          <option value="">キャラクター: なし</option>
+        </select>
+        <select id="tokutsuboLv" class="filter-select tokutsubo-lv-sel">
+          <option value="1">Lv 1</option>
+          <option value="2">Lv 2</option>
+          <option value="3">Lv 3</option>
+          <option value="4">Lv 4</option>
+          <option value="5">Lv 5</option>
+          <option value="6">Lv 6</option>
+          <option value="7">Lv 7</option>
+          <option value="8">Lv 8</option>
+          <option value="9">Lv 9</option>
+          <option value="10">Lv 10</option>
+        </select>
+      </div>
+
+      <!-- 5列カードグリッド -->
+      <div class="deck-columns" id="deckSlots"></div>
+
+      <!-- アクション -->
+      <div class="panel-actions">
+        <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
+      </div>
+
     </section>
 
     <!-- ページ: カード情報登録 -->
