@@ -482,13 +482,19 @@ body {
 }
 .card-thumb:hover { border-color: var(--primary); background: var(--bg2); }
 .card-thumb.in-deck { border-color: var(--primary); background: rgba(124,58,237,0.12); }
+.card-thumb-badges {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
 .card-thumb-rarity {
   font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
   display: inline-block;
-  margin-bottom: 0.25rem;
+  flex-shrink: 0;
 }
 .card-thumb-name {
   font-size: 0.8rem;
@@ -500,13 +506,12 @@ body {
 .card-thumb-char { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-thumb-stat { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
 .card-thumb-attr {
-  position: absolute;
-  top: 4px;
-  right: 4px;
   font-size: 0.65rem;
-  padding: 1px 4px;
-  border-radius: 3px;
   font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 /* Rarity colors */

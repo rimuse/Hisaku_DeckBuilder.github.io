@@ -178,8 +178,10 @@ function renderCardGrid() {
   const inDeckIds = new Set(deck.filter(Boolean).map(s => s.card.id));
   grid.innerHTML = cards.map(c => `
     <div class="card-thumb${inDeckIds.has(c.id) ? ' in-deck' : ''}" data-id="${esc(c.id)}" title="${esc(c.cardName)}">
-      <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
-      <span class="card-thumb-attr attr-${esc(c.attribute)}">${esc(c.attribute)}</span>
+      <div class="card-thumb-badges">
+        <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
+        <span class="card-thumb-attr attr-${esc(c.attribute)}">${esc(c.attribute)}</span>
+      </div>
       <div class="card-thumb-name">${esc(c.cardName)}</div>
       <div class="card-thumb-char">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''}</div>
       <div class="card-thumb-stat">脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
