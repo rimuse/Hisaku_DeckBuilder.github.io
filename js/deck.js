@@ -332,85 +332,78 @@ function renderDeckStats() {
 ---------------------------------------------------------------- */
 function calcSkillActivations(slots) {
   const allSkills = Storage.skills.getAll();
+  const skillById = Object.fromEntries(allSkills.map(s => [s.id, s]));
 
-  /* skillId ごとに最初に登場したスロットの情報を記録 */
-  const skillInfoMap = {};
-  slots.forEach(s => {
-    if (s.card.skillId && !(s.card.skillId in skillInfoMap)) {
-      skillInfoMap[s.card.skillId] = {
-        skillLv:   s.skillLv       || 1,
-        ownerChar: s.card.charName  || '',
-        ownerWork: s.card.workName  || '',
-        ownerAttr: s.card.attribute || '',
-      };
-    }
-  });
+  /* スロットごとに1エントリ生成（同じ特技でも複数枚分を個別に扱う） */
+  return slots
+    .filter(slot => slot.card.skillId && skillById[slot.card.skillId])
+    .map(slot => {
+      const skill     = skillById[slot.card.skillId];
+      const skillLv   = slot.skillLv       || 1;
+      const ownerChar = slot.card.charName  || '';
+      const ownerWork = slot.card.workName  || '';
+      const ownerAttr = slot.card.attribute || '';
 
-  const deckSkills = allSkills.filter(skill => skill.id in skillInfoMap);
+      /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
+      const tPct = skill.threatPctInit !== undefined
+        ? num(skill.threatPctInit) + num(skill.threatRise) * (skillLv - 1)
+        : num(skill.threatPct);
+      const ePct = skill.endurancePctInit !== undefined
+        ? num(skill.endurancePctInit) + num(skill.enduranceRise) * (skillLv - 1)
+        : num(skill.endurancePct);
 
-  return deckSkills.map(skill => {
-    const { skillLv, ownerChar, ownerWork, ownerAttr } = skillInfoMap[skill.id];
-
-    /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
-    const tPct = skill.threatPctInit !== undefined
-      ? num(skill.threatPctInit) + num(skill.threatRise) * (skillLv - 1)
-      : num(skill.threatPct);
-    const ePct = skill.endurancePctInit !== undefined
-      ? num(skill.endurancePctInit) + num(skill.enduranceRise) * (skillLv - 1)
-      : num(skill.endurancePct);
-
-    /* 条件の owner タイプを所有者情報で解決 */
-    const conditions = (skill.conditions || []).map(cond => {
-      if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
-      if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
-      if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
-      return cond;
-    });
-
-    const active = conditions.length === 0 || conditions.every(cond => {
-      const count = slots.filter(s => {
-        const c = s.card;
-        if (cond.type === 'character') return c.charName  === cond.value;
-        if (cond.type === 'work')      return c.workName  === cond.value;
-        if (cond.type === 'attribute') return c.attribute === cond.value;
-        return false;
-      }).length;
-      return count >= num(cond.minCount || 1);
-    });
-
-    /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
-    const rawTargets = skill.targets?.length ? skill.targets
-      : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
-    const resolvedTargets = rawTargets.map(t => {
-      if (t.type === 'owner_character') return { type: 'character', value: ownerChar };
-      if (t.type === 'owner_work')      return { type: 'work',      value: ownerWork };
-      if (t.type === 'owner_attribute') return { type: 'attribute', value: ownerAttr };
-      return t;
-    });
-
-    /* 対象スロット抽出（空 = 全体、複数要素は OR） */
-    const targetSlots = active ? slots.filter(s => {
-      if (!resolvedTargets.length) return true;
-      const c = s.card;
-      return resolvedTargets.some(rt => {
-        if (rt.type === 'character') return c.charName  === rt.value;
-        if (rt.type === 'work')      return c.workName  === rt.value;
-        if (rt.type === 'attribute') return c.attribute === rt.value;
-        return false;
+      /* 条件の owner タイプを所有者情報で解決 */
+      const conditions = (skill.conditions || []).map(cond => {
+        if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
+        if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
+        if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
+        return cond;
       });
-    }) : [];
 
-    return {
-      skill,
-      active,
-      skillLv,
-      tPct,
-      ePct,
-      resolvedTargets,
-      threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
-      hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
-    };
-  });
+      const active = conditions.length === 0 || conditions.every(cond => {
+        const count = slots.filter(s => {
+          const c = s.card;
+          if (cond.type === 'character') return c.charName  === cond.value;
+          if (cond.type === 'work')      return c.workName  === cond.value;
+          if (cond.type === 'attribute') return c.attribute === cond.value;
+          return false;
+        }).length;
+        return count >= num(cond.minCount || 1);
+      });
+
+      /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
+      const rawTargets = skill.targets?.length ? skill.targets
+        : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
+      const resolvedTargets = rawTargets.map(t => {
+        if (t.type === 'owner_character') return { type: 'character', value: ownerChar };
+        if (t.type === 'owner_work')      return { type: 'work',      value: ownerWork };
+        if (t.type === 'owner_attribute') return { type: 'attribute', value: ownerAttr };
+        return t;
+      });
+
+      /* 対象スロット抽出（空 = 全体、複数要素は OR） */
+      const targetSlots = active ? slots.filter(s => {
+        if (!resolvedTargets.length) return true;
+        const c = s.card;
+        return resolvedTargets.some(rt => {
+          if (rt.type === 'character') return c.charName  === rt.value;
+          if (rt.type === 'work')      return c.workName  === rt.value;
+          if (rt.type === 'attribute') return c.attribute === rt.value;
+          return false;
+        });
+      }) : [];
+
+      return {
+        skill,
+        active,
+        skillLv,
+        tPct,
+        ePct,
+        resolvedTargets,
+        threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
+        hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
+      };
+    });
 }
 
 /* ----------------------------------------------------------------
