@@ -53,8 +53,10 @@ function renderDeckSlots() {
       slotEl.className = 'deck-col-slot';
       slotEl.innerHTML = `
         <div class="deck-col-slot-top">
-          <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
-          <span class="slot-attr attr-${esc(card.attribute)}">${esc(card.attribute)}</span>
+          <div class="slot-badges">
+            <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
+            <span class="slot-attr attr-${esc(card.attribute)}">${esc(card.attribute)}</span>
+          </div>
           <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>
         </div>
         <div class="slot-card-name">${esc(card.cardName)}</div>

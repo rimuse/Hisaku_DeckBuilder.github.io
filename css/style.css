@@ -331,8 +331,13 @@ body {
 .deck-col-slot-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 0.1rem;
+}
+.slot-badges {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
 }
 .slot-lb-row {
   display: flex;
@@ -518,10 +523,11 @@ body {
 /* Inline attribute badge (for deck slots etc.) */
 .slot-attr {
   display: inline-block;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
 /* ===== Form ===== */
