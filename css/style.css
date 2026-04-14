@@ -515,6 +515,15 @@ body {
 .attr-調教 { color: var(--attr-ch); background: rgba(251,146,60,0.15);  }
 .attr-従順 { color: var(--attr-ju); background: rgba(52,211,153,0.15);  }
 
+/* Inline attribute badge (for deck slots etc.) */
+.slot-attr {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
 /* ===== Form ===== */
 .form { display: flex; flex-direction: column; gap: 0.75rem; }
 .form-row { display: flex; flex-direction: column; gap: 0.3rem; }
