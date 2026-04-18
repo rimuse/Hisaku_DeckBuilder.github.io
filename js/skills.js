@@ -209,7 +209,8 @@ function renderSkillList() {
     return `<div class="list-item">
       <div class="list-item-main">
         <div class="list-item-name">${esc(s.name)}${nameBadges}</div>
-        <div class="list-item-sub">${conds} → [${targetStr}] ${effs}</div>
+        <div class="list-item-sub">条件: ${conds}</div>
+        <div class="list-item-sub">対象: ${targetStr}${noEffect ? '' : ' — ' + effs}</div>
       </div>
       <div class="list-item-actions">
         <button class="icon-btn edit"   data-id="${esc(s.id)}">編集</button>
