@@ -125,6 +125,11 @@ function renderTargetList() {
 /* 対象追加ボタン */
 document.getElementById('btnAddTarget').addEventListener('click', () => {
   const type    = document.getElementById('targetAddType').value;
+  if (type === 'all') {
+    skillTargets = [];
+    renderTargetList();
+    return;
+  }
   const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
   let value = '';
   if (type === 'attribute') {
@@ -144,15 +149,16 @@ document.getElementById('targetAddType').addEventListener('change', function () 
   const inp    = document.getElementById('targetAddValue');
   const sepEl  = document.getElementById('targetAddValueSep');
   const attrGr = document.getElementById('targetAddAttrGroup');
+  const isAll   = this.value === 'all';
   const isOwner = this.value === 'owner_character' || this.value === 'owner_work' || this.value === 'owner_attribute';
   const isAttr  = this.value === 'attribute';
 
-  inp.hidden    = isOwner || isAttr;
-  sepEl.hidden  = isOwner;
+  inp.hidden    = isAll || isOwner || isAttr;
+  sepEl.hidden  = isAll || isOwner;
   attrGr.hidden = !isAttr;
 
-  if (isOwner || isAttr) inp.value = '';
-  if (!isOwner && !isAttr) refreshTargetSuggestions();
+  if (isAll || isOwner || isAttr) inp.value = '';
+  if (!isAll && !isOwner && !isAttr) refreshTargetSuggestions();
 });
 
 function refreshTargetSuggestions() {
