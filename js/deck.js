@@ -11,6 +11,8 @@
    null | { card, lbLv }
 ---------------------------------------------------------------- */
 let deck = Array(5).fill(null);
+let _pickingSlot = -1;
+const cardPickerModal = setupModal('cardPickerOverlay', 'cardPickerClose');
 
 /* ----------------------------------------------------------------
    限界突破補正
@@ -29,46 +31,74 @@ function slotHp(slot)    { return num(slot.card.hp)    + lbBonus(slot.card, slot
 function initDeckPage() {
   refreshTokutsuboSelect();
   renderDeckSlots();
-  renderCardGrid();
   renderDeckStats();
   refreshWorkFilter();
 }
 
 /* ----------------------------------------------------------------
-   デッキスロット
+   デッキスロット（5列グリッド）
 ---------------------------------------------------------------- */
 function renderDeckSlots() {
   const container = document.getElementById('deckSlots');
   container.innerHTML = '';
 
   deck.forEach((slot, i) => {
-    const el = document.createElement('div');
+    const col = document.createElement('div');
+    col.className = 'deck-col';
+
+    /* ---- カードスロット ---- */
+    const slotEl = document.createElement('div');
     if (slot) {
       const { card, lbLv } = slot;
-      const skillObj   = card.skillId ? Storage.skills.get(card.skillId) : null;
-      const maxSkillLv = skillObj && skillObj.maxSkillLv ? num(skillObj.maxSkillLv) : 1;
-      el.className = 'deck-slot';
-      el.innerHTML = `
-        <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
-        <div class="slot-info">
-          <div class="slot-card-name">${esc(card.cardName)}</div>
-          <div class="slot-char-name">${esc(card.charName)}${card.workName ? ' / ' + esc(card.workName) : ''}</div>
+      slotEl.className = 'deck-col-slot';
+      slotEl.innerHTML = `
+        <div class="deck-col-slot-top">
+          <div class="slot-badges">
+            <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
+            <span class="slot-attr attr-${esc(card.attribute)}">${esc(card.attribute)}</span>
+          </div>
+          <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>
         </div>
-        <div class="slot-lb-wrap">
+        <div class="slot-card-name">${esc(card.cardName)}</div>
+        <div class="slot-char-name">${esc(card.charName)}${card.workName ? ' / ' + esc(card.workName) : ''}</div>
+        <div class="slot-lb-row">
           <span class="slot-lb-label">限突Lv</span>
           <input type="number" class="slot-lb-input" min="0" max="200" value="${num(lbLv)}" data-slot="${i}">
-        </div>
-        ${skillObj ? `
-        <div class="slot-skill-wrap">
-          <span class="slot-skill-label">特技Lv</span>
-          <input type="number" class="slot-skill-input" min="1" max="${maxSkillLv}" value="${num(slot.skillLv) || 1}" data-slot="${i}">
-        </div>` : ''}
-        <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>`;
+        </div>`;
     } else {
-      el.className = 'deck-slot empty';
-      el.textContent = 'スロット ' + (i + 1);
+      slotEl.className = 'deck-col-slot empty';
+      slotEl.innerHTML = `<span class="slot-empty-label">カード ${i + 1}</span>`;
     }
-    container.appendChild(el);
+    slotEl.addEventListener('click', e => {
+      if (e.target.closest('.slot-remove, .slot-lb-input')) return;
+      openCardPicker(i);
+    });
+    col.appendChild(slotEl);
+
+    /* ---- 特技Lv ---- */
+    if (slot && slot.card.skillId) {
+      const skillObj   = Storage.skills.get(slot.card.skillId);
+      const maxSkillLv = skillObj && skillObj.maxSkillLv ? num(skillObj.maxSkillLv) : 1;
+      const skillEl = document.createElement('div');
+      skillEl.className = 'deck-col-skill';
+      skillEl.innerHTML = `
+        <span class="slot-skill-label">特技Lv</span>
+        <input type="number" class="slot-skill-input" min="1" max="${maxSkillLv}" value="${num(slot.skillLv) || 1}" data-slot="${i}">`;
+      col.appendChild(skillEl);
+    }
+
+    /* ---- スキル反映後ステータス ---- */
+    if (slot) {
+      const statsEl = document.createElement('div');
+      statsEl.className = 'deck-col-stats';
+      statsEl.innerHTML = `
+        <div class="col-stats-title">スキル反映後</div>
+        <div class="col-stats-row"><span>脅迫力</span><span class="col-stat-val" id="colThreat${i}">—</span></div>
+        <div class="col-stats-row"><span>耐久力</span><span class="col-stat-val" id="colHp${i}">—</span></div>`;
+      col.appendChild(statsEl);
+    }
+
+    container.appendChild(col);
   });
 
   /* 取り外しボタン */
@@ -77,12 +107,11 @@ function renderDeckSlots() {
       e.stopPropagation();
       deck[+btn.dataset.slot] = null;
       renderDeckSlots();
-      renderCardGrid();
       renderDeckStats();
     });
   });
 
-  /* 限突Lv 入力 — スロット再描画せず統計だけ更新（フォーカスを維持） */
+  /* 限突Lv 入力 */
   container.querySelectorAll('.slot-lb-input').forEach(input => {
     input.addEventListener('input', e => {
       const idx = +e.target.dataset.slot;
@@ -91,12 +120,9 @@ function renderDeckSlots() {
         renderDeckStats();
       }
     });
-    /* フォーカスを外したときに値を正規化 */
     input.addEventListener('blur', e => {
       const idx = +e.target.dataset.slot;
-      if (deck[idx]) {
-        e.target.value = deck[idx].lbLv;
-      }
+      if (deck[idx]) e.target.value = deck[idx].lbLv;
     });
   });
 
@@ -112,15 +138,24 @@ function renderDeckSlots() {
     });
     input.addEventListener('blur', e => {
       const idx = +e.target.dataset.slot;
-      if (deck[idx]) {
-        e.target.value = deck[idx].skillLv || 1;
-      }
+      if (deck[idx]) e.target.value = deck[idx].skillLv || 1;
     });
   });
 }
 
 /* ----------------------------------------------------------------
-   カードグリッド（デッキページ用）
+   カード選択ピッカーを開く
+---------------------------------------------------------------- */
+function openCardPicker(slotIndex) {
+  _pickingSlot = slotIndex;
+  document.getElementById('cardPickerSlotNum').textContent = slotIndex + 1;
+  refreshWorkFilter();
+  renderCardGrid();
+  cardPickerModal.open();
+}
+
+/* ----------------------------------------------------------------
+   カードグリッド（カード選択ピッカー内）
 ---------------------------------------------------------------- */
 function renderCardGrid() {
   const text = document.getElementById('filterText').value.trim().toLowerCase();
@@ -143,8 +178,10 @@ function renderCardGrid() {
   const inDeckIds = new Set(deck.filter(Boolean).map(s => s.card.id));
   grid.innerHTML = cards.map(c => `
     <div class="card-thumb${inDeckIds.has(c.id) ? ' in-deck' : ''}" data-id="${esc(c.id)}" title="${esc(c.cardName)}">
-      <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
-      <span class="card-thumb-attr attr-${esc(c.attribute)}">${esc(c.attribute)}</span>
+      <div class="card-thumb-badges">
+        <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
+        <span class="card-thumb-attr attr-${esc(c.attribute)}">${esc(c.attribute)}</span>
+      </div>
       <div class="card-thumb-name">${esc(c.cardName)}</div>
       <div class="card-thumb-char">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''}</div>
       <div class="card-thumb-stat">脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
@@ -157,15 +194,11 @@ function renderCardGrid() {
 
 function onCardThumbClick(cardId) {
   const card = Storage.cards.get(cardId);
-  if (!card) return;
-  /* すでにデッキにある or 空きスロットなし → 詳細表示 */
-  if (deck.some(s => s && s.card.id === cardId) || deck.indexOf(null) === -1) {
-    openCardDetail(card);
-    return;
-  }
-  deck[deck.indexOf(null)] = { card, lbLv: 0, skillLv: 1 };
+  if (!card || _pickingSlot < 0) return;
+  deck[_pickingSlot] = { card, lbLv: 0, skillLv: 1 };
+  cardPickerModal.close();
+  _pickingSlot = -1;
   renderDeckSlots();
-  renderCardGrid();
   renderDeckStats();
 }
 
@@ -208,6 +241,33 @@ function renderDeckStats() {
   }
 
   const activations = calcSkillActivations(slots);
+
+  /* カードごとの反映後ステータスを更新 */
+  const tokChar = document.getElementById('tokutsuboChar').value;
+  const tokLv   = +document.getElementById('tokutsuboLv').value || 1;
+  deck.forEach((slot, i) => {
+    if (!slot) return;
+    const thrEl = document.getElementById(`colThreat${i}`);
+    const hpEl  = document.getElementById(`colHp${i}`);
+    if (!thrEl || !hpEl) return;
+    const basePow = slotPower(slot);
+    const baseHp  = slotHp(slot);
+    const isTargeted = a => !a.resolvedTargets.length || a.resolvedTargets.some(rt => {
+      if (rt.type === 'character') return slot.card.charName  === rt.value;
+      if (rt.type === 'work')      return slot.card.workName  === rt.value;
+      if (rt.type === 'attribute') return slot.card.attribute === rt.value;
+      return false;
+    });
+    const sktPow = activations.filter(a => a.active && isTargeted(a))
+      .reduce((sum, a) => sum + Math.round(basePow * a.tPct / 100), 0);
+    const sktHp  = activations.filter(a => a.active && isTargeted(a))
+      .reduce((sum, a) => sum + Math.round(baseHp  * a.ePct / 100), 0);
+    const tokuPow = (tokChar && slot.card.charName === tokChar) ? Math.round(basePow * tokLv / 100) : 0;
+    const tokuHp  = (tokChar && slot.card.charName === tokChar) ? Math.round(baseHp  * tokLv / 100) : 0;
+    thrEl.textContent = fmt(basePow + sktPow + tokuPow);
+    hpEl.textContent  = fmt(baseHp  + sktHp  + tokuHp);
+  });
+
   const skillThreat = activations.filter(a => a.active).reduce((s, a) => s + a.threatBuff, 0);
   const skillHp     = activations.filter(a => a.active).reduce((s, a) => s + a.hpBuff,     0);
 
@@ -272,85 +332,78 @@ function renderDeckStats() {
 ---------------------------------------------------------------- */
 function calcSkillActivations(slots) {
   const allSkills = Storage.skills.getAll();
+  const skillById = Object.fromEntries(allSkills.map(s => [s.id, s]));
 
-  /* skillId ごとに最初に登場したスロットの情報を記録 */
-  const skillInfoMap = {};
-  slots.forEach(s => {
-    if (s.card.skillId && !(s.card.skillId in skillInfoMap)) {
-      skillInfoMap[s.card.skillId] = {
-        skillLv:   s.skillLv       || 1,
-        ownerChar: s.card.charName  || '',
-        ownerWork: s.card.workName  || '',
-        ownerAttr: s.card.attribute || '',
-      };
-    }
-  });
+  /* スロットごとに1エントリ生成（同じ特技でも複数枚分を個別に扱う） */
+  return slots
+    .filter(slot => slot.card.skillId && skillById[slot.card.skillId])
+    .map(slot => {
+      const skill     = skillById[slot.card.skillId];
+      const skillLv   = slot.skillLv       || 1;
+      const ownerChar = slot.card.charName  || '';
+      const ownerWork = slot.card.workName  || '';
+      const ownerAttr = slot.card.attribute || '';
 
-  const deckSkills = allSkills.filter(skill => skill.id in skillInfoMap);
+      /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
+      const tPct = skill.threatPctInit !== undefined
+        ? num(skill.threatPctInit) + num(skill.threatRise) * (skillLv - 1)
+        : num(skill.threatPct);
+      const ePct = skill.endurancePctInit !== undefined
+        ? num(skill.endurancePctInit) + num(skill.enduranceRise) * (skillLv - 1)
+        : num(skill.endurancePct);
 
-  return deckSkills.map(skill => {
-    const { skillLv, ownerChar, ownerWork, ownerAttr } = skillInfoMap[skill.id];
-
-    /* 新形式（init + rise）があれば Lv に応じて計算、なければ旧 threatPct を使用 */
-    const tPct = skill.threatPctInit !== undefined
-      ? num(skill.threatPctInit) + num(skill.threatRise) * (skillLv - 1)
-      : num(skill.threatPct);
-    const ePct = skill.endurancePctInit !== undefined
-      ? num(skill.endurancePctInit) + num(skill.enduranceRise) * (skillLv - 1)
-      : num(skill.endurancePct);
-
-    /* 条件の owner タイプを所有者情報で解決 */
-    const conditions = (skill.conditions || []).map(cond => {
-      if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
-      if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
-      if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
-      return cond;
-    });
-
-    const active = conditions.length === 0 || conditions.every(cond => {
-      const count = slots.filter(s => {
-        const c = s.card;
-        if (cond.type === 'character') return c.charName  === cond.value;
-        if (cond.type === 'work')      return c.workName  === cond.value;
-        if (cond.type === 'attribute') return c.attribute === cond.value;
-        return false;
-      }).length;
-      return count >= num(cond.minCount || 1);
-    });
-
-    /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
-    const rawTargets = skill.targets?.length ? skill.targets
-      : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
-    const resolvedTargets = rawTargets.map(t => {
-      if (t.type === 'owner_character') return { type: 'character', value: ownerChar };
-      if (t.type === 'owner_work')      return { type: 'work',      value: ownerWork };
-      if (t.type === 'owner_attribute') return { type: 'attribute', value: ownerAttr };
-      return t;
-    });
-
-    /* 対象スロット抽出（空 = 全体、複数要素は OR） */
-    const targetSlots = active ? slots.filter(s => {
-      if (!resolvedTargets.length) return true;
-      const c = s.card;
-      return resolvedTargets.some(rt => {
-        if (rt.type === 'character') return c.charName  === rt.value;
-        if (rt.type === 'work')      return c.workName  === rt.value;
-        if (rt.type === 'attribute') return c.attribute === rt.value;
-        return false;
+      /* 条件の owner タイプを所有者情報で解決 */
+      const conditions = (skill.conditions || []).map(cond => {
+        if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
+        if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
+        if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
+        return cond;
       });
-    }) : [];
 
-    return {
-      skill,
-      active,
-      skillLv,
-      tPct,
-      ePct,
-      resolvedTargets,
-      threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
-      hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
-    };
-  });
+      const active = conditions.length === 0 || conditions.every(cond => {
+        const count = slots.filter(s => {
+          const c = s.card;
+          if (cond.type === 'character') return c.charName  === cond.value;
+          if (cond.type === 'work')      return c.workName  === cond.value;
+          if (cond.type === 'attribute') return c.attribute === cond.value;
+          return false;
+        }).length;
+        return count >= num(cond.minCount || 1);
+      });
+
+      /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
+      const rawTargets = skill.targets?.length ? skill.targets
+        : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
+      const resolvedTargets = rawTargets.map(t => {
+        if (t.type === 'owner_character') return { type: 'character', value: ownerChar };
+        if (t.type === 'owner_work')      return { type: 'work',      value: ownerWork };
+        if (t.type === 'owner_attribute') return { type: 'attribute', value: ownerAttr };
+        return t;
+      });
+
+      /* 対象スロット抽出（空 = 全体、複数要素は OR） */
+      const targetSlots = active ? slots.filter(s => {
+        if (!resolvedTargets.length) return true;
+        const c = s.card;
+        return resolvedTargets.some(rt => {
+          if (rt.type === 'character') return c.charName  === rt.value;
+          if (rt.type === 'work')      return c.workName  === rt.value;
+          if (rt.type === 'attribute') return c.attribute === rt.value;
+          return false;
+        });
+      }) : [];
+
+      return {
+        skill,
+        active,
+        skillLv,
+        tPct,
+        ePct,
+        resolvedTargets,
+        threatBuff: Math.round(targetSlots.reduce((s, slot) => s + slotPower(slot) * tPct / 100, 0)),
+        hpBuff:     Math.round(targetSlots.reduce((s, slot) => s + slotHp(slot)    * ePct / 100, 0))
+      };
+    });
 }
 
 /* ----------------------------------------------------------------
@@ -396,7 +449,6 @@ function refreshWorkFilter() {
 document.getElementById('btnClearDeck').addEventListener('click', () => {
   deck = Array(5).fill(null);
   renderDeckSlots();
-  renderCardGrid();
   renderDeckStats();
 });
 

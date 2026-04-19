@@ -123,6 +123,13 @@ body {
   gap: 1.25rem;
   align-items: start;
 }
+.skills-forms-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+  margin-bottom: 2rem;
+}
 .sub-section { margin-bottom: 2rem; }
 .sub-section-title {
   font-size: 1rem;
@@ -164,14 +171,28 @@ body {
   border-radius: var(--radius);
   padding: 0.5rem 0.75rem;
   min-height: 52px;
-  cursor: default;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.deck-slot:not(.empty):hover {
+  border-color: var(--primary);
 }
 .deck-slot.empty {
   color: var(--text-muted);
   font-size: 0.85rem;
   justify-content: center;
-  cursor: default;
+  cursor: pointer;
   border-style: dashed;
+}
+.deck-slot.empty:hover {
+  border-color: var(--primary);
+  color: var(--primary-light);
+}
+.slot-empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  opacity: 0.7;
 }
 .slot-rarity {
   font-size: 0.7rem;
@@ -260,6 +281,100 @@ body {
   padding: 1px 5px;
   vertical-align: middle;
 }
+
+/* ===== Deck 5-Column Layout ===== */
+.deck-info-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.tokutsubo-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.deck-columns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.deck-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.deck-col-slot {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  min-height: 90px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-color 0.15s;
+}
+.deck-col-slot:hover { border-color: var(--primary); }
+.deck-col-slot.empty {
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.deck-col-slot.empty:hover { color: var(--primary-light); }
+.deck-col-slot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.1rem;
+}
+.slot-badges {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+.slot-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+.deck-col-skill {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+}
+.deck-col-stats {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.5rem;
+  font-size: 0.78rem;
+}
+.col-stats-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+.col-stats-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.1rem 0;
+  color: var(--text-muted);
+}
+.col-stat-val { font-weight: 600; color: var(--text); }
 
 /* ===== Deck Stats ===== */
 .deck-stats {
@@ -367,13 +482,19 @@ body {
 }
 .card-thumb:hover { border-color: var(--primary); background: var(--bg2); }
 .card-thumb.in-deck { border-color: var(--primary); background: rgba(124,58,237,0.12); }
+.card-thumb-badges {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
 .card-thumb-rarity {
   font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
   display: inline-block;
-  margin-bottom: 0.25rem;
+  flex-shrink: 0;
 }
 .card-thumb-name {
   font-size: 0.8rem;
@@ -385,13 +506,12 @@ body {
 .card-thumb-char { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-thumb-stat { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
 .card-thumb-attr {
-  position: absolute;
-  top: 4px;
-  right: 4px;
   font-size: 0.65rem;
-  padding: 1px 4px;
-  border-radius: 3px;
   font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 /* Rarity colors */
@@ -404,6 +524,16 @@ body {
 .attr-親愛 { color: var(--attr-ai); background: rgba(244,114,182,0.15); }
 .attr-調教 { color: var(--attr-ch); background: rgba(251,146,60,0.15);  }
 .attr-従順 { color: var(--attr-ju); background: rgba(52,211,153,0.15);  }
+
+/* Inline attribute badge (for deck slots etc.) */
+.slot-attr {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
 
 /* ===== Form ===== */
 .form { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -573,7 +703,10 @@ body {
   overflow-y: auto;
   position: relative;
 }
-.modal-sm { max-width: 340px; }
+.modal-sm          { max-width: 340px; }
+.modal-list        { max-width: 700px; }
+.modal-card-picker { max-width: 900px; }
+.modal-card-picker .card-grid { max-height: calc(70vh - 120px); }
 .modal-close {
   position: absolute;
   top: 0.75rem;
@@ -868,7 +1001,9 @@ body {
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
   .deck-layout  { grid-template-columns: 1fr; }
-  .split-layout { grid-template-columns: 1fr; }
+  .split-layout       { grid-template-columns: 1fr; }
+  .skills-forms-row   { grid-template-columns: 1fr; }
+  .deck-columns       { grid-template-columns: repeat(3, 1fr); }
   .card-grid    { max-height: none; }
 }
 
@@ -879,6 +1014,7 @@ body {
   .nav-mobile.open { display: flex; }
   .main { padding: 1rem 0.75rem; }
   .form-input-sm { width: 70px; }
+  .deck-columns { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ===== Toast Notification ===== */

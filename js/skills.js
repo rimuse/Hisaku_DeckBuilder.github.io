@@ -8,8 +8,6 @@
    ページ初期化
 ---------------------------------------------------------------- */
 function initSkillsPage() {
-  renderSkillList();
-  renderOugiList();    /* ougi.js */
   refreshCondSuggestions();
 }
 
@@ -211,7 +209,8 @@ function renderSkillList() {
     return `<div class="list-item">
       <div class="list-item-main">
         <div class="list-item-name">${esc(s.name)}${nameBadges}</div>
-        <div class="list-item-sub">${conds} → [${targetStr}] ${effs}</div>
+        <div class="list-item-sub">条件: ${conds}</div>
+        <div class="list-item-sub">効果: ${targetStr}${noEffect ? '' : ' — ' + effs}</div>
       </div>
       <div class="list-item-actions">
         <button class="icon-btn edit"   data-id="${esc(s.id)}">編集</button>
@@ -221,7 +220,7 @@ function renderSkillList() {
   }).join('');
 
   el.querySelectorAll('.icon-btn.edit').forEach(btn =>
-    btn.addEventListener('click', () => editSkill(btn.dataset.id))
+    btn.addEventListener('click', () => { skillListModal.close(); editSkill(btn.dataset.id); })
   );
   el.querySelectorAll('.icon-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteSkill(btn.dataset.id))

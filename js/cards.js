@@ -10,7 +10,6 @@ function initCardPage() {
   populateSkillSelect();
   populateOugiSelect();
   refreshWorkSuggestions();
-  renderCardList();
 }
 
 /* ----------------------------------------------------------------
@@ -73,7 +72,7 @@ function renderCardList() {
     </div>`).join('');
 
   el.querySelectorAll('.icon-btn.edit').forEach(btn =>
-    btn.addEventListener('click', () => editCard(btn.dataset.id))
+    btn.addEventListener('click', () => { cardListModal.close(); editCard(btn.dataset.id); })
   );
   el.querySelectorAll('.icon-btn.delete').forEach(btn =>
     btn.addEventListener('click', () => deleteCard(btn.dataset.id))
