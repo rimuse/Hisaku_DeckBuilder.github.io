@@ -496,7 +496,8 @@ function downloadSkillSampleCSV() {
   const header = '特技名,効果なし,最大特技Lv,発動条件,発動対象,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%';
   const sample = [
     'サンプル特技A,,10,キャラクター名:キャラA:2,作品:臭作;キャラクター名:AAA,10,20,5,10',
-    'サンプル特技B（効果なし）,true,,,,,,,'
+    'サンプル特技B（効果なし）,true,,,,,,,',
+    'サンプル特技C（常時・全体）,,5,,全体,15,30,0,0'
   ].join('\n');
   _downloadCSV(header + '\n' + sample, 'skill_import_sample.csv');
 }
