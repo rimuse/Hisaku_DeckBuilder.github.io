@@ -72,6 +72,8 @@
 
       <!-- アクション -->
       <div class="panel-actions">
+        <button class="btn btn-primary"   id="btnSaveDeck">デッキを保存</button>
+        <button class="btn btn-secondary" id="btnOpenSavedDecks">保存済みデッキ一覧</button>
         <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
       </div>
 
@@ -563,6 +565,36 @@
       <button class="modal-close" id="ougiListClose" aria-label="閉じる">&times;</button>
       <h3 class="panel-title" style="margin-bottom:0.75rem">登録済み奥義</h3>
       <div class="registered-list" id="ougiList"></div>
+    </div>
+  </div>
+
+  <!-- デッキ保存モーダル -->
+  <div class="modal-overlay" id="saveDeckOverlay">
+    <div class="modal modal-sm" role="dialog" aria-modal="true">
+      <button class="modal-close" id="saveDeckClose" aria-label="閉じる">&times;</button>
+      <h3 class="save-deck-title">デッキを保存</h3>
+      <p id="saveDeckSlotInfo" class="save-deck-slot-info"></p>
+      <div class="form-row">
+        <label class="form-label">デッキ名</label>
+        <input type="text" id="saveDeckName" class="form-input" placeholder="デッキ名を入力（省略可）" maxlength="30" autocomplete="off">
+      </div>
+      <p id="saveDeckError" class="save-deck-error"></p>
+      <div class="form-actions" style="margin-top:0.75rem">
+        <button class="btn btn-primary"   id="saveDeckConfirm">保存する</button>
+        <button class="btn btn-secondary" id="saveDeckClose2"  onclick="document.getElementById('saveDeckOverlay').classList.remove('open')">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 保存済みデッキ一覧モーダル -->
+  <div class="modal-overlay" id="savedDecksOverlay">
+    <div class="modal modal-list" role="dialog" aria-modal="true">
+      <button class="modal-close" id="savedDecksClose" aria-label="閉じる">&times;</button>
+      <div class="saved-decks-header">
+        <h3 class="panel-title" style="margin-bottom:0">保存済みデッキ</h3>
+        <span id="savedDecksCount" class="save-deck-slot-info"></span>
+      </div>
+      <div id="savedDecksList" class="saved-decks-list"></div>
     </div>
   </div>
 

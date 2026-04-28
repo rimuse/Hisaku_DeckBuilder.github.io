@@ -458,3 +458,147 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);
+
+/* ----------------------------------------------------------------
+   デッキ保存 / 読み込み（localStorage）
+   保存形式: { id, name, savedAt, tokutsuboChar, tokutsuboLv, slots[] }
+   slots の各要素: { cardId, lbLv, skillLv } | null
+---------------------------------------------------------------- */
+const SAVED_DECKS_KEY = 'hisaku_saved_decks';
+const MAX_SAVED_DECKS = 5;
+
+const saveDeckModal   = setupModal('saveDeckOverlay',   'saveDeckClose');
+const savedDecksModal = setupModal('savedDecksOverlay', 'savedDecksClose');
+
+function getSavedDecks() {
+  try { return JSON.parse(localStorage.getItem(SAVED_DECKS_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function persistSavedDecks(decks) {
+  localStorage.setItem(SAVED_DECKS_KEY, JSON.stringify(decks));
+}
+
+function deckToSaveData() {
+  return {
+    tokutsuboChar: document.getElementById('tokutsuboChar').value,
+    tokutsuboLv:   +document.getElementById('tokutsuboLv').value || 1,
+    slots: deck.map(slot => slot ? { cardId: slot.card.id, lbLv: slot.lbLv, skillLv: slot.skillLv || 1 } : null)
+  };
+}
+
+function applyDeckSaveData(data) {
+  document.getElementById('tokutsuboChar').value = data.tokutsuboChar || '';
+  document.getElementById('tokutsuboLv').value   = data.tokutsuboLv   || 1;
+  deck = (data.slots || []).map(s => {
+    if (!s) return null;
+    const card = Storage.cards.get(s.cardId);
+    return card ? { card, lbLv: s.lbLv || 0, skillLv: s.skillLv || 1 } : null;
+  });
+}
+
+function doSaveDeck(name) {
+  const saved = getSavedDecks();
+  const data  = deckToSaveData();
+  if (!data.slots.some(Boolean)) return 'デッキにカードがありません';
+  if (saved.length >= MAX_SAVED_DECKS) return `保存できるデッキは最大 ${MAX_SAVED_DECKS} 件です`;
+  saved.push({ id: 'deck_' + Date.now(), name: name || '名無しデッキ', savedAt: Date.now(), ...data });
+  persistSavedDecks(saved);
+  return null;
+}
+
+function overwriteSavedDeck(id) {
+  const saved = getSavedDecks();
+  const idx   = saved.findIndex(d => d.id === id);
+  if (idx < 0) return;
+  const data = deckToSaveData();
+  if (!data.slots.some(Boolean)) { showToast('デッキにカードがありません', true); return; }
+  saved[idx] = { ...saved[idx], ...data, savedAt: Date.now() };
+  persistSavedDecks(saved);
+  renderSavedDecksList();
+  showToast('上書き保存しました');
+}
+
+function deleteSavedDeck(id) {
+  persistSavedDecks(getSavedDecks().filter(d => d.id !== id));
+  renderSavedDecksList();
+}
+
+function renderSavedDecksList() {
+  const el    = document.getElementById('savedDecksList');
+  const saved = getSavedDecks();
+
+  document.getElementById('savedDecksCount').textContent = `${saved.length} / ${MAX_SAVED_DECKS} 件保存中`;
+
+  if (!saved.length) {
+    el.innerHTML = '<div class="empty-state">保存済みデッキはありません</div>';
+    return;
+  }
+
+  el.innerHTML = saved.map(d => {
+    const cardCount = (d.slots || []).filter(Boolean).length;
+    const dateStr   = new Date(d.savedAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `<div class="saved-deck-item">
+      <div class="saved-deck-info">
+        <div class="saved-deck-name">${esc(d.name)}</div>
+        <div class="saved-deck-meta">${cardCount}枚 &nbsp;·&nbsp; ${dateStr}</div>
+      </div>
+      <div class="saved-deck-actions">
+        <button class="btn btn-sm btn-primary  saved-deck-load"      data-id="${esc(d.id)}">読み込む</button>
+        <button class="btn btn-sm btn-secondary saved-deck-overwrite" data-id="${esc(d.id)}">上書き</button>
+        <button class="btn btn-sm btn-danger    saved-deck-delete"    data-id="${esc(d.id)}">削除</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.saved-deck-load').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = getSavedDecks().find(x => x.id === btn.dataset.id);
+      if (!d) return;
+      applyDeckSaveData(d);
+      renderDeckSlots();
+      renderDeckStats();
+      savedDecksModal.close();
+      showToast('デッキを読み込みました');
+    });
+  });
+
+  el.querySelectorAll('.saved-deck-overwrite').forEach(btn => {
+    btn.addEventListener('click', () => overwriteSavedDeck(btn.dataset.id));
+  });
+
+  el.querySelectorAll('.saved-deck-delete').forEach(btn => {
+    btn.addEventListener('click', () =>
+      openConfirm('このデッキを削除しますか？', () => deleteSavedDeck(btn.dataset.id))
+    );
+  });
+}
+
+/* 保存ボタン */
+document.getElementById('btnSaveDeck').addEventListener('click', () => {
+  const saved = getSavedDecks();
+  document.getElementById('saveDeckName').value        = '';
+  document.getElementById('saveDeckError').textContent = '';
+  document.getElementById('saveDeckSlotInfo').textContent =
+    `保存済み: ${saved.length} / ${MAX_SAVED_DECKS}`;
+  saveDeckModal.open();
+  setTimeout(() => document.getElementById('saveDeckName').focus(), 50);
+});
+
+document.getElementById('saveDeckConfirm').addEventListener('click', () => {
+  const name = document.getElementById('saveDeckName').value.trim() || '名無しデッキ';
+  const err  = doSaveDeck(name);
+  if (err) { document.getElementById('saveDeckError').textContent = err; return; }
+  saveDeckModal.close();
+  showToast('デッキを保存しました');
+});
+
+document.getElementById('saveDeckName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('saveDeckConfirm').click();
+});
+
+/* 保存済み一覧ボタン */
+document.getElementById('btnOpenSavedDecks').addEventListener('click', () => {
+  renderSavedDecksList();
+  savedDecksModal.open();
+});
