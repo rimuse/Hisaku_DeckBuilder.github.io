@@ -21,14 +21,19 @@ function parseCSVText(text, colMap) {
   const lines = text.split(/\r?\n/);
   if (lines.length < 2) return [];
 
-  const headers = splitCSVRow(lines[0]).map(h => h.trim());
+  const normalizeKey = s => s.replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim().normalize('NFC');
+  const normalizedMap = Object.fromEntries(
+    Object.entries(colMap).map(([k, v]) => [normalizeKey(k), v])
+  );
+
+  const headers = splitCSVRow(lines[0]).map(normalizeKey);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     const vals = splitCSVRow(lines[i]);
     const obj  = {};
     headers.forEach((h, idx) => {
-      const key = colMap[h];
+      const key = normalizedMap[h];
       if (key) obj[key] = (vals[idx] || '').trim();
     });
     rows.push(obj);
