@@ -241,6 +241,11 @@
                   <span class="sep" id="condValueSep">:</span>
                   <input type="text" id="condValue" class="form-input cond-value-input" placeholder="値" list="condValueSuggestions" autocomplete="off">
                   <datalist id="condValueSuggestions"></datalist>
+                  <div id="condAttrGroup" class="radio-group" hidden>
+                    <label class="radio-label"><input type="radio" name="condAttrVal" value="親愛"> 親愛</label>
+                    <label class="radio-label"><input type="radio" name="condAttrVal" value="調教"> 調教</label>
+                    <label class="radio-label"><input type="radio" name="condAttrVal" value="従順"> 従順</label>
+                  </div>
                   <input type="number" id="condMinCount" class="form-input cond-count-input" min="1" max="5" value="1">
                   <span class="sep">枚以上</span>
                   <button type="button" id="btnAddCond" class="btn btn-sm">追加</button>
@@ -270,7 +275,7 @@
                     <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="調教"> 調教</label>
                     <label class="radio-label"><input type="radio" name="targetAddAttrVal" value="従順"> 従順</label>
                   </div>
-                  <button type="button" id="btnAddTarget" class="btn btn-sm btn-secondary">追加</button>
+                  <button type="button" id="btnAddTarget" class="btn btn-sm">追加</button>
                 </div>
                 <div id="targetList" class="cond-list target-list"></div>
               </div>

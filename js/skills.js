@@ -50,11 +50,18 @@ function renderCondList() {
 document.getElementById('btnAddCond').addEventListener('click', () => {
   const type    = document.getElementById('condType').value;
   const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
-  const value   = isOwner ? '' : document.getElementById('condValue').value.trim();
+  const isAttr  = type === 'attribute';
   const count   = parseInt(document.getElementById('condMinCount').value, 10) || 1;
-  if (!isOwner && !value) { alert('条件の値を入力してください'); return; }
+  let value = '';
+  if (isAttr) {
+    value = document.querySelector('input[name="condAttrVal"]:checked')?.value || '';
+    if (!value) { alert('属性を選択してください'); return; }
+  } else if (!isOwner) {
+    value = document.getElementById('condValue').value.trim();
+    if (!value) { alert('条件の値を入力してください'); return; }
+    document.getElementById('condValue').value = '';
+  }
   skillConditions.push({ type, value, minCount: count });
-  if (!isOwner) document.getElementById('condValue').value = '';
   renderCondList();
 });
 
@@ -62,16 +69,16 @@ document.getElementById('btnAddCond').addEventListener('click', () => {
 document.getElementById('condType').addEventListener('change', function () {
   const inp     = document.getElementById('condValue');
   const sepEl   = document.getElementById('condValueSep');
+  const attrGr  = document.getElementById('condAttrGroup');
   const isOwner = this.value === 'owner_character' || this.value === 'owner_work' || this.value === 'owner_attribute';
+  const isAttr  = this.value === 'attribute';
 
-  inp.hidden   = isOwner;
-  sepEl.hidden = isOwner;
+  inp.hidden    = isOwner || isAttr;
+  sepEl.hidden  = isOwner;
+  attrGr.hidden = !isAttr;
 
-  if (isOwner) {
+  if (isOwner || isAttr) {
     inp.value = '';
-  } else if (this.value === 'attribute') {
-    inp.setAttribute('list', '');
-    inp.placeholder = '親愛 / 調教 / 従順';
   } else {
     inp.setAttribute('list', 'condValueSuggestions');
     inp.placeholder = '値を入力';
