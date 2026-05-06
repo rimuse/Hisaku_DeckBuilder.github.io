@@ -692,6 +692,9 @@ body {
   justify-content: center;
 }
 .modal-overlay.open { display: flex; }
+
+/* 削除確認ダイアログは他のモーダルより前面に表示する */
+#confirmOverlay { z-index: 300; }
 .modal {
   background: var(--card-bg);
   border: 1px solid var(--border);
