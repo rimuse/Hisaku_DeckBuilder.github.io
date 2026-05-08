@@ -67,6 +67,22 @@
         </select>
       </div>
 
+      <!-- 補正系設定 -->
+      <div class="correction-bar">
+        <div class="correction-group">
+          <label class="correction-label">布教 脅迫力上昇Lv</label>
+          <input type="number" id="fukyoPowerLv" class="filter-select correction-lv-input" min="1" max="50" value="1">
+        </div>
+        <div class="correction-group">
+          <label class="correction-label">布教 耐久力上昇Lv</label>
+          <input type="number" id="fukuyoHpLv" class="filter-select correction-lv-input" min="1" max="50" value="1">
+        </div>
+        <div class="correction-group">
+          <label class="correction-label">特効%</label>
+          <input type="number" id="tokkoEffectPct" class="filter-select correction-pct-input" min="0" value="0">
+        </div>
+      </div>
+
       <!-- 5列カードグリッド -->
       <div class="deck-columns" id="deckSlots"></div>
 

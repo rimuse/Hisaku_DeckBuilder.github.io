@@ -253,6 +253,9 @@ function renderDeckStats() {
   /* カードごとの反映後ステータスを更新 */
   const tokChar = document.getElementById('tokutsuboChar').value;
   const tokLv   = +document.getElementById('tokutsuboLv').value || 1;
+  const fukyoPowerPct = fukyoLvToPct(num(document.getElementById('fukyoPowerLv').value) || 1);
+  const fukyoHpPct    = fukyoLvToPct(num(document.getElementById('fukuyoHpLv').value)   || 1);
+  const tokkoPct      = num(document.getElementById('tokkoEffectPct').value) || 0;
   deck.forEach((slot, i) => {
     if (!slot) return;
     const thrEl = document.getElementById(`colThreat${i}`);
@@ -272,8 +275,11 @@ function renderDeckStats() {
       .reduce((sum, a) => sum + Math.round(baseHp  * a.ePct / 100), 0);
     const tokuPow = (tokChar && slot.card.charName === tokChar) ? Math.round(basePow * tokLv / 100) : 0;
     const tokuHp  = (tokChar && slot.card.charName === tokChar) ? Math.round(baseHp  * tokLv / 100) : 0;
-    thrEl.textContent = fmt(basePow + sktPow + tokuPow);
-    hpEl.textContent  = fmt(baseHp  + sktHp  + tokuHp);
+    const fukyoPow = Math.round(basePow * fukyoPowerPct / 100);
+    const fukyoHp  = Math.round(baseHp  * fukyoHpPct   / 100);
+    const tokkoHp  = Math.round(baseHp  * tokkoPct      / 100);
+    thrEl.textContent = fmt(basePow + sktPow + tokuPow + fukyoPow);
+    hpEl.textContent  = fmt(baseHp  + sktHp  + tokuHp  + fukyoHp + tokkoHp);
   });
 
   const skillThreat = activations.filter(a => a.active).reduce((s, a) => s + a.threatBuff, 0);
@@ -285,26 +291,29 @@ function renderDeckStats() {
   const lbHp       = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
 
   const { threat: tokuboThreat, hp: tokuboHp } = calcTokutsuboBonus(slots);
+  const { fukyoThreat, fukyoHp, tokkoHp: corrTokkoHp } = calcCorrectionBonus(slots);
 
-  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat;
-  const totalHp     = baseHp     + lbHp     + skillHp     + tokuboHp;
+  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat + fukyoThreat;
+  const totalHp     = baseHp     + lbHp     + skillHp     + tokuboHp     + fukyoHp + corrTokkoHp;
 
   const attrStr = Object.entries(
     slots.reduce((acc, s) => { acc[s.card.attribute] = (acc[s.card.attribute] || 0) + 1; return acc; }, {})
   ).map(([k, v]) => `${k}×${v}`).join(' / ');
 
-  function buffParts(lb, skill, tokubo) {
+  function buffParts(lb, skill, tokubo, fukuyo, tokko) {
     const parts = [];
     if (lb     > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
     if (skill  > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} 特技</span>`);
     if (tokubo > 0) parts.push(`<span class="stat-buff tokubo">+${fmt(tokubo)} 特壺</span>`);
+    if (fukuyo > 0) parts.push(`<span class="stat-buff fukuyo">+${fmt(fukuyo)} 布教</span>`);
+    if (tokko  > 0) parts.push(`<span class="stat-buff tokko">+${fmt(tokko)} 特効</span>`);
     return parts.join('');
   }
 
   statsEl.innerHTML = `
     <div class="stat-row"><span class="stat-label">カード枚数</span><span class="stat-value">${slots.length} / 5</span></div>
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat)}</span></div>
-    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp)}</span></div>
+    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, 0)}</span></div>
+    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
@@ -415,6 +424,36 @@ function calcSkillActivations(slots) {
 }
 
 /* ----------------------------------------------------------------
+   布教Lv → 増加率%
+---------------------------------------------------------------- */
+function fukyoLvToPct(lv) {
+  const n = Math.min(50, Math.max(1, Math.round(lv)));
+  if (n <= 1) return 0;
+  if (n <= 26) return (n - 1) * 0.20;
+  return 5.00 + (n - 26) * 0.10;
+}
+
+/* ----------------------------------------------------------------
+   補正系計算（純粋関数）
+   布教Lv: 全カードの脅迫力・耐久力それぞれに増加率%を適用
+   特効%: 全カードの耐久力に指定%を適用
+---------------------------------------------------------------- */
+function calcCorrectionBonus(slots) {
+  const powerLv = num(document.getElementById('fukyoPowerLv').value) || 1;
+  const hpLv    = num(document.getElementById('fukuyoHpLv').value)   || 1;
+  const tokkoPct = num(document.getElementById('tokkoEffectPct').value) || 0;
+
+  const fukyoPowerPct = fukyoLvToPct(powerLv);
+  const fukyoHpPct    = fukyoLvToPct(hpLv);
+
+  const fukyoThreat = Math.round(slots.reduce((s, slot) => s + slotPower(slot) * fukyoPowerPct / 100, 0));
+  const fukyoHp     = Math.round(slots.reduce((s, slot) => s + slotHp(slot)    * fukyoHpPct    / 100, 0));
+  const tokkoHp     = Math.round(slots.reduce((s, slot) => s + slotHp(slot)    * tokkoPct       / 100, 0));
+
+  return { fukyoThreat, fukyoHp, tokkoHp, fukyoPowerPct, fukyoHpPct, tokkoPct };
+}
+
+/* ----------------------------------------------------------------
    特壺計算（純粋関数）
    対象キャラクターの限突補正後ステータスに特壺Lv%を加算
 ---------------------------------------------------------------- */
@@ -466,6 +505,10 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);
+
+['fukyoPowerLv', 'fukuyoHpLv', 'tokkoEffectPct'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderDeckStats);
+});
 
 /* ----------------------------------------------------------------
    デッキ保存 / 読み込み（localStorage）
