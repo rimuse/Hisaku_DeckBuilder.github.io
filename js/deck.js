@@ -176,16 +176,24 @@ function renderCardGrid() {
   }
 
   const inDeckIds = new Set(deck.filter(Boolean).map(s => s.card.id));
-  grid.innerHTML = cards.map(c => `
+  grid.innerHTML = cards.map(c => {
+    const skill = c.skillId ? Storage.skills.get(c.skillId) : null;
+    const ougi  = c.ougiId  ? Storage.ougi.get(c.ougiId)   : null;
+    return `
     <div class="card-thumb${inDeckIds.has(c.id) ? ' in-deck' : ''}" data-id="${esc(c.id)}" title="${esc(c.cardName)}">
       <div class="card-thumb-badges">
         <span class="card-thumb-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
         <span class="card-thumb-attr attr-${esc(c.attribute)}">${esc(c.attribute)}</span>
+        ${c.workName ? `<span class="card-thumb-work">${esc(c.workName)}</span>` : ''}
       </div>
       <div class="card-thumb-name">${esc(c.cardName)}</div>
-      <div class="card-thumb-char">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''}</div>
-      <div class="card-thumb-stat">脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
-    </div>`).join('');
+      <div class="card-thumb-char">${esc(c.charName)}</div>
+      <div class="card-thumb-stat">脅迫力：${fmt(c.power)}</div>
+      <div class="card-thumb-stat">耐久力：${fmt(c.hp)}</div>
+      <div class="card-thumb-stat">${skill ? esc(skill.name) : '—'}</div>
+      <div class="card-thumb-stat">${ougi  ? esc(ougi.name)  : '—'}</div>
+    </div>`;
+  }).join('');
 
   grid.querySelectorAll('.card-thumb').forEach(el => {
     el.addEventListener('click', () => onCardThumbClick(el.dataset.id));

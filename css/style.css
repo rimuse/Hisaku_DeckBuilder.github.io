@@ -505,6 +505,7 @@ body {
   text-overflow: ellipsis;
 }
 .card-thumb-char { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-thumb-work { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
 .card-thumb-stat { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
 .card-thumb-attr {
   font-size: 0.65rem;

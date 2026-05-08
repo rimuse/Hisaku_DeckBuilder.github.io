@@ -58,18 +58,24 @@ function renderCardList() {
     return;
   }
 
-  el.innerHTML = cards.map(c => `
+  el.innerHTML = cards.map(c => {
+    const skill = c.skillId ? Storage.skills.get(c.skillId) : null;
+    const ougi  = c.ougiId  ? Storage.ougi.get(c.ougiId)   : null;
+    return `
     <div class="list-item">
       <span class="slot-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
       <div class="list-item-main">
         <div class="list-item-name">${esc(c.cardName)}${c.internalId ? `<span class="internal-id-badge">${esc(c.internalId)}</span>` : ''}</div>
         <div class="list-item-sub">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''} — 脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
+        <div class="list-item-sub">特技：${skill ? esc(skill.name) : '—'}</div>
+        <div class="list-item-sub">奥義：${ougi  ? esc(ougi.name)  : '—'}</div>
       </div>
       <div class="list-item-actions">
         <button class="icon-btn edit"   data-id="${esc(c.id)}">編集</button>
         <button class="icon-btn delete" data-id="${esc(c.id)}">削除</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   el.querySelectorAll('.icon-btn.edit').forEach(btn =>
     btn.addEventListener('click', () => { cardListModal.close(); editCard(btn.dataset.id); })
