@@ -19,7 +19,7 @@ function populateSkillSelect() {
   const sel = document.getElementById('cardSkill');
   const cur = sel.value;
   sel.innerHTML = '<option value="">なし</option>' +
-    Storage.skills.getAll().map(s =>
+    Storage.skills.getAll().slice().sort((a, b) => a.name.localeCompare(b.name, 'ja')).map(s =>
       `<option value="${esc(s.id)}"${s.id === cur ? ' selected' : ''}>${esc(s.name)}</option>`
     ).join('');
 }
@@ -28,7 +28,7 @@ function populateOugiSelect() {
   const sel = document.getElementById('cardOugi');
   const cur = sel.value;
   sel.innerHTML = '<option value="">なし</option>' +
-    Storage.ougi.getAll().map(o =>
+    Storage.ougi.getAll().slice().sort((a, b) => a.name.localeCompare(b.name, 'ja')).map(o =>
       `<option value="${esc(o.id)}"${o.id === cur ? ' selected' : ''}>${esc(o.name)}</option>`
     ).join('');
 }
