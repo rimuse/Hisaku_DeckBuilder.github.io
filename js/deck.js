@@ -501,7 +501,24 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);
 
-['fukyoPowerLv', 'fukuyoHpLv', 'tokkoEffectPct', 'newCardTokkoEffectPct'].forEach(id => {
+['fukyoPowerLv', 'fukuyoHpLv'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const max = num(el.max) || 50;
+    const min = num(el.min) || 1;
+    const v = num(el.value);
+    if (v > max) el.value = max;
+    else if (v < min) el.value = min;
+    renderDeckStats();
+  });
+  el.addEventListener('blur', () => {
+    const max = num(el.max) || 50;
+    const min = num(el.min) || 1;
+    el.value = Math.min(max, Math.max(min, num(el.value) || min));
+  });
+});
+
+['tokkoEffectPct', 'newCardTokkoEffectPct'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderDeckStats);
 });
 
