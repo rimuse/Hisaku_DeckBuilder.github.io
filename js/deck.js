@@ -427,8 +427,10 @@ function fukyoLvToPct(lv) {
    特効%: 全カードの耐久力に指定%を適用
 ---------------------------------------------------------------- */
 function calcCorrectionBonus(slots) {
-  const powerLv = num(document.getElementById('fukyoPowerLv').value) || 1;
-  const hpLv    = num(document.getElementById('fukuyoHpLv').value)   || 1;
+  const fukyoPowerEl = document.getElementById('fukyoPowerLv');
+  const fukuyoHpEl   = document.getElementById('fukuyoHpLv');
+  const powerLv = Math.min(num(fukyoPowerEl.max) || 50, Math.max(1, num(fukyoPowerEl.value) || 1));
+  const hpLv    = Math.min(num(fukuyoHpEl.max)   || 50, Math.max(1, num(fukuyoHpEl.value)   || 1));
   const tokkoPct        = num(document.getElementById('tokkoEffectPct').value)        || 0;
   const newCardTokkoPct = num(document.getElementById('newCardTokkoEffectPct').value) || 0;
 
@@ -505,9 +507,6 @@ document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStat
 ['fukyoPowerLv', 'fukuyoHpLv'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', () => {
-    const max = num(el.max) || 50;
-    const v = num(el.value);
-    if (el.value !== '' && v > max) el.value = max;
     renderDeckStats();
   });
   el.addEventListener('blur', () => {
