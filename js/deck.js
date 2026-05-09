@@ -471,7 +471,7 @@ function refreshTokutsuboSelect() {
   const sel   = document.getElementById('tokutsuboChar');
   const chars = [...new Set(Storage.cards.getAll().map(c => c.charName).filter(Boolean))].sort();
   const prev  = sel.value;
-  sel.innerHTML = '<option value="">キャラクター: なし</option>' +
+  sel.innerHTML = '<option value="">特壺: なし</option>' +
     chars.map(c => `<option value="${esc(c)}"${c === prev ? ' selected' : ''}>${esc(c)}</option>`).join('');
 }
 
