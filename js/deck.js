@@ -56,11 +56,12 @@ function renderDeckSlots() {
           <div class="slot-badges">
             <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
             <span class="slot-attr attr-${esc(card.attribute)}">${esc(card.attribute)}</span>
+            ${card.workName ? `<span class="slot-work">${esc(card.workName)}</span>` : ''}
           </div>
           <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>
         </div>
         <div class="slot-card-name">${esc(card.cardName)}</div>
-        <div class="slot-char-name">${esc(card.charName)}${card.workName ? ' / ' + esc(card.workName) : ''}</div>
+        <div class="slot-char-name">${esc(card.charName)}</div>
         <div class="slot-lb-row">
           <span class="slot-lb-label">限突Lv</span>
           <input type="number" class="slot-lb-input" min="0" max="200" value="${num(lbLv)}" data-slot="${i}">
@@ -87,15 +88,20 @@ function renderDeckSlots() {
       col.appendChild(skillEl);
     }
 
-    /* ---- スキル反映後ステータス ---- */
+    /* ---- 特効チェックボックス ---- */
     if (slot) {
-      const statsEl = document.createElement('div');
-      statsEl.className = 'deck-col-stats';
-      statsEl.innerHTML = `
-        <div class="col-stats-title">スキル反映後</div>
-        <div class="col-stats-row"><span>脅迫力</span><span class="col-stat-val" id="colThreat${i}">—</span></div>
-        <div class="col-stats-row"><span>耐久力</span><span class="col-stat-val" id="colHp${i}">—</span></div>`;
-      col.appendChild(statsEl);
+      const checksEl = document.createElement('div');
+      checksEl.className = 'deck-col-checks';
+      checksEl.innerHTML = `
+        <label class="deck-check-label">
+          <input type="checkbox" class="slot-tokko-check" data-slot="${i}"${slot.isTokkoTarget ? ' checked' : ''}>
+          特効効果対象
+        </label>
+        <label class="deck-check-label">
+          <input type="checkbox" class="slot-new-tokko-check" data-slot="${i}"${slot.isNewCardTokko ? ' checked' : ''}>
+          新カード特効
+        </label>`;
+      col.appendChild(checksEl);
     }
 
     container.appendChild(col);
@@ -139,6 +145,20 @@ function renderDeckSlots() {
     input.addEventListener('blur', e => {
       const idx = +e.target.dataset.slot;
       if (deck[idx]) e.target.value = deck[idx].skillLv || 1;
+    });
+  });
+
+  /* 特効チェックボックス */
+  container.querySelectorAll('.slot-tokko-check').forEach(input => {
+    input.addEventListener('change', e => {
+      const idx = +e.target.dataset.slot;
+      if (deck[idx]) { deck[idx].isTokkoTarget = e.target.checked; renderDeckStats(); }
+    });
+  });
+  container.querySelectorAll('.slot-new-tokko-check').forEach(input => {
+    input.addEventListener('change', e => {
+      const idx = +e.target.dataset.slot;
+      if (deck[idx]) { deck[idx].isNewCardTokko = e.target.checked; renderDeckStats(); }
     });
   });
 }
@@ -203,7 +223,7 @@ function renderCardGrid() {
 function onCardThumbClick(cardId) {
   const card = Storage.cards.get(cardId);
   if (!card || _pickingSlot < 0) return;
-  deck[_pickingSlot] = { card, lbLv: 0, skillLv: 1 };
+  deck[_pickingSlot] = { card, lbLv: 0, skillLv: 1, isTokkoTarget: false, isNewCardTokko: false };
   cardPickerModal.close();
   _pickingSlot = -1;
   renderDeckSlots();
@@ -250,38 +270,6 @@ function renderDeckStats() {
 
   const activations = calcSkillActivations(slots);
 
-  /* カードごとの反映後ステータスを更新 */
-  const tokChar = document.getElementById('tokutsuboChar').value;
-  const tokLv   = +document.getElementById('tokutsuboLv').value || 1;
-  const fukyoPowerPct = fukyoLvToPct(num(document.getElementById('fukyoPowerLv').value) || 1);
-  const fukyoHpPct    = fukyoLvToPct(num(document.getElementById('fukuyoHpLv').value)   || 1);
-  const tokkoPct      = num(document.getElementById('tokkoEffectPct').value) || 0;
-  deck.forEach((slot, i) => {
-    if (!slot) return;
-    const thrEl = document.getElementById(`colThreat${i}`);
-    const hpEl  = document.getElementById(`colHp${i}`);
-    if (!thrEl || !hpEl) return;
-    const basePow = slotPower(slot);
-    const baseHp  = slotHp(slot);
-    const isTargeted = a => !a.resolvedTargets.length || a.resolvedTargets.some(rt => {
-      if (rt.type === 'character') return slot.card.charName  === rt.value;
-      if (rt.type === 'work')      return slot.card.workName  === rt.value;
-      if (rt.type === 'attribute') return slot.card.attribute === rt.value;
-      return false;
-    });
-    const sktPow = activations.filter(a => a.active && isTargeted(a))
-      .reduce((sum, a) => sum + Math.round(basePow * a.tPct / 100), 0);
-    const sktHp  = activations.filter(a => a.active && isTargeted(a))
-      .reduce((sum, a) => sum + Math.round(baseHp  * a.ePct / 100), 0);
-    const tokuPow = (tokChar && slot.card.charName === tokChar) ? Math.round(basePow * tokLv / 100) : 0;
-    const tokuHp  = (tokChar && slot.card.charName === tokChar) ? Math.round(baseHp  * tokLv / 100) : 0;
-    const fukyoPow = Math.round(basePow * fukyoPowerPct / 100);
-    const fukyoHp  = Math.round(baseHp  * fukyoHpPct   / 100);
-    const tokkoHp  = Math.round(baseHp  * tokkoPct      / 100);
-    thrEl.textContent = fmt(basePow + sktPow + tokuPow + fukyoPow);
-    hpEl.textContent  = fmt(baseHp  + sktHp  + tokuHp  + fukyoHp + tokkoHp);
-  });
-
   const skillThreat = activations.filter(a => a.active).reduce((s, a) => s + a.threatBuff, 0);
   const skillHp     = activations.filter(a => a.active).reduce((s, a) => s + a.hpBuff,     0);
 
@@ -291,29 +279,29 @@ function renderDeckStats() {
   const lbHp       = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
 
   const { threat: tokuboThreat, hp: tokuboHp } = calcTokutsuboBonus(slots);
-  const { fukyoThreat, fukyoHp, tokkoHp: corrTokkoHp } = calcCorrectionBonus(slots);
+  const { fukyoThreat, fukyoHp, tokkoThreat: corrTokkoThreat, tokkoHp: corrTokkoHp, newCardTokkoThreat: corrNewTokkoThreat, newCardTokkoHp } = calcCorrectionBonus(slots);
 
-  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat + fukyoThreat;
-  const totalHp     = baseHp     + lbHp     + skillHp     + tokuboHp     + fukyoHp + corrTokkoHp;
+  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat + fukyoThreat + corrTokkoThreat + corrNewTokkoThreat;
+  const totalHp     = baseHp     + lbHp     + skillHp     + tokuboHp     + fukyoHp + corrTokkoHp + newCardTokkoHp;
 
   const attrStr = Object.entries(
     slots.reduce((acc, s) => { acc[s.card.attribute] = (acc[s.card.attribute] || 0) + 1; return acc; }, {})
   ).map(([k, v]) => `${k}×${v}`).join(' / ');
 
-  function buffParts(lb, skill, tokubo, fukuyo, tokko) {
+  function buffParts(lb, skill, tokubo, fukuyo, tokko, newTokko) {
     const parts = [];
-    if (lb     > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
-    if (skill  > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} 特技</span>`);
-    if (tokubo > 0) parts.push(`<span class="stat-buff tokubo">+${fmt(tokubo)} 特壺</span>`);
-    if (fukuyo > 0) parts.push(`<span class="stat-buff fukuyo">+${fmt(fukuyo)} 布教</span>`);
-    if (tokko  > 0) parts.push(`<span class="stat-buff tokko">+${fmt(tokko)} 特効</span>`);
+    if (lb       > 0) parts.push(`<span class="stat-buff lb">+${fmt(lb)} 限突</span>`);
+    if (skill    > 0) parts.push(`<span class="stat-buff skill">+${fmt(skill)} 特技</span>`);
+    if (tokubo   > 0) parts.push(`<span class="stat-buff tokubo">+${fmt(tokubo)} 特壺</span>`);
+    if (fukuyo   > 0) parts.push(`<span class="stat-buff fukuyo">+${fmt(fukuyo)} 布教</span>`);
+    if (tokko    > 0) parts.push(`<span class="stat-buff tokko">+${fmt(tokko)} 特効</span>`);
+    if (newTokko > 0) parts.push(`<span class="stat-buff new-tokko">+${fmt(newTokko)} 新特効</span>`);
     return parts.join('');
   }
 
   statsEl.innerHTML = `
-    <div class="stat-row"><span class="stat-label">カード枚数</span><span class="stat-value">${slots.length} / 5</span></div>
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, 0)}</span></div>
-    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp)}</span></div>
+    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
+    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
@@ -441,16 +429,24 @@ function fukyoLvToPct(lv) {
 function calcCorrectionBonus(slots) {
   const powerLv = num(document.getElementById('fukyoPowerLv').value) || 1;
   const hpLv    = num(document.getElementById('fukuyoHpLv').value)   || 1;
-  const tokkoPct = num(document.getElementById('tokkoEffectPct').value) || 0;
+  const tokkoPct        = num(document.getElementById('tokkoEffectPct').value)        || 0;
+  const newCardTokkoPct = num(document.getElementById('newCardTokkoEffectPct').value) || 0;
 
   const fukyoPowerPct = fukyoLvToPct(powerLv);
   const fukyoHpPct    = fukyoLvToPct(hpLv);
 
-  const fukyoThreat = Math.round(slots.reduce((s, slot) => s + slotPower(slot) * fukyoPowerPct / 100, 0));
-  const fukyoHp     = Math.round(slots.reduce((s, slot) => s + slotHp(slot)    * fukyoHpPct    / 100, 0));
-  const tokkoHp     = Math.round(slots.reduce((s, slot) => s + slotHp(slot)    * tokkoPct       / 100, 0));
+  const fukyoThreat    = Math.round(slots.reduce((s, slot) => s + slotPower(slot) * fukyoPowerPct / 100, 0));
+  const fukyoHp        = Math.round(slots.reduce((s, slot) => s + slotHp(slot)    * fukyoHpPct    / 100, 0));
+  const tokkoThreat    = Math.round(slots.filter(slot => slot.isTokkoTarget)
+    .reduce((s, slot) => s + slotPower(slot) * tokkoPct        / 100, 0));
+  const tokkoHp        = Math.round(slots.filter(slot => slot.isTokkoTarget)
+    .reduce((s, slot) => s + slotHp(slot)    * tokkoPct        / 100, 0));
+  const newCardTokkoThreat = Math.round(slots.filter(slot => slot.isNewCardTokko)
+    .reduce((s, slot) => s + slotPower(slot) * newCardTokkoPct / 100, 0));
+  const newCardTokkoHp = Math.round(slots.filter(slot => slot.isNewCardTokko)
+    .reduce((s, slot) => s + slotHp(slot)    * newCardTokkoPct / 100, 0));
 
-  return { fukyoThreat, fukyoHp, tokkoHp, fukyoPowerPct, fukyoHpPct, tokkoPct };
+  return { fukyoThreat, fukyoHp, tokkoThreat, tokkoHp, newCardTokkoThreat, newCardTokkoHp, fukyoPowerPct, fukyoHpPct, tokkoPct, newCardTokkoPct };
 }
 
 /* ----------------------------------------------------------------
@@ -475,7 +471,7 @@ function refreshTokutsuboSelect() {
   const sel   = document.getElementById('tokutsuboChar');
   const chars = [...new Set(Storage.cards.getAll().map(c => c.charName).filter(Boolean))].sort();
   const prev  = sel.value;
-  sel.innerHTML = '<option value="">キャラクター: なし</option>' +
+  sel.innerHTML = '<option value="">特壺: なし</option>' +
     chars.map(c => `<option value="${esc(c)}"${c === prev ? ' selected' : ''}>${esc(c)}</option>`).join('');
 }
 
@@ -506,7 +502,24 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);
 
-['fukyoPowerLv', 'fukuyoHpLv', 'tokkoEffectPct'].forEach(id => {
+['fukyoPowerLv', 'fukuyoHpLv'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const max = num(el.max) || 50;
+    const min = num(el.min) || 1;
+    const v = num(el.value);
+    if (v > max) el.value = max;
+    else if (v < min) el.value = min;
+    renderDeckStats();
+  });
+  el.addEventListener('blur', () => {
+    const max = num(el.max) || 50;
+    const min = num(el.min) || 1;
+    el.value = Math.min(max, Math.max(min, num(el.value) || min));
+  });
+});
+
+['tokkoEffectPct', 'newCardTokkoEffectPct'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderDeckStats);
 });
 
@@ -544,7 +557,7 @@ function applyDeckSaveData(data) {
   deck = (data.slots || []).map(s => {
     if (!s) return null;
     const card = Storage.cards.get(s.cardId);
-    return card ? { card, lbLv: s.lbLv || 0, skillLv: s.skillLv || 1 } : null;
+    return card ? { card, lbLv: s.lbLv || 0, skillLv: s.skillLv || 1, isTokkoTarget: false, isNewCardTokko: false } : null;
   });
 }
 

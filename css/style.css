@@ -356,26 +356,30 @@ body {
   gap: 0.4rem;
   font-size: 0.8rem;
 }
-.deck-col-stats {
+.deck-col-checks {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0.4rem 0.5rem;
-  font-size: 0.78rem;
-}
-.col-stats-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 0.2rem;
-}
-.col-stats-row {
   display: flex;
-  justify-content: space-between;
-  padding: 0.1rem 0;
-  color: var(--text-muted);
+  flex-direction: column;
+  gap: 0.3rem;
 }
-.col-stat-val { font-weight: 600; color: var(--text); }
+.deck-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.deck-check-label input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
 
 /* ===== Deck Stats ===== */
 .deck-stats {
@@ -394,7 +398,8 @@ body {
 .stat-buff.lb     { color: #fbbf24; }
 .stat-buff.tokubo { color: #38bdf8; }
 .stat-buff.fukuyo { color: #f472b6; }
-.stat-buff.tokko  { color: #fb923c; }
+.stat-buff.tokko     { color: #fb923c; }
+.stat-buff.new-tokko { color: #a78bfa; }
 
 /* ===== 補正系 ===== */
 .correction-bar {
@@ -563,6 +568,14 @@ body {
   border-radius: 4px;
   flex-shrink: 0;
 }
+.slot-work {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
 
 /* ===== Form ===== */
 .form { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -589,7 +602,7 @@ body {
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus { border-color: var(--primary); }
-.form-input-sm { width: 80px; }
+.form-input-sm { width: 110px; }
 .form-textarea { resize: vertical; }
 .form-select { cursor: pointer; }
 
@@ -1045,7 +1058,7 @@ body {
   .nav-mobile { display: none; }
   .nav-mobile.open { display: flex; }
   .main { padding: 1rem 0.75rem; }
-  .form-input-sm { width: 70px; }
+  .form-input-sm { width: 95px; }
   .deck-columns { grid-template-columns: repeat(2, 1fr); }
 }
 
