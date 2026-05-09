@@ -506,16 +506,15 @@ document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStat
   const el = document.getElementById(id);
   el.addEventListener('input', () => {
     const max = num(el.max) || 50;
-    const min = num(el.min) || 1;
     const v = num(el.value);
-    if (v > max) el.value = max;
-    else if (v < min) el.value = min;
+    if (el.value !== '' && v > max) el.value = max;
     renderDeckStats();
   });
   el.addEventListener('blur', () => {
     const max = num(el.max) || 50;
     const min = num(el.min) || 1;
     el.value = Math.min(max, Math.max(min, num(el.value) || min));
+    renderDeckStats();
   });
 });
 
