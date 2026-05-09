@@ -278,9 +278,9 @@ function renderDeckStats() {
   const lbHp       = slots.reduce((s, slot) => s + lbBonus(slot.card, slot.lbLv), 0);
 
   const { threat: tokuboThreat, hp: tokuboHp } = calcTokutsuboBonus(slots);
-  const { fukyoThreat, fukyoHp, tokkoHp: corrTokkoHp, newCardTokkoHp } = calcCorrectionBonus(slots);
+  const { fukyoThreat, fukyoHp, tokkoThreat: corrTokkoThreat, tokkoHp: corrTokkoHp, newCardTokkoThreat: corrNewTokkoThreat, newCardTokkoHp } = calcCorrectionBonus(slots);
 
-  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat + fukyoThreat;
+  const totalThreat = baseThreat + lbThreat + skillThreat + tokuboThreat + fukyoThreat + corrTokkoThreat + corrNewTokkoThreat;
   const totalHp     = baseHp     + lbHp     + skillHp     + tokuboHp     + fukyoHp + corrTokkoHp + newCardTokkoHp;
 
   const attrStr = Object.entries(
@@ -299,7 +299,7 @@ function renderDeckStats() {
   }
 
   statsEl.innerHTML = `
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, 0, 0)}</span></div>
+    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
     <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
@@ -436,12 +436,16 @@ function calcCorrectionBonus(slots) {
 
   const fukyoThreat    = Math.round(slots.reduce((s, slot) => s + slotPower(slot) * fukyoPowerPct / 100, 0));
   const fukyoHp        = Math.round(slots.reduce((s, slot) => s + slotHp(slot)    * fukyoHpPct    / 100, 0));
+  const tokkoThreat    = Math.round(slots.filter(slot => slot.isTokkoTarget)
+    .reduce((s, slot) => s + slotPower(slot) * tokkoPct        / 100, 0));
   const tokkoHp        = Math.round(slots.filter(slot => slot.isTokkoTarget)
-    .reduce((s, slot) => s + slotHp(slot) * tokkoPct        / 100, 0));
+    .reduce((s, slot) => s + slotHp(slot)    * tokkoPct        / 100, 0));
+  const newCardTokkoThreat = Math.round(slots.filter(slot => slot.isNewCardTokko)
+    .reduce((s, slot) => s + slotPower(slot) * newCardTokkoPct / 100, 0));
   const newCardTokkoHp = Math.round(slots.filter(slot => slot.isNewCardTokko)
-    .reduce((s, slot) => s + slotHp(slot) * newCardTokkoPct / 100, 0));
+    .reduce((s, slot) => s + slotHp(slot)    * newCardTokkoPct / 100, 0));
 
-  return { fukyoThreat, fukyoHp, tokkoHp, newCardTokkoHp, fukyoPowerPct, fukyoHpPct, tokkoPct, newCardTokkoPct };
+  return { fukyoThreat, fukyoHp, tokkoThreat, tokkoHp, newCardTokkoThreat, newCardTokkoHp, fukyoPowerPct, fukyoHpPct, tokkoPct, newCardTokkoPct };
 }
 
 /* ----------------------------------------------------------------
