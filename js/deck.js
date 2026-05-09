@@ -56,6 +56,7 @@ function renderDeckSlots() {
           <div class="slot-badges">
             <span class="slot-rarity rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>
             <span class="slot-attr attr-${esc(card.attribute)}">${esc(card.attribute)}</span>
+            ${card.workName ? `<span class="slot-work">${esc(card.workName)}</span>` : ''}
           </div>
           <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>
         </div>
