@@ -180,12 +180,25 @@ function refreshTargetSuggestions() {
 /* ----------------------------------------------------------------
    登録済みスキル一覧
 ---------------------------------------------------------------- */
+function _sortSkillList(list, sortVal) {
+  if (sortVal === 'name-asc')  return list.slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  if (sortVal === 'name-desc') return list.slice().sort((a, b) => b.name.localeCompare(a.name, 'ja'));
+  if (sortVal === 'reg-desc')  return list.slice().reverse();
+  return list.slice(); /* reg-asc: 登録順（古い順） */
+}
+
+document.getElementById('skillListSort').addEventListener('change', renderSkillList);
+document.getElementById('skillListSearch').addEventListener('input', renderSkillList);
+
 function renderSkillList() {
-  const el     = document.getElementById('skillList');
-  const skills = Storage.skills.getAll();
+  const el      = document.getElementById('skillList');
+  const sortVal = document.getElementById('skillListSort').value;
+  const query   = document.getElementById('skillListSearch').value.toLowerCase();
+  let skills    = _sortSkillList(Storage.skills.getAll(), sortVal);
+  if (query) skills = skills.filter(s => s.name.toLowerCase().includes(query));
 
   if (!skills.length) {
-    el.innerHTML = '<div class="empty-state">特技が登録されていません</div>';
+    el.innerHTML = `<div class="empty-state">${query ? '検索結果が見つかりません' : '特技が登録されていません'}</div>`;
     return;
   }
 

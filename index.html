@@ -579,7 +579,16 @@
   <div class="modal-overlay" id="skillListOverlay">
     <div class="modal modal-list" role="dialog" aria-modal="true">
       <button class="modal-close" id="skillListClose" aria-label="閉じる">&times;</button>
-      <h3 class="panel-title" style="margin-bottom:0.75rem">登録済み特技</h3>
+      <div class="list-modal-header">
+        <h3 class="panel-title">登録済み特技</h3>
+        <select id="skillListSort" class="filter-select list-sort-select">
+          <option value="name-asc">名前順（昇順）</option>
+          <option value="name-desc">名前順（降順）</option>
+          <option value="reg-asc">登録順（古い順）</option>
+          <option value="reg-desc">登録順（新しい順）</option>
+        </select>
+      </div>
+      <input type="text" id="skillListSearch" class="filter-input" placeholder="特技名で検索..." style="margin-bottom:0.5rem;width:100%">
       <div class="registered-list" id="skillList"></div>
     </div>
   </div>
@@ -588,7 +597,16 @@
   <div class="modal-overlay" id="ougiListOverlay">
     <div class="modal modal-list" role="dialog" aria-modal="true">
       <button class="modal-close" id="ougiListClose" aria-label="閉じる">&times;</button>
-      <h3 class="panel-title" style="margin-bottom:0.75rem">登録済み奥義</h3>
+      <div class="list-modal-header">
+        <h3 class="panel-title">登録済み奥義</h3>
+        <select id="ougiListSort" class="filter-select list-sort-select">
+          <option value="name-asc">名前順（昇順）</option>
+          <option value="name-desc">名前順（降順）</option>
+          <option value="reg-asc">登録順（古い順）</option>
+          <option value="reg-desc">登録順（新しい順）</option>
+        </select>
+      </div>
+      <input type="text" id="ougiListSearch" class="filter-input" placeholder="奥義名で検索..." style="margin-bottom:0.5rem;width:100%">
       <div class="registered-list" id="ougiList"></div>
     </div>
   </div>
