@@ -14,9 +14,19 @@ document.getElementById('ougiNoEffect').addEventListener('change', function () {
 /* ----------------------------------------------------------------
    登録済み奥義一覧
 ---------------------------------------------------------------- */
+function _sortOugiList(list, sortVal) {
+  if (sortVal === 'name-asc')  return list.slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  if (sortVal === 'name-desc') return list.slice().sort((a, b) => b.name.localeCompare(a.name, 'ja'));
+  if (sortVal === 'reg-desc')  return list.slice().reverse();
+  return list.slice(); /* reg-asc: 登録順（古い順） */
+}
+
+document.getElementById('ougiListSort').addEventListener('change', renderOugiList);
+
 function renderOugiList() {
-  const el   = document.getElementById('ougiList');
-  const list = Storage.ougi.getAll();
+  const el      = document.getElementById('ougiList');
+  const sortVal = document.getElementById('ougiListSort').value;
+  const list    = _sortOugiList(Storage.ougi.getAll(), sortVal);
 
   if (!list.length) {
     el.innerHTML = '<div class="empty-state">奥義が登録されていません</div>';

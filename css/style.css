@@ -1141,3 +1141,13 @@ body {
 }
 .toast[hidden] { display: none; }
 .toast.toast-error { background: #ef4444; }
+
+/* ===== 一覧モーダル ヘッダー（タイトル + ソート） ===== */
+.list-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.list-sort-select { width: auto; min-width: 10rem; }
