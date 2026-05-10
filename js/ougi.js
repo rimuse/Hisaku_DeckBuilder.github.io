@@ -22,14 +22,17 @@ function _sortOugiList(list, sortVal) {
 }
 
 document.getElementById('ougiListSort').addEventListener('change', renderOugiList);
+document.getElementById('ougiListSearch').addEventListener('input', renderOugiList);
 
 function renderOugiList() {
   const el      = document.getElementById('ougiList');
   const sortVal = document.getElementById('ougiListSort').value;
-  const list    = _sortOugiList(Storage.ougi.getAll(), sortVal);
+  const query   = document.getElementById('ougiListSearch').value.toLowerCase();
+  let list      = _sortOugiList(Storage.ougi.getAll(), sortVal);
+  if (query) list = list.filter(o => o.name.toLowerCase().includes(query));
 
   if (!list.length) {
-    el.innerHTML = '<div class="empty-state">奥義が登録されていません</div>';
+    el.innerHTML = `<div class="empty-state">${query ? '検索結果が見つかりません' : '奥義が登録されていません'}</div>`;
     return;
   }
 
