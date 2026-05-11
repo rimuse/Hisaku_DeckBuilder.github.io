@@ -7,6 +7,7 @@
    ページ初期化
 ---------------------------------------------------------------- */
 function initRegInfoPage() {
+  _refreshRegWorkFilter();
   _showRegInfoTab('cards');
 }
 
@@ -30,17 +31,34 @@ document.getElementById('reginfo-tab-ougi').addEventListener('click',   () => _s
 /* ----------------------------------------------------------------
    カード情報一覧
 ---------------------------------------------------------------- */
-document.getElementById('reginfoCardSearch').addEventListener('input', renderRegCardList);
+['reginfoCardSearch', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderRegCardList);
+});
 document.getElementById('reginfoCardCsvBtn').addEventListener('click', downloadRegCardCSV);
+
+function _refreshRegWorkFilter() {
+  const sel   = document.getElementById('reginfoCardWork');
+  const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
+  const prev  = sel.value;
+  sel.innerHTML = '<option value="">作品: すべて</option>' +
+    works.map(w => `<option value="${esc(w)}"${w === prev ? ' selected' : ''}>${esc(w)}</option>`).join('');
+}
 
 function renderRegCardList() {
   const query = (document.getElementById('reginfoCardSearch').value || '').toLowerCase();
+  const rar   = document.getElementById('reginfoCardRarity').value;
+  const attr  = document.getElementById('reginfoCardAttribute').value;
+  const work  = document.getElementById('reginfoCardWork').value;
+
   let cards = Storage.cards.getAll().slice().sort((a, b) =>
     (a.cardName || '').localeCompare(b.cardName || '', 'ja')
   );
   if (query) cards = cards.filter(c =>
     [c.internalId, c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
   );
+  if (rar)  cards = cards.filter(c => c.rarity    === rar);
+  if (attr) cards = cards.filter(c => c.attribute === attr);
+  if (work) cards = cards.filter(c => c.workName  === work);
 
   const el = document.getElementById('reginfoCardList');
   if (!cards.length) {

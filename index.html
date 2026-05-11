@@ -517,6 +517,22 @@
       <div id="reginfo-panel-cards">
         <div class="reginfo-toolbar">
           <input type="text" id="reginfoCardSearch" class="filter-input" placeholder="カード名 / キャラクター名 / 作品名で検索">
+          <select id="reginfoCardRarity" class="filter-select">
+            <option value="">レア度: すべて</option>
+            <option value="N">N</option>
+            <option value="R">R</option>
+            <option value="SR">SR</option>
+            <option value="SSR">SSR</option>
+          </select>
+          <select id="reginfoCardAttribute" class="filter-select">
+            <option value="">属性: すべて</option>
+            <option value="親愛">親愛</option>
+            <option value="調教">調教</option>
+            <option value="従順">従順</option>
+          </select>
+          <select id="reginfoCardWork" class="filter-select">
+            <option value="">作品: すべて</option>
+          </select>
           <button id="reginfoCardCsvBtn" class="btn btn-secondary btn-sm">CSVダウンロード</button>
         </div>
         <div class="registered-list" id="reginfoCardList"></div>
