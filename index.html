@@ -21,6 +21,7 @@
       <h1 class="site-title">Hisaku DeckBuilder</h1>
       <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
+        <button class="nav-btn" data-page="reginfo">登録情報確認</button>
         <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
         <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
       </nav>
@@ -31,6 +32,7 @@
     </div>
     <nav class="nav-mobile" id="navMobile">
       <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
+      <button class="nav-btn" data-page="reginfo">登録情報確認</button>
       <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
       <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
     </nav>
@@ -500,6 +502,62 @@
 
     </section>
 
+    <!-- ページ: 登録情報確認 -->
+    <section id="page-reginfo" class="page">
+      <h2 class="page-title">登録情報確認</h2>
+
+      <!-- タブ -->
+      <div class="reginfo-tabs">
+        <button class="reginfo-tab active" id="reginfo-tab-cards">カード情報</button>
+        <button class="reginfo-tab" id="reginfo-tab-skills">特技情報</button>
+        <button class="reginfo-tab" id="reginfo-tab-ougi">奥義情報</button>
+      </div>
+
+      <!-- カード情報パネル -->
+      <div id="reginfo-panel-cards">
+        <div class="reginfo-toolbar">
+          <input type="text" id="reginfoCardSearch" class="filter-input" placeholder="カード名 / キャラクター名 / 作品名で検索">
+          <select id="reginfoCardRarity" class="filter-select">
+            <option value="">レア度: すべて</option>
+            <option value="N">N</option>
+            <option value="R">R</option>
+            <option value="SR">SR</option>
+            <option value="SSR">SSR</option>
+          </select>
+          <select id="reginfoCardAttribute" class="filter-select">
+            <option value="">属性: すべて</option>
+            <option value="親愛">親愛</option>
+            <option value="調教">調教</option>
+            <option value="従順">従順</option>
+          </select>
+          <select id="reginfoCardWork" class="filter-select">
+            <option value="">作品: すべて</option>
+          </select>
+          <button id="reginfoCardCsvBtn" class="btn btn-secondary btn-sm">CSVダウンロード</button>
+        </div>
+        <div class="registered-list" id="reginfoCardList"></div>
+      </div>
+
+      <!-- 特技情報パネル -->
+      <div id="reginfo-panel-skills" hidden>
+        <div class="reginfo-toolbar">
+          <input type="text" id="reginfoSkillSearch" class="filter-input" placeholder="特技名で検索">
+          <button id="reginfoSkillCsvBtn" class="btn btn-secondary btn-sm">CSVダウンロード</button>
+        </div>
+        <div class="registered-list" id="reginfoSkillList"></div>
+      </div>
+
+      <!-- 奥義情報パネル -->
+      <div id="reginfo-panel-ougi" hidden>
+        <div class="reginfo-toolbar">
+          <input type="text" id="reginfoOugiSearch" class="filter-input" placeholder="奥義名で検索">
+          <button id="reginfoOugiCsvBtn" class="btn btn-secondary btn-sm">CSVダウンロード</button>
+        </div>
+        <div class="registered-list" id="reginfoOugiList"></div>
+      </div>
+
+    </section>
+
   </main>
 
   <!-- カード詳細モーダル -->
@@ -687,6 +745,7 @@
   <script src="js/ougi.js"></script>
   <script src="js/skills.js"></script>
   <script src="js/csv-import.js"></script>
+  <script src="js/reginfo.js"></script>
   <script src="js/nav.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>

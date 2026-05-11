@@ -24,9 +24,10 @@ function showPage(id) {
   _pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + id));
   _navBtns.forEach(b => b.classList.toggle('active', b.dataset.page === id));
 
-  if (id === 'deck')   initDeckPage();
-  if (id === 'cards')  initCardPage();
-  if (id === 'skills') initSkillsPage();
+  if (id === 'deck')    initDeckPage();
+  if (id === 'reginfo') initRegInfoPage();
+  if (id === 'cards')   initCardPage();
+  if (id === 'skills')  initSkillsPage();
 }
 
 /**
@@ -34,9 +35,10 @@ function showPage(id) {
  * 現在表示中のページを再描画する。
  */
 function renderCurrentPage() {
-  if (_currentPage === 'deck')   initDeckPage();
-  if (_currentPage === 'cards')  initCardPage();
-  if (_currentPage === 'skills') initSkillsPage();
+  if (_currentPage === 'deck')    initDeckPage();
+  if (_currentPage === 'reginfo') initRegInfoPage();
+  if (_currentPage === 'cards')   initCardPage();
+  if (_currentPage === 'skills')  initSkillsPage();
 }
 
 _navBtns.forEach(btn => btn.addEventListener('click', () => {

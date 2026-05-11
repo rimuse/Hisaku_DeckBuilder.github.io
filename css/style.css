@@ -1151,3 +1151,34 @@ body {
   margin-bottom: 0.75rem;
 }
 .list-sort-select { width: auto; min-width: 10rem; }
+
+/* ===== 登録情報確認 ===== */
+.reginfo-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.reginfo-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+.reginfo-tab:hover  { color: var(--text); }
+.reginfo-tab.active { color: var(--primary-light); border-bottom-color: var(--primary); }
+
+.reginfo-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.reginfo-toolbar .filter-input { flex: 1; min-width: 200px; }
