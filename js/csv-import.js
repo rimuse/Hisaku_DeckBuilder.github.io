@@ -512,14 +512,45 @@ function downloadSkillSampleCSV() {
 ================================================================ */
 
 const OUGI_CSV_COL = {
-  '奥義名': 'name',
+  '奥義名':   'name',
   '効果なし': 'noEffectStr',
-  '説明':   'desc',
+  '最大Lv':   'maxLv',
+  '対象':     'targetsStr',
+  'パターン': 'patternStr',
+  '最低%':    'minPct',
+  '最大%':    'maxPct',
+  '最低倍率': 'minRate',
+  '最大倍率': 'maxRate',
 };
+
+const OUGI_TARGET_TYPE_MAP = {
+  'すべて':      'all',
+  '属性':        'attribute',
+  'キャラクター名': 'character',
+  '作品':        'work',
+};
+
+/** 対象文字列 → targets 配列（例: 「属性：親愛 / キャラクター名：キャラA」） */
+function _parseOugiTargetsStr(str) {
+  if (!str || !str.trim() || str.trim() === 'すべて') return [];
+  return str.split('/').map(part => {
+    const segs  = part.trim().split(/[：:]/);
+    const type  = OUGI_TARGET_TYPE_MAP[segs[0]?.trim()];
+    if (!type || type === 'all') return null;
+    const value = segs[1]?.trim() || '';
+    if (!value) return null;
+    return { type, value };
+  }).filter(Boolean);
+}
 
 function validateOugiRow(row) {
   const errors = [];
   if (!row.name) errors.push('奥義名は必須');
+  if (!_parseBool(row.noEffectStr)) {
+    if (row.patternStr && row.patternStr !== '脅迫力上昇' && row.patternStr !== 'ダメージ') {
+      errors.push(`パターン「${row.patternStr}」が無効（脅迫力上昇 / ダメージ）`);
+    }
+  }
   return errors;
 }
 
@@ -568,18 +599,21 @@ function runOugiPreview(text) {
       note  = '';
     }
     const cls = r.errors.length > 0 ? ' class="row-err"' : r.dup ? ' class="row-dup"' : '';
+    const patternDisplay = _parseBool(r.data.noEffectStr) ? '効果なし' :
+      (r.data.patternStr || '脅迫力上昇');
     return `<tr${cls}>
       <td>${i + 2}</td>
       <td>${badge}</td>
       <td>${esc(r.data.name || '')}</td>
-      <td>${esc(r.data.desc || '')}</td>
+      <td>${esc(r.data.targetsStr || 'すべて')}</td>
+      <td>${esc(patternDisplay)}</td>
       <td class="csv-note">${esc(note)}</td>
     </tr>`;
   }).join('');
 
   document.getElementById('ougiCsvPreviewTable').innerHTML = `
     <thead><tr>
-      <th>行</th><th>状態</th><th>奥義名</th><th>説明</th><th>備考</th>
+      <th>行</th><th>状態</th><th>奥義名</th><th>対象</th><th>パターン</th><th>備考</th>
     </tr></thead>
     <tbody>${tbody}</tbody>`;
 
@@ -598,10 +632,17 @@ function executeOugiImport() {
     if (r.errors.length > 0) { errored++; return; }
 
     const noEffect = _parseBool(r.data.noEffectStr);
+    const pattern  = r.data.patternStr === 'ダメージ' ? 'damage' : 'power';
     const ougiData = {
       name:     r.data.name,
       noEffect: noEffect || undefined,
-      desc:     noEffect ? undefined : (r.data.desc || undefined),
+      maxLv:    noEffect ? undefined : (parseInt(r.data.maxLv, 10) || 1),
+      targets:  noEffect ? undefined : _parseOugiTargetsStr(r.data.targetsStr),
+      pattern:  noEffect ? undefined : pattern,
+      minPct:   (noEffect || pattern !== 'power')  ? undefined : (parseFloat(r.data.minPct)  || 0),
+      maxPct:   (noEffect || pattern !== 'power')  ? undefined : (parseFloat(r.data.maxPct)  || 0),
+      minRate:  (noEffect || pattern !== 'damage') ? undefined : (parseFloat(r.data.minRate) || 0),
+      maxRate:  (noEffect || pattern !== 'damage') ? undefined : (parseFloat(r.data.maxRate) || 0),
     };
 
     if (r.dup) {
@@ -626,10 +667,12 @@ function executeOugiImport() {
 
 /* --- 奥義サンプルDL --- */
 function downloadOugiSampleCSV() {
-  const header = '奥義名,効果なし,説明';
+  const header = '奥義名,効果なし,最大Lv,対象,パターン,最低%,最大%,最低倍率,最大倍率';
   const sample = [
-    'サンプル奥義A,,サンプルの説明文',
-    'サンプル奥義B（効果なし）,true,'
+    'サンプル奥義A（脅迫力上昇）,,10,属性：親愛,脅迫力上昇,10,20,,',
+    'サンプル奥義B（ダメージ）,,5,キャラクター名：キャラA,ダメージ,,,1.5,3',
+    'サンプル奥義C（全体・脅迫力）,,8,すべて,脅迫力上昇,5,15,,',
+    'サンプル奥義D（効果なし）,true,,,,,,,',
   ].join('\n');
   _downloadCSV(header + '\n' + sample, 'ougi_import_sample.csv');
 }

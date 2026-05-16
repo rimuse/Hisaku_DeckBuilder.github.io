@@ -221,6 +221,16 @@ function downloadRegSkillCSV() {
 document.getElementById('reginfoOugiSearch').addEventListener('input', renderRegOugiList);
 document.getElementById('reginfoOugiCsvBtn').addEventListener('click', downloadRegOugiCSV);
 
+function _ougiTargetStr(targets) {
+  if (!targets || !targets.length) return 'すべて';
+  return targets.map(t => {
+    const label = t.type === 'attribute' ? '属性' :
+                  t.type === 'character' ? 'キャラクター名' :
+                  t.type === 'work'      ? '作品' : t.type;
+    return `${label}：${t.value}`;
+  }).join(' / ');
+}
+
 function renderRegOugiList() {
   const query = (document.getElementById('reginfoOugiSearch').value || '').toLowerCase();
   let list = Storage.ougi.getAll().slice().sort((a, b) =>
@@ -237,7 +247,15 @@ function renderRegOugiList() {
   el.innerHTML = list.map(o => {
     const noEffect = !!o.noEffect;
     const badge = noEffect ? '<span class="no-effect-badge">効果なし</span>' : '';
-    const sub   = noEffect ? '' : (o.desc ? `<div class="list-item-sub">${esc(o.desc)}</div>` : '');
+    let sub = '';
+    if (!noEffect) {
+      const lvBadge  = o.maxLv ? `<span class="skill-lv-badge">最大Lv${o.maxLv}</span>` : '';
+      const target   = _ougiTargetStr(o.targets);
+      const effStr   = o.pattern === 'damage'
+        ? `ダメージ ${fmt(o.minRate)}→${fmt(o.maxRate)}倍`
+        : `脅迫力上昇 ${fmt(o.minPct)}→${fmt(o.maxPct)}%`;
+      sub = `<div class="list-item-sub">対象: ${esc(target)} — ${effStr}${lvBadge}</div>`;
+    }
     return `
     <div class="list-item">
       <div class="list-item-main">
@@ -252,13 +270,19 @@ function downloadRegOugiCSV() {
   const list = Storage.ougi.getAll().slice().sort((a, b) =>
     (a.name || '').localeCompare(b.name || '', 'ja')
   );
-  const header = '奥義名,効果なし,説明';
+  const header = '奥義名,効果なし,最大Lv,対象,パターン,最低%,最大%,最低倍率,最大倍率';
   const rows = list.map(o => {
     const noEffect = !!o.noEffect;
     return [
       o.name || '',
       noEffect ? 'true' : '',
-      noEffect ? '' : (o.desc || ''),
+      noEffect ? '' : (o.maxLv || 1),
+      noEffect ? '' : _ougiTargetStr(o.targets),
+      noEffect ? '' : (o.pattern === 'damage' ? 'ダメージ' : '脅迫力上昇'),
+      (noEffect || o.pattern === 'damage')  ? '' : (o.minPct  ?? 0),
+      (noEffect || o.pattern === 'damage')  ? '' : (o.maxPct  ?? 0),
+      (noEffect || o.pattern !== 'damage')  ? '' : (o.minRate ?? 0),
+      (noEffect || o.pattern !== 'damage')  ? '' : (o.maxRate ?? 0),
     ].map(_csvCell).join(',');
   });
   _downloadRegCSV(header + '\n' + rows.join('\n'), 'ougi_list.csv');
