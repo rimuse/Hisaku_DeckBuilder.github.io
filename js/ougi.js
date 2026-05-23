@@ -33,7 +33,7 @@ function renderOugiTargetList() {
       ${label}${valPart}
       <button type="button" class="cond-tag-remove" data-i="${i}">&times;</button>
     </span>`;
-  }).join('<span class="or-sep">または</span>');
+  }).join('<span class="and-sep">かつ</span>');
 
   el.querySelectorAll('.cond-tag-remove').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -120,7 +120,7 @@ function _ougiTargetLabel(targets) {
                   t.type === 'character' ? 'キャラクター名' :
                   t.type === 'work'      ? '作品' : t.type;
     return `${label}：${t.value}`;
-  }).join(' / ');
+  }).join(' かつ ');
 }
 
 function renderOugiList() {
