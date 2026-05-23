@@ -773,7 +773,9 @@
       <button class="modal-close" id="cardPickerClose" aria-label="閉じる">&times;</button>
       <h3 class="panel-title" style="margin-bottom:0.75rem">カードを選択 — スロット <span id="cardPickerSlotNum">1</span></h3>
       <div class="filter-bar">
-        <input type="text" id="filterText" class="filter-input" placeholder="カード名 / キャラクター名 / 作品名で検索">
+        <input type="text" id="filterText" class="filter-input filter-input-third" placeholder="カード名 / キャラクター名で検索">
+        <input type="text" id="filterSkill" class="filter-input filter-input-third" placeholder="特技名で検索">
+        <input type="text" id="filterOugi" class="filter-input filter-input-third" placeholder="奥義名で検索">
         <select id="filterRarity" class="filter-select">
           <option value="">レア度: すべて</option>
           <option value="N">N</option>
@@ -789,6 +791,9 @@
         </select>
         <select id="filterWork" class="filter-select">
           <option value="">作品: すべて</option>
+        </select>
+        <select id="filterGensaku" class="filter-select">
+          <option value="">原作: すべて</option>
         </select>
       </div>
       <div class="card-grid" id="cardGrid"></div>

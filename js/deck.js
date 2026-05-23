@@ -33,6 +33,7 @@ function initDeckPage() {
   renderDeckSlots();
   renderDeckStats();
   refreshWorkFilter();
+  refreshGensakuFilter();
 }
 
 /* ----------------------------------------------------------------
@@ -170,6 +171,7 @@ function openCardPicker(slotIndex) {
   _pickingSlot = slotIndex;
   document.getElementById('cardPickerSlotNum').textContent = slotIndex + 1;
   refreshWorkFilter();
+  refreshGensakuFilter();
   renderCardGrid();
   cardPickerModal.open();
 }
@@ -178,17 +180,29 @@ function openCardPicker(slotIndex) {
    カードグリッド（カード選択ピッカー内）
 ---------------------------------------------------------------- */
 function renderCardGrid() {
-  const text = document.getElementById('filterText').value.trim().toLowerCase();
-  const rar  = document.getElementById('filterRarity').value;
-  const attr = document.getElementById('filterAttribute').value;
-  const work = document.getElementById('filterWork').value;
-  const grid = document.getElementById('cardGrid');
+  const text    = document.getElementById('filterText').value.trim().toLowerCase();
+  const skill   = document.getElementById('filterSkill').value.trim().toLowerCase();
+  const ougi    = document.getElementById('filterOugi').value.trim().toLowerCase();
+  const rar     = document.getElementById('filterRarity').value;
+  const attr    = document.getElementById('filterAttribute').value;
+  const work    = document.getElementById('filterWork').value;
+  const gensaku = document.getElementById('filterGensaku').value;
+  const grid    = document.getElementById('cardGrid');
 
   let cards = Storage.cards.getAll();
-  if (text) cards = cards.filter(c => [c.cardName, c.charName, c.gensaku, c.workName].some(v => (v || '').toLowerCase().includes(text)));
-  if (rar)  cards = cards.filter(c => c.rarity    === rar);
-  if (attr) cards = cards.filter(c => c.attribute === attr);
-  if (work) cards = cards.filter(c => c.workName  === work);
+  if (text)    cards = cards.filter(c => [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(text)));
+  if (skill)   cards = cards.filter(c => {
+    const s = c.skillId ? Storage.skills.get(c.skillId) : null;
+    return s && s.name.toLowerCase().includes(skill);
+  });
+  if (ougi)    cards = cards.filter(c => {
+    const o = c.ougiId ? Storage.ougi.get(c.ougiId) : null;
+    return o && o.name.toLowerCase().includes(ougi);
+  });
+  if (rar)     cards = cards.filter(c => c.rarity    === rar);
+  if (attr)    cards = cards.filter(c => c.attribute === attr);
+  if (work)    cards = cards.filter(c => c.workName  === work);
+  if (gensaku) cards = cards.filter(c => c.gensaku   === gensaku);
 
   if (!cards.length) {
     grid.innerHTML = '<div class="empty-state">カードが見つかりません</div>';
@@ -489,6 +503,14 @@ function refreshWorkFilter() {
     works.map(w => `<option value="${esc(w)}"${w === prev ? ' selected' : ''}>${esc(w)}</option>`).join('');
 }
 
+function refreshGensakuFilter() {
+  const sel      = document.getElementById('filterGensaku');
+  const gensakus = [...new Set(Storage.cards.getAll().map(c => c.gensaku).filter(Boolean))].sort();
+  const prev     = sel.value;
+  sel.innerHTML = '<option value="">原作: すべて</option>' +
+    gensakus.map(g => `<option value="${esc(g)}"${g === prev ? ' selected' : ''}>${esc(g)}</option>`).join('');
+}
+
 /* ----------------------------------------------------------------
    イベントリスナー
 ---------------------------------------------------------------- */
@@ -498,7 +520,7 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
   renderDeckStats();
 });
 
-['filterText', 'filterRarity', 'filterAttribute', 'filterWork'].forEach(id => {
+['filterText', 'filterSkill', 'filterOugi', 'filterRarity', 'filterAttribute', 'filterWork', 'filterGensaku'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderCardGrid);
 });
 

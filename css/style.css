@@ -483,6 +483,7 @@ body {
   transition: border-color 0.15s;
 }
 .filter-input:focus { border-color: var(--primary); }
+.filter-input-third { flex: 1 1 calc(33% - 0.5rem); min-width: 120px; }
 .filter-select {
   background: var(--bg3);
   border: 1px solid var(--border);
