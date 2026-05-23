@@ -9,6 +9,7 @@
 function initCardPage() {
   populateSkillSelect();
   populateOugiSelect();
+  refreshGensakuSuggestions();
   refreshWorkSuggestions();
 }
 
@@ -34,8 +35,14 @@ function populateOugiSelect() {
 }
 
 /* ----------------------------------------------------------------
-   作品サジェスト更新
+   原作・作品サジェスト更新
 ---------------------------------------------------------------- */
+function refreshGensakuSuggestions() {
+  const gensakus = [...new Set(Storage.cards.getAll().map(c => c.gensaku).filter(Boolean))].sort();
+  document.getElementById('gensakuSuggestions').innerHTML =
+    gensakus.map(g => `<option value="${esc(g)}">`).join('');
+}
+
 function refreshWorkSuggestions() {
   const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
   document.getElementById('workSuggestions').innerHTML =
@@ -49,7 +56,7 @@ function renderCardList() {
   const query = (document.getElementById('cardListSearch').value || '').toLowerCase();
   let cards = Storage.cards.getAll();
   if (query) cards = cards.filter(c =>
-    [c.internalId, c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
+    [c.internalId, c.cardName, c.charName, c.gensaku, c.workName].some(v => (v || '').toLowerCase().includes(query))
   );
 
   const el = document.getElementById('cardList');
@@ -66,7 +73,7 @@ function renderCardList() {
       <span class="slot-rarity rarity-${esc(c.rarity)}">${esc(c.rarity)}</span>
       <div class="list-item-main">
         <div class="list-item-name">${esc(c.cardName)}${c.internalId ? `<span class="internal-id-badge">${esc(c.internalId)}</span>` : ''}</div>
-        <div class="list-item-sub">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''} — 脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
+        <div class="list-item-sub">${esc(c.charName)}${c.gensaku ? ' / ' + esc(c.gensaku) : ''}${c.workName ? ' / ' + esc(c.workName) : ''} — 脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
         <div class="list-item-sub">特技：${skill ? esc(skill.name) : '—'}</div>
         <div class="list-item-sub">奥義：${ougi  ? esc(ougi.name)  : '—'}</div>
       </div>
@@ -105,6 +112,7 @@ function editCard(id) {
   document.getElementById('internalId').value     = c.internalId || '';
   document.getElementById('cardName').value       = c.cardName   || '';
   document.getElementById('charName').value       = c.charName   || '';
+  document.getElementById('gensaku').value        = c.gensaku    || '';
   document.getElementById('workName').value       = c.workName   || '';
   document.getElementById('cardPower').value      = c.power      || '';
   document.getElementById('cardHp').value         = c.hp         || '';
@@ -126,6 +134,7 @@ function deleteCard(id) {
     /* デッキからも除去（deck は deck.js のグローバル変数） */
     deck = deck.map(d => (d && d.card && d.card.id === id) ? null : d);
     renderCardList();
+    refreshGensakuSuggestions();
     refreshWorkSuggestions();
   });
 }
@@ -138,6 +147,7 @@ function saveCard(data) {
   if (!ok) return;            // 未認証 — Storage 側でエラートーストを表示済み
   resetCardForm();
   renderCardList();
+  refreshGensakuSuggestions();
   refreshWorkSuggestions();
   showToast('カードを登録しました（Firebase へ保存中...）');
 }
@@ -159,6 +169,7 @@ function openDupModal(existing, newData, reason) {
       ['カード名', c.cardName   || '—'],
       ['キャラ',   c.charName   || '—'],
       ['レア度',   c.rarity     || '—'],
+      ['原作',     c.gensaku    || '—'],
       ['作品',     c.workName   || '—'],
       ['属性',     c.attribute  || '—'],
       ['脅迫力',   fmt(c.power)],
@@ -206,6 +217,7 @@ document.getElementById('cardForm').addEventListener('submit', e => {
     cardName:   document.getElementById('cardName').value.trim(),
     charName:   document.getElementById('charName').value.trim(),
     rarity:     rarity.value,
+    gensaku:    document.getElementById('gensaku').value.trim() || undefined,
     workName:   document.getElementById('workName').value.trim(),
     attribute:  attribute.value,
     power:      document.getElementById('cardPower').value,

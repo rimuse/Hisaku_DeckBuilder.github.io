@@ -132,6 +132,11 @@
               </div>
             </div>
             <div class="form-row">
+              <label class="form-label">原作</label>
+              <input type="text" id="gensaku" class="form-input" placeholder="原作名を入力（省略可）" list="gensakuSuggestions" autocomplete="off">
+              <datalist id="gensakuSuggestions"></datalist>
+            </div>
+            <div class="form-row">
               <label class="form-label">作品</label>
               <input type="text" id="workName" class="form-input" placeholder="作品名を入力" list="workSuggestions" autocomplete="off">
               <datalist id="workSuggestions"></datalist>
@@ -184,7 +189,7 @@
           <div class="csv-format-info">
             <p class="csv-hint">1行目はヘッダー行として扱います。以下の列名を使用してください（順不同・不要列は省略可）。</p>
             <div class="csv-format-code-wrap">
-              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,特技,奥義</code>
+              <code class="csv-format-code">ゲーム内ID,カード名,キャラクター名,レア度,原作,作品,属性,脅迫力,耐久力,特技,奥義</code>
               <button id="csvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
           </div>

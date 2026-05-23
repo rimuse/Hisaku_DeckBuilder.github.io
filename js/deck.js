@@ -185,7 +185,7 @@ function renderCardGrid() {
   const grid = document.getElementById('cardGrid');
 
   let cards = Storage.cards.getAll();
-  if (text) cards = cards.filter(c => [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(text)));
+  if (text) cards = cards.filter(c => [c.cardName, c.charName, c.gensaku, c.workName].some(v => (v || '').toLowerCase().includes(text)));
   if (rar)  cards = cards.filter(c => c.rarity    === rar);
   if (attr) cards = cards.filter(c => c.attribute === attr);
   if (work) cards = cards.filter(c => c.workName  === work);
@@ -239,6 +239,7 @@ function openCardDetail(card) {
   document.getElementById('cardModalContent').innerHTML = `
     <div class="card-detail-name">${esc(card.cardName)}</div>
     ${detailRow('キャラクター', card.charName)}
+    ${card.gensaku ? detailRow('原作', card.gensaku) : ''}
     ${detailRow('作品', card.workName || '—')}
     ${detailRow('レア度', `<span class="rarity-${esc(card.rarity)}">${esc(card.rarity)}</span>`)}
     ${detailRow('属性', `<span class="attr-${esc(card.attribute)}">${esc(card.attribute)}</span>`)}
