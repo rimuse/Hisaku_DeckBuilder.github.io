@@ -8,6 +8,7 @@
 ---------------------------------------------------------------- */
 function initRegInfoPage() {
   _refreshRegWorkFilter();
+  _refreshRegGensakuFilter();
   _showRegInfoTab('cards');
 }
 
@@ -31,7 +32,7 @@ document.getElementById('reginfo-tab-ougi').addEventListener('click',   () => _s
 /* ----------------------------------------------------------------
    カード情報一覧
 ---------------------------------------------------------------- */
-['reginfoCardSearch', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork'].forEach(id => {
+['reginfoCardSearch', 'reginfoSkillFilter', 'reginfoOugiFilter', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork', 'reginfoCardGensaku'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderRegCardList);
 });
 document.getElementById('reginfoCardCsvBtn').addEventListener('click', downloadRegCardCSV);
@@ -44,21 +45,41 @@ function _refreshRegWorkFilter() {
     works.map(w => `<option value="${esc(w)}"${w === prev ? ' selected' : ''}>${esc(w)}</option>`).join('');
 }
 
+function _refreshRegGensakuFilter() {
+  const sel      = document.getElementById('reginfoCardGensaku');
+  const gensakus = [...new Set(Storage.cards.getAll().map(c => c.gensaku).filter(Boolean))].sort();
+  const prev     = sel.value;
+  sel.innerHTML = '<option value="">原作: すべて</option>' +
+    gensakus.map(g => `<option value="${esc(g)}"${g === prev ? ' selected' : ''}>${esc(g)}</option>`).join('');
+}
+
 function renderRegCardList() {
-  const query = (document.getElementById('reginfoCardSearch').value || '').toLowerCase();
-  const rar   = document.getElementById('reginfoCardRarity').value;
-  const attr  = document.getElementById('reginfoCardAttribute').value;
-  const work  = document.getElementById('reginfoCardWork').value;
+  const query   = (document.getElementById('reginfoCardSearch').value || '').toLowerCase();
+  const skill   = (document.getElementById('reginfoSkillFilter').value || '').toLowerCase();
+  const ougi    = (document.getElementById('reginfoOugiFilter').value  || '').toLowerCase();
+  const rar     = document.getElementById('reginfoCardRarity').value;
+  const attr    = document.getElementById('reginfoCardAttribute').value;
+  const work    = document.getElementById('reginfoCardWork').value;
+  const gensaku = document.getElementById('reginfoCardGensaku').value;
 
   let cards = Storage.cards.getAll().slice().sort((a, b) =>
     (a.cardName || '').localeCompare(b.cardName || '', 'ja')
   );
-  if (query) cards = cards.filter(c =>
+  if (query)   cards = cards.filter(c =>
     [c.internalId, c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
   );
-  if (rar)  cards = cards.filter(c => c.rarity    === rar);
-  if (attr) cards = cards.filter(c => c.attribute === attr);
-  if (work) cards = cards.filter(c => c.workName  === work);
+  if (skill)   cards = cards.filter(c => {
+    const s = c.skillId ? Storage.skills.get(c.skillId) : null;
+    return s && s.name.toLowerCase().includes(skill);
+  });
+  if (ougi)    cards = cards.filter(c => {
+    const o = c.ougiId ? Storage.ougi.get(c.ougiId) : null;
+    return o && o.name.toLowerCase().includes(ougi);
+  });
+  if (rar)     cards = cards.filter(c => c.rarity    === rar);
+  if (attr)    cards = cards.filter(c => c.attribute === attr);
+  if (work)    cards = cards.filter(c => c.workName  === work);
+  if (gensaku) cards = cards.filter(c => c.gensaku   === gensaku);
 
   const el = document.getElementById('reginfoCardList');
   if (!cards.length) {
