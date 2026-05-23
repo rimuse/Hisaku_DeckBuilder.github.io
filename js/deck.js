@@ -550,7 +550,7 @@ document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStat
    slots の各要素: { cardId, lbLv, skillLv } | null
 ---------------------------------------------------------------- */
 const SAVED_DECKS_KEY = 'hisaku_saved_decks';
-const MAX_SAVED_DECKS = 5;
+const MAX_SAVED_DECKS = 10;
 
 const saveDeckModal   = setupModal('saveDeckOverlay',   'saveDeckClose');
 const savedDecksModal = setupModal('savedDecksOverlay', 'savedDecksClose');
