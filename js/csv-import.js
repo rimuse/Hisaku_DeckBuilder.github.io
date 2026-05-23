@@ -68,6 +68,7 @@ const CARD_CSV_COL = {
   'カード名':      'cardName',
   'キャラクター名': 'charName',
   'レア度':        'rarity',
+  '原作':          'gensaku',
   '作品':          'workName',
   '属性':          'attribute',
   '脅迫力':        'power',
@@ -188,6 +189,7 @@ function executeCardImport() {
       cardName:   r.data.cardName,
       charName:   r.data.charName,
       rarity:     r.data.rarity,
+      gensaku:    r.data.gensaku    || undefined,
       workName:   r.data.workName   || undefined,
       attribute:  r.data.attribute,
       power:      r.data.power      || '0',
@@ -213,14 +215,15 @@ function executeCardImport() {
 
   _showImportResult('csvResult', 'csvPreview', imported, overwritten, skipped, errored);
   renderCardList();
+  refreshGensakuSuggestions();
   refreshWorkSuggestions();
   refreshTokutsuboSelect();
 }
 
 /* --- カードサンプルDL --- */
 function downloadCardSampleCSV() {
-  const header = 'ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,特技,奥義';
-  const sample = ',サンプルカード,キャラA,SSR,サンプル作品,親愛,10000,10000,,';
+  const header = 'ゲーム内ID,カード名,キャラクター名,レア度,原作,作品,属性,脅迫力,耐久力,特技,奥義';
+  const sample = ',サンプルカード,キャラA,SSR,サンプル原作,サンプル作品,親愛,10000,10000,,';
   _downloadCSV(header + '\n' + sample, 'card_import_sample.csv');
 }
 
