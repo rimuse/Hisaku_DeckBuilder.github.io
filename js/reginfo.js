@@ -228,7 +228,7 @@ function _ougiTargetStr(targets) {
                   t.type === 'character' ? 'キャラクター名' :
                   t.type === 'work'      ? '作品' : t.type;
     return `${label}：${t.value}`;
-  }).join(' / ');
+  }).join(' かつ ');
 }
 
 function renderRegOugiList() {
