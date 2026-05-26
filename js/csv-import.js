@@ -264,24 +264,31 @@ const TARGET_TYPE_MAP = {
   '所有者属性':        'owner_attribute',
 };
 
-/** 発動条件文字列 → conditions 配列
- * 通常: 「キャラクター名:キャラA:2」(type:value:count)
- * 所有者: 「所有者キャラクター:2」「所有者作品:2」「所有者属性:2」(type:count)
+/** 発動条件文字列 → { conditions, condMinCount }
+ * 通常: 「キャラクター名:キャラA:2」(type:value:count) または「キャラクター名:キャラA」(count省略)
+ * 所有者: 「所有者作品:2」(type:count)
+ * 枚数は最後に見つかった値を condMinCount として返す（旧形式との後方互換）
  */
 function parseConditionsStr(str) {
-  if (!str || !str.trim()) return [];
-  return str.split(';').map(part => {
+  if (!str || !str.trim()) return { conditions: [], condMinCount: 1 };
+  let lastCount = 1;
+  const conditions = str.split(';').map(part => {
     const segs    = part.trim().split(':');
     const type    = COND_TYPE_MAP[segs[0]?.trim()];
     if (!type) return null;
     const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
-    const value   = isOwner ? '' : segs[1]?.trim();
-    const minCount = isOwner
-      ? parseInt(segs[1], 10) || 1
-      : parseInt(segs[2], 10) || 1;
-    if (!isOwner && !value) return null;
-    return { type, value: value || '', minCount };
+    if (isOwner) {
+      const c = parseInt(segs[1], 10);
+      if (c) lastCount = c;
+      return { type, value: '' };
+    }
+    const value = segs[1]?.trim();
+    const c     = parseInt(segs[2], 10);
+    if (c) lastCount = c;
+    if (!value) return null;
+    return { type, value };
   }).filter(Boolean);
+  return { conditions, condMinCount: lastCount };
 }
 
 /** 発動条件文字列のバリデーション（エラー文字列の配列を返す） */
@@ -297,7 +304,7 @@ function validateConditionsStr(str) {
     }
     const isOwner = typeKey === 'owner_character' || typeKey === 'owner_work' || typeKey === 'owner_attribute';
     if (!isOwner && (segs.length < 2 || !segs[1]?.trim())) {
-      errors.push(`条件${i + 1}: フォーマット不正（例: キャラクター名:キャラA:2）`);
+      errors.push(`条件${i + 1}: フォーマット不正（例: キャラクター名:キャラA）`);
     }
   });
   return errors;
@@ -389,9 +396,12 @@ function skillRowToData(row) {
     }
   }
 
+  const { conditions, condMinCount } = parseConditionsStr(row.conditionsStr);
+
   return {
     name:             row.name,
-    conditions:       parseConditionsStr(row.conditionsStr),
+    conditions,
+    condMinCount,
     targets,
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : maxLv,

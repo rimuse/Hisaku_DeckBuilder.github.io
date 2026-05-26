@@ -380,16 +380,32 @@ function calcSkillActivations(slots) {
         return cond;
       });
 
-      const active = conditions.length === 0 || conditions.every(cond => {
-        const count = slots.filter(s => {
-          const c = s.card;
-          if (cond.type === 'character') return c.charName  === cond.value;
-          if (cond.type === 'work')      return c.workName  === cond.value;
-          if (cond.type === 'attribute') return c.attribute === cond.value;
-          return false;
-        }).length;
-        return count >= num(cond.minCount || 1);
-      });
+      const active = conditions.length === 0 || (() => {
+        if (skill.condMinCount !== undefined) {
+          /* 新形式: 全条件に一致するカード数を合算して比較 */
+          const count = slots.filter(s => {
+            const c = s.card;
+            return conditions.every(cond => {
+              if (cond.type === 'character') return c.charName  === cond.value;
+              if (cond.type === 'work')      return c.workName  === cond.value;
+              if (cond.type === 'attribute') return c.attribute === cond.value;
+              return true;
+            });
+          }).length;
+          return count >= num(skill.condMinCount);
+        }
+        /* 旧データ互換: 各条件を独立カウントして AND 評価 */
+        return conditions.every(cond => {
+          const count = slots.filter(s => {
+            const c = s.card;
+            if (cond.type === 'character') return c.charName  === cond.value;
+            if (cond.type === 'work')      return c.workName  === cond.value;
+            if (cond.type === 'attribute') return c.attribute === cond.value;
+            return false;
+          }).length;
+          return count >= num(cond.minCount || 1);
+        });
+      })();
 
       /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
       const rawTargets = skill.targets?.length ? skill.targets

@@ -34,7 +34,7 @@ function renderCondList() {
     const valPart = isOwner ? '' : `: ${esc(c.value)}`;
     return `
     <span class="cond-tag">
-      ${condLabel(c.type)}${valPart} ≥ ${c.minCount}枚
+      ${condLabel(c.type)}${valPart}
       <button type="button" class="cond-tag-remove" data-i="${i}">&times;</button>
     </span>`;
   }).join('');
@@ -51,7 +51,6 @@ document.getElementById('btnAddCond').addEventListener('click', () => {
   const type    = document.getElementById('condType').value;
   const isOwner = type === 'owner_character' || type === 'owner_work' || type === 'owner_attribute';
   const isAttr  = type === 'attribute';
-  const count   = parseInt(document.getElementById('condMinCount').value, 10) || 1;
   let value = '';
   if (isAttr) {
     value = document.querySelector('input[name="condAttrVal"]:checked')?.value || '';
@@ -61,7 +60,7 @@ document.getElementById('btnAddCond').addEventListener('click', () => {
     if (!value) { alert('条件の値を入力してください'); return; }
     document.getElementById('condValue').value = '';
   }
-  skillConditions.push({ type, value, minCount: count });
+  skillConditions.push({ type, value });
   renderCondList();
 });
 
@@ -203,12 +202,21 @@ function renderSkillList() {
   }
 
   el.innerHTML = skills.map(s => {
-    const conds = (s.conditions || [])
-      .map(c => {
+    const condItems = s.conditions || [];
+    const conds = condItems.length === 0 ? '常時発動' : (() => {
+      const parts = condItems.map(c => {
         const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
-        return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount}`;
-      })
-      .join(' AND ') || '常時発動';
+        return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}`;
+      }).join(' かつ ');
+      if (s.condMinCount !== undefined) {
+        return `${parts} ≥${s.condMinCount}枚`;
+      }
+      /* 旧データ互換 */
+      return condItems.map(c => {
+        const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
+        return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount ?? 1}`;
+      }).join(' AND ');
+    })();
     const noEffect = !!s.noEffect;
     const tInit = s.threatPctInit     ?? s.threatPct     ?? 0;
     const tMax  = s.threatPctMax      ?? s.threatPct     ?? 0;
@@ -272,6 +280,7 @@ function resetSkillForm() {
   document.getElementById('effectEnduranceInit').value  = 0;
   document.getElementById('effectThreatMax').value      = 0;
   document.getElementById('effectEnduranceMax').value   = 0;
+  document.getElementById('skillCondMinCount').value    = 1;
 }
 
 function editSkill(id) {
@@ -288,8 +297,11 @@ function editSkill(id) {
   document.getElementById('effectThreatMax').value      = s.threatPctMax     ?? s.threatPct    ?? 0;
   document.getElementById('effectEnduranceMax').value   = s.endurancePctMax  ?? s.endurancePct ?? 0;
 
-  skillConditions = (s.conditions || []).slice();
+  /* 旧データ（condMinCount なし）は最初の条件の minCount を引き継ぐ */
+  skillConditions = (s.conditions || []).map(c => ({ type: c.type, value: c.value }));
   renderCondList();
+  document.getElementById('skillCondMinCount').value =
+    s.condMinCount ?? s.conditions?.[0]?.minCount ?? 1;
 
   skillTargets = getSkillTargets(s);
   renderTargetList();
@@ -319,10 +331,13 @@ document.getElementById('skillForm').addEventListener('submit', e => {
   const eMax     = noEffect ? 0 : num(document.getElementById('effectEnduranceMax').value);
   const calcRise = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
 
+  const condMinCount = num(document.getElementById('skillCondMinCount').value) || 1;
+
   Storage.skills.save({
     id:               document.getElementById('skillId').value || undefined,
     name:             document.getElementById('skillName').value.trim(),
     conditions:       skillConditions.slice(),
+    condMinCount:     condMinCount,
     targets:          skillTargets.slice(),
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : maxLv,
