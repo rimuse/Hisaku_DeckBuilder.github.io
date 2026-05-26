@@ -61,8 +61,8 @@ function renderDeckSlots() {
           </div>
           <button class="slot-remove" data-slot="${i}" title="取り外す">&times;</button>
         </div>
-        <div class="slot-card-name">${esc(card.cardName)}</div>
-        <div class="slot-char-name">${esc(card.charName)}</div>
+        <div class="slot-card-name">${esc(card.cardName)} / ${esc(card.charName)}</div>
+        <div class="slot-card-stats">脅:${fmt(card.power)} / 耐:${fmt(card.hp)}</div>
         <div class="slot-lb-row">
           <span class="slot-lb-label">限突Lv</span>
           <input type="number" class="slot-lb-input" min="0" max="200" value="${num(lbLv)}" data-slot="${i}">

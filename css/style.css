@@ -205,7 +205,7 @@ body {
 }
 .slot-info { flex: 1; min-width: 0; }
 .slot-card-name { font-size: 0.875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.slot-char-name { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slot-card-stats { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .slot-remove {
   background: none;
   border: none;
