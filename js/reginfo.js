@@ -151,12 +151,23 @@ const _TARGET_TYPE_LABEL = {
   owner_attribute: '所有者属性',
 };
 
-function _conditionsToStr(conditions) {
+function _conditionsToStr(conditions, condMinCount) {
   if (!conditions || !conditions.length) return '';
+  if (condMinCount !== undefined) {
+    /* 新形式: 最後の条件に枚数を付加 */
+    return conditions.map((c, i) => {
+      const label   = _COND_TYPE_LABEL[c.type] || c.type;
+      const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
+      const isLast  = i === conditions.length - 1;
+      if (isOwner) return isLast ? `${label}:${condMinCount}` : label;
+      return isLast ? `${label}:${c.value}:${condMinCount}` : `${label}:${c.value}`;
+    }).join(';');
+  }
+  /* 旧データ互換: 各条件に minCount */
   return conditions.map(c => {
     const label   = _COND_TYPE_LABEL[c.type] || c.type;
     const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
-    return isOwner ? `${label}:${c.minCount}` : `${label}:${c.value}:${c.minCount}`;
+    return isOwner ? `${label}:${c.minCount ?? 1}` : `${label}:${c.value}:${c.minCount ?? 1}`;
   }).join(';');
 }
 
@@ -188,7 +199,7 @@ function renderRegSkillList() {
     const tMax     = s.threatPctMax     ?? s.threatPct    ?? 0;
     const eInit    = s.endurancePctInit ?? s.endurancePct ?? 0;
     const eMax     = s.endurancePctMax  ?? s.endurancePct ?? 0;
-    const conds    = _conditionsToStr(s.conditions) || '常時発動';
+    const conds    = _conditionsToStr(s.conditions, s.condMinCount) || '常時発動';
     const targets  = getSkillTargets(s);
     const targetStr = _targetsToStr(targets);
     const effs = noEffect ? '効果なし' : (
@@ -225,7 +236,7 @@ function downloadRegSkillCSV() {
       s.name || '',
       noEffect ? 'true' : '',
       noEffect ? '' : (s.maxSkillLv || 1),
-      _conditionsToStr(s.conditions),
+      _conditionsToStr(s.conditions, s.condMinCount),
       _targetsToStr(targets),
       noEffect ? '' : (s.threatPctInit    ?? s.threatPct    ?? 0),
       noEffect ? '' : (s.threatPctMax     ?? s.threatPct    ?? 0),

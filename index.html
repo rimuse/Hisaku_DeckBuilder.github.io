@@ -255,7 +255,7 @@
               </div>
 
               <div class="form-row">
-                <label class="form-label">発動条件（複数設定時は AND）</label>
+                <label class="form-label">発動条件</label>
                 <div class="cond-add-row">
                   <select id="condType" class="form-select cond-type-sel">
                     <option value="character">キャラクター名</option>
@@ -273,12 +273,15 @@
                     <label class="radio-label"><input type="radio" name="condAttrVal" value="調教"> 調教</label>
                     <label class="radio-label"><input type="radio" name="condAttrVal" value="従順"> 従順</label>
                   </div>
-                  <input type="number" id="condMinCount" class="form-input cond-count-input" min="1" max="5" value="1">
-                  <span class="sep">枚以上</span>
                   <button type="button" id="btnAddCond" class="btn btn-sm">追加</button>
                 </div>
                 <div id="condList" class="cond-list">
                   <span class="empty-hint">条件なし（常時発動）</span>
+                </div>
+                <div class="cond-add-row">
+                  <span class="sep">上記条件すべてに一致するカードが</span>
+                  <input type="number" id="skillCondMinCount" class="form-input cond-count-input" min="1" max="5" value="1">
+                  <span class="sep">枚以上</span>
                 </div>
               </div>
 
@@ -473,7 +476,7 @@
               <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%</code>
               <button id="skillCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
-            <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値:枚数」をセミコロン区切りで記述（例: キャラクター名:キャラA:2;作品:作品B:1）</p>
+            <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値」をセミコロン区切りで記述し、最後の条件に枚数を付加（例: キャラクター名:キャラA;作品:作品B:3）。条件1件の場合は「作品:作品A:2」</p>
             <p class="csv-hint csv-hint-sm">発動対象タイプ: 全体 / キャラクター名 / 作品 / 属性</p>
           </div>
 
