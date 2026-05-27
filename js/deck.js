@@ -336,10 +336,23 @@ function renderDeckStats() {
       const targetStr = !a.resolvedTargets?.length
         ? '全体'
         : a.resolvedTargets.map(t => `${condLabel(t.type)}: ${esc(t.value)}`).join(' または ');
+      const condItems = a.skill.conditions || [];
+      const condStr = condItems.length === 0 ? '常時発動' : (() => {
+        const parts = condItems.map(c => {
+          const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
+          return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}`;
+        }).join(' かつ ');
+        if (a.skill.condMinCount !== undefined) return `${parts} ≥${a.skill.condMinCount}枚`;
+        return condItems.map(c => {
+          const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
+          return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount ?? 1}`;
+        }).join(' AND ');
+      })();
       return `<div class="skill-status-item${a.active ? ' active' : ''}">
         <div class="skill-status-header">
           <span class="skill-status-name">${esc(a.skill.name)}${lvLabel}</span>${badge}
         </div>
+        <div class="skill-status-detail">発動条件: ${condStr}</div>
         <div class="skill-status-detail">${effects}（対象: ${targetStr}）</div>
       </div>`;
     }).join('');
