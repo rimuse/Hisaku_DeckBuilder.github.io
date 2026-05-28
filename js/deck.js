@@ -314,9 +314,39 @@ function renderDeckStats() {
     return parts.join('');
   }
 
+  /* スロット1（index 0）の奥義情報 */
+  const slot1 = deck[0];
+  let ougiRowHtml;
+  if (slot1 && slot1.card.ougiId) {
+    const ougi = Storage.ougi.get(slot1.card.ougiId);
+    if (ougi) {
+      if (ougi.noEffect) {
+        ougiRowHtml = `<div class="stat-row"><span class="stat-label">奥義</span><span class="stat-value">${esc(ougi.name)} <span class="stat-buff">効果なし</span></span></div>`;
+      } else {
+        const targetStr = (!ougi.targets || !ougi.targets.length) ? 'すべて'
+          : ougi.targets.map(t => {
+              const lbl = t.type === 'attribute' ? '属性' :
+                          t.type === 'character' ? 'キャラクター名' :
+                          t.type === 'work'      ? '作品' : t.type;
+              return `${lbl}：${esc(t.value)}`;
+            }).join(' かつ ');
+        const effStr = ougi.pattern === 'damage'
+          ? `ダメージ ${fmt(ougi.minRate)}→${fmt(ougi.maxRate)}倍`
+          : `脅迫力上昇 ${fmt(ougi.minPct)}→${fmt(ougi.maxPct)}%`;
+        const lvStr = ougi.maxLv ? ` / 最大Lv${ougi.maxLv}` : '';
+        ougiRowHtml = `<div class="stat-row"><span class="stat-label">奥義</span><span class="stat-value">${esc(ougi.name)} — ${effStr}（${targetStr}${lvStr}）</span></div>`;
+      }
+    } else {
+      ougiRowHtml = `<div class="stat-row"><span class="stat-label">奥義</span><span class="stat-value">—</span></div>`;
+    }
+  } else {
+    ougiRowHtml = `<div class="stat-row"><span class="stat-label">奥義</span><span class="stat-value">—</span></div>`;
+  }
+
   statsEl.innerHTML = `
     <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
     <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
+    ${ougiRowHtml}
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
