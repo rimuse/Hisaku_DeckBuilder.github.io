@@ -21,6 +21,7 @@
       <h1 class="site-title">Hisaku DeckBuilder</h1>
       <nav class="nav" id="navDesktop">
         <button class="nav-btn active" data-page="deck">デッキシミュレーション</button>
+        <button class="nav-btn" data-page="battle">バトルシミュレーション</button>
         <button class="nav-btn" data-page="reginfo">登録情報確認</button>
         <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
         <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
@@ -32,6 +33,7 @@
     </div>
     <nav class="nav-mobile" id="navMobile">
       <button class="nav-btn" data-page="deck">デッキシミュレーション</button>
+      <button class="nav-btn" data-page="battle">バトルシミュレーション</button>
       <button class="nav-btn" data-page="reginfo">登録情報確認</button>
       <button class="nav-btn" data-page="cards" data-admin="true">カード情報登録</button>
       <button class="nav-btn" data-page="skills" data-admin="true">特技 / 奥義登録</button>
@@ -99,6 +101,47 @@
         <button class="btn btn-secondary" id="btnClearDeck">デッキをクリア</button>
       </div>
 
+    </section>
+
+    <!-- ページ: バトルシミュレーション -->
+    <section id="page-battle" class="page">
+      <h2 class="page-title">バトルシミュレーション</h2>
+
+      <div class="sub-section">
+        <h3 class="sub-section-title">奥義発動回数チェッカー</h3>
+
+        <div class="form-panel">
+          <div id="battleDeckInfo" class="battle-deck-info"></div>
+
+          <div class="form-row">
+            <label class="form-label">被ダメージ</label>
+            <div class="effect-row">
+              <input type="number" id="battleDamage" class="form-input form-input-sm" min="1" placeholder="ダメージ値">
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Lv（被ダメージ時）</label>
+            <div class="effect-row">
+              <input type="number" id="battleDamageLv" class="form-input form-input-sm" min="1" value="1" placeholder="Lv">
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">チェック範囲</label>
+            <div class="effect-row">
+              <input type="number" id="battleCheckFrom" class="form-input form-input-sm" min="1" value="1" placeholder="開始Lv">
+              <span class="sep">〜</span>
+              <input type="number" id="battleCheckTo" class="form-input form-input-sm" min="1" placeholder="終了Lv">
+            </div>
+          </div>
+          <p class="form-note">※ 被ダメージは「Lv1ダメージ × √Lv」で計算（小数点以下切り捨て）。デッキの総耐久力をシミュレータの設定から自動取得します。</p>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" id="battleCheckBtn">チェック実行</button>
+          </div>
+        </div>
+
+        <div id="battleResult" class="battle-result"></div>
+      </div>
     </section>
 
     <!-- ページ: カード情報登録 -->
@@ -822,6 +865,7 @@
   <script src="js/utils.js"></script>
   <script src="js/modal.js"></script>
   <script src="js/deck.js"></script>
+  <script src="js/battle.js"></script>
   <script src="js/cards.js"></script>
   <script src="js/ougi.js"></script>
   <script src="js/skills.js"></script>

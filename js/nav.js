@@ -25,6 +25,7 @@ function showPage(id) {
   _navBtns.forEach(b => b.classList.toggle('active', b.dataset.page === id));
 
   if (id === 'deck')    initDeckPage();
+  if (id === 'battle')  initBattlePage();
   if (id === 'reginfo') initRegInfoPage();
   if (id === 'cards')   initCardPage();
   if (id === 'skills')  initSkillsPage();
@@ -36,6 +37,7 @@ function showPage(id) {
  */
 function renderCurrentPage() {
   if (_currentPage === 'deck')    initDeckPage();
+  if (_currentPage === 'battle')  initBattlePage();
   if (_currentPage === 'reginfo') initRegInfoPage();
   if (_currentPage === 'cards')   initCardPage();
   if (_currentPage === 'skills')  initSkillsPage();
