@@ -67,30 +67,59 @@ function _calcOugiCount(totalHp, dmgPerTurn) {
 }
 
 /* ----------------------------------------------------------------
-   総耐久を減らすことで奥義回数が増える HP 範囲を探索
-   totalHp から 1 ずつ減らし、奥義回数が増える範囲を特定する。
-   探索幅は min(totalHp-1, 50000) に制限。
+   総耐久を減らすことで奥義回数が増える HP 範囲を探索（効率的な実装）
+
+   ステップ1: 各奥義閾値の補完比率（70%/90%/97.5%）を使い、
+             境界付近の HP 候補を約 30 点生成する。
+             境界 = totalHp × r が damage の整数倍に近い点 ⇒ hp = k×d/r
+   ステップ2: 候補をシミュレーションして奥義回数が増える候補（シード）を特定
+   ステップ3: シードから上下に走査し正確な境界を確定、[min, max] を返す
 ---------------------------------------------------------------- */
 function _findBetterHpRange(totalHp, dmgPerTurn, originalCount) {
   if (originalCount >= 3 || dmgPerTurn <= 0 || totalHp <= 1) return null;
 
-  const MAX_STEPS = 50000;
-  const lo = Math.max(1, totalHp - MAX_STEPS);
+  // ステップ1: 境界HP候補を列挙
+  // 各奥義の発動閾値 (30%/10%/2.5%) の補完値 = 1 - threshold
+  const COMPLEMENTS = [0.70, 0.90, 0.975];
+  const candidateSet = new Set();
 
-  let rangeMin = null;
-  let rangeMax = null;
-
-  for (let hp = totalHp - 1; hp >= lo; hp--) {
-    const c = _calcOugiCount(hp, dmgPerTurn);
-    if (c > originalCount) {
-      if (rangeMax === null) rangeMax = hp; // 初めて見つかった（最大値）
-      rangeMin = hp;                        // 更新し続ける（最小値）
-    } else if (rangeMax !== null) {
-      break; // 範囲が途切れた
+  for (const r of COMPLEMENTS) {
+    // totalHp × r を damage で割った商の近辺の整数倍を列挙
+    const base = Math.floor(totalHp * r / dmgPerTurn) * dmgPerTurn;
+    for (let k = -2; k <= 2; k++) {
+      const mult = base + k * dmgPerTurn;
+      if (mult <= 0) continue;
+      // hp × r = mult となる hp を候補に追加（floor/ceil 両方）
+      const hpExact = mult / r;
+      for (const hp of [Math.floor(hpExact), Math.ceil(hpExact)]) {
+        if (hp > 0 && hp < totalHp) candidateSet.add(hp);
+      }
     }
   }
 
-  return rangeMin !== null ? { min: rangeMin, max: rangeMax } : null;
+  // ステップ2: 候補をシミュレーションして奥義回数が増えるシードを抽出
+  const betterSeeds = [...candidateSet]
+    .filter(hp => _calcOugiCount(hp, dmgPerTurn) > originalCount);
+  if (betterSeeds.length === 0) return null;
+
+  // ステップ3: シードから上下に走査して正確な境界を確定
+  // 範囲幅の上限は概ね dmgPerTurn × T1 × 0.11 程度なので 10 倍で十分
+  const EXPAND = Math.min(100000, Math.ceil(dmgPerTurn * 10));
+  let rangeMin = Math.min(...betterSeeds);
+  let rangeMax = Math.max(...betterSeeds);
+
+  for (const seed of betterSeeds) {
+    for (let hp = seed + 1; hp < totalHp && hp <= seed + EXPAND; hp++) {
+      if (_calcOugiCount(hp, dmgPerTurn) > originalCount) rangeMax = Math.max(rangeMax, hp);
+      else break;
+    }
+    for (let hp = seed - 1; hp >= 1 && hp >= seed - EXPAND; hp--) {
+      if (_calcOugiCount(hp, dmgPerTurn) > originalCount) rangeMin = Math.min(rangeMin, hp);
+      else break;
+    }
+  }
+
+  return { min: rangeMin, max: rangeMax };
 }
 
 /* ----------------------------------------------------------------
