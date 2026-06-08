@@ -25,7 +25,7 @@ const _db = firebase.database();
 /* ----------------------------------------------------------------
    ローカルキャッシュ（読み取りはここから行う）
 ---------------------------------------------------------------- */
-let _cache = { cards: [], skills: [], ougi: [] };
+let _cache = { cards: [], skills: [], ougi: [], cardHistory: [] };
 
 /* ----------------------------------------------------------------
    Firebase リアルタイムリスナー
@@ -35,9 +35,10 @@ _db.ref('hisaku').on('value', snapshot => {
   const data  = snapshot.val() || {};
   const toArr = obj => (obj ? Object.values(obj) : []);
 
-  _cache.cards  = toArr(data.cards);
-  _cache.skills = toArr(data.skills);
-  _cache.ougi   = toArr(data.ougi);
+  _cache.cards       = toArr(data.cards);
+  _cache.skills      = toArr(data.skills);
+  _cache.ougi        = toArr(data.ougi);
+  _cache.cardHistory = toArr(data.cardHistory);
 
   const overlay = document.getElementById('loadingOverlay');
   if (overlay) overlay.hidden = true;
@@ -191,6 +192,23 @@ function makeStore(key) {
 const Storage = {
   cards:  makeStore('cards'),
   skills: makeStore('skills'),
-  ougi:   makeStore('ougi')
+  ougi:   makeStore('ougi'),
+
+  cardHistory: {
+    getAll() {
+      return _cache.cardHistory.slice()
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+        .slice(0, 100);
+    },
+    /** カード登録/編集時に呼び出す */
+    record(cardName, charName, action) {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const entry = { id: _uid(), timestamp: Date.now(), cardName, charName, action };
+      _cache.cardHistory.push(entry);
+      _db.ref(`hisaku/cardHistory/${entry.id}`).set(entry)
+        .catch(err => console.error('[cardHistory.record] FAILED', err));
+    }
+  }
 };
 

@@ -1184,3 +1184,7 @@ body {
   flex-wrap: wrap;
 }
 .reginfo-toolbar .filter-input { flex: 1; min-width: 200px; }
+.reginfo-toolbar .filter-note { font-size: 0.8rem; color: var(--text-muted); }
+
+.history-action-create { color: var(--primary-light); font-weight: 600; }
+.history-action-update { color: #f59e0b; font-weight: 600; }

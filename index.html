@@ -582,6 +582,7 @@
         <button class="reginfo-tab active" id="reginfo-tab-cards">カード情報</button>
         <button class="reginfo-tab" id="reginfo-tab-skills">特技情報</button>
         <button class="reginfo-tab" id="reginfo-tab-ougi">奥義情報</button>
+        <button class="reginfo-tab" id="reginfo-tab-history">登録履歴</button>
       </div>
 
       <!-- カード情報パネル -->
@@ -630,6 +631,14 @@
           <button id="reginfoOugiCsvBtn" class="btn btn-secondary btn-sm">CSVダウンロード</button>
         </div>
         <div class="registered-list" id="reginfoOugiList"></div>
+      </div>
+
+      <!-- 登録履歴パネル -->
+      <div id="reginfo-panel-history" hidden>
+        <div class="reginfo-toolbar">
+          <span class="filter-note">最新100件を表示（新しい順）</span>
+        </div>
+        <div class="registered-list" id="reginfo-history-list"></div>
       </div>
 
     </section>

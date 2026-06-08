@@ -180,6 +180,7 @@ function executeCardImport() {
   const mode = document.getElementById('csvDupHandling').value;
   let imported = 0, skipped = 0, overwritten = 0, errored = 0;
   const toSave = [];
+  const historyEntries = [];
 
   _parsedCardRows.forEach(r => {
     if (r.errors.length > 0) { errored++; return; }
@@ -201,9 +202,11 @@ function executeCardImport() {
     if (r.dup) {
       if (mode === 'skip') { skipped++; return; }
       toSave.push({ ...cardData, id: r.dup.card.id });
+      historyEntries.push({ cardName: cardData.cardName, charName: cardData.charName, action: 'update' });
       overwritten++;
     } else {
       toSave.push(cardData);
+      historyEntries.push({ cardName: cardData.cardName, charName: cardData.charName, action: 'create' });
       imported++;
     }
   });
@@ -211,6 +214,7 @@ function executeCardImport() {
   if (toSave.length > 0) {
     const ok = Storage.cards.saveAll(toSave);
     if (!ok) return;
+    historyEntries.forEach(e => Storage.cardHistory.record(e.cardName, e.charName, e.action));
   }
 
   _showImportResult('csvResult', 'csvPreview', imported, overwritten, skipped, errored);
