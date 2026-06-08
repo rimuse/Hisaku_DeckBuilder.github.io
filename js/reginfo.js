@@ -340,8 +340,7 @@ function renderRegHistoryList() {
     return `
     <div class="list-item">
       <div class="list-item-main">
-        <div class="list-item-name">${esc(h.cardName || '—')}</div>
-        <div class="list-item-sub">${esc(h.charName || '—')} — <span class="history-action-${esc(h.action || 'create')}">${actionLabel}</span> — ${esc(dateStr)}</div>
+        <div class="list-item-sub">${esc(dateStr)} — <span class="history-action-${esc(h.action || 'create')}">${actionLabel}</span> — ${esc(h.cardName || '—')} / ${esc(h.charName || '—')}</div>
       </div>
     </div>`;
   }).join('');
