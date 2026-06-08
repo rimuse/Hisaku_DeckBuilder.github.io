@@ -16,18 +16,20 @@ function initRegInfoPage() {
    タブ切り替え
 ---------------------------------------------------------------- */
 function _showRegInfoTab(tab) {
-  ['cards', 'skills', 'ougi'].forEach(t => {
+  ['cards', 'skills', 'ougi', 'history'].forEach(t => {
     document.getElementById(`reginfo-tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`reginfo-panel-${t}`).hidden = (t !== tab);
   });
-  if (tab === 'cards')  renderRegCardList();
-  if (tab === 'skills') renderRegSkillList();
-  if (tab === 'ougi')   renderRegOugiList();
+  if (tab === 'cards')   renderRegCardList();
+  if (tab === 'skills')  renderRegSkillList();
+  if (tab === 'ougi')    renderRegOugiList();
+  if (tab === 'history') renderRegHistoryList();
 }
 
-document.getElementById('reginfo-tab-cards').addEventListener('click',  () => _showRegInfoTab('cards'));
-document.getElementById('reginfo-tab-skills').addEventListener('click', () => _showRegInfoTab('skills'));
-document.getElementById('reginfo-tab-ougi').addEventListener('click',   () => _showRegInfoTab('ougi'));
+document.getElementById('reginfo-tab-cards').addEventListener('click',   () => _showRegInfoTab('cards'));
+document.getElementById('reginfo-tab-skills').addEventListener('click',  () => _showRegInfoTab('skills'));
+document.getElementById('reginfo-tab-ougi').addEventListener('click',    () => _showRegInfoTab('ougi'));
+document.getElementById('reginfo-tab-history').addEventListener('click', () => _showRegInfoTab('history'));
 
 /* ----------------------------------------------------------------
    カード情報一覧
@@ -318,6 +320,31 @@ function downloadRegOugiCSV() {
     ].map(_csvCell).join(',');
   });
   _downloadRegCSV(header + '\n' + rows.join('\n'), 'ougi_list.csv');
+}
+
+/* ----------------------------------------------------------------
+   登録履歴一覧
+---------------------------------------------------------------- */
+function renderRegHistoryList() {
+  const list = Storage.cardHistory.getAll();
+  const el = document.getElementById('reginfo-history-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state">登録履歴がありません</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(h => {
+    const dt = new Date(h.timestamp);
+    const dateStr = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    const actionLabel = h.action === 'create' ? '登録' : '編集';
+    return `
+    <div class="list-item">
+      <div class="list-item-main">
+        <div class="list-item-name">${esc(h.cardName || '—')}</div>
+        <div class="list-item-sub">${esc(h.charName || '—')} — <span class="history-action-${esc(h.action || 'create')}">${actionLabel}</span> — ${esc(dateStr)}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ----------------------------------------------------------------
