@@ -34,7 +34,7 @@ document.getElementById('reginfo-tab-history').addEventListener('click', () => _
 /* ----------------------------------------------------------------
    カード情報一覧
 ---------------------------------------------------------------- */
-['reginfoCardSearch', 'reginfoSkillFilter', 'reginfoOugiFilter', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork', 'reginfoCardGensaku'].forEach(id => {
+['reginfoCardSearch', 'reginfoSkillFilter', 'reginfoOugiFilter', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork', 'reginfoCardGensaku', 'reginfoCardOwned'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderRegCardList);
 });
 document.getElementById('reginfoCardCsvBtn').addEventListener('click', downloadRegCardCSV);
@@ -63,6 +63,9 @@ function renderRegCardList() {
   const attr    = document.getElementById('reginfoCardAttribute').value;
   const work    = document.getElementById('reginfoCardWork').value;
   const gensaku = document.getElementById('reginfoCardGensaku').value;
+  const owned   = document.getElementById('reginfoCardOwned').value;
+
+  Ownership.cleanup();
 
   let cards = Storage.cards.getAll().slice().sort((a, b) =>
     (a.cardName || '').localeCompare(b.cardName || '', 'ja')
@@ -82,6 +85,8 @@ function renderRegCardList() {
   if (attr)    cards = cards.filter(c => c.attribute === attr);
   if (work)    cards = cards.filter(c => c.workName  === work);
   if (gensaku) cards = cards.filter(c => c.gensaku   === gensaku);
+  if (owned === 'owned')   cards = cards.filter(c => Ownership.isOwned(c.id));
+  if (owned === 'unowned') cards = cards.filter(c => !Ownership.isOwned(c.id));
 
   const el = document.getElementById('reginfoCardList');
   if (!cards.length) {
@@ -100,8 +105,20 @@ function renderRegCardList() {
         <div class="list-item-sub">${esc(c.charName)}${c.workName ? ' / ' + esc(c.workName) : ''} — ${esc(c.attribute || '')} — 脅 ${fmt(c.power)} / 耐 ${fmt(c.hp)}</div>
         <div class="list-item-sub">特技：${skill ? esc(skill.name) : '—'} ／ 奥義：${ougi ? esc(ougi.name) : '—'}</div>
       </div>
+      <label class="owned-toggle">
+        <input type="checkbox" class="owned-checkbox" data-id="${esc(c.id)}"${Ownership.isOwned(c.id) ? ' checked' : ''}>
+        <span>所持</span>
+      </label>
     </div>`;
   }).join('');
+
+  el.querySelectorAll('.owned-checkbox').forEach(cb =>
+    cb.addEventListener('change', () => {
+      Ownership.setOwned(cb.dataset.id, cb.checked);
+      /* 所持で絞り込み中はリストから外れるため再描画する */
+      if (document.getElementById('reginfoCardOwned').value) renderRegCardList();
+    })
+  );
 }
 
 function downloadRegCardCSV() {
