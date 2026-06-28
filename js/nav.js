@@ -35,6 +35,8 @@ function showPage(id) {
  * 現在表示中のページを再描画する。
  */
 function renderCurrentPage() {
+  /* カードデータ更新時に所持情報の孤立IDを掃除（描画ごとではなくデータ変更時に1回だけ） */
+  if (typeof Ownership !== 'undefined') Ownership.cleanup();
   if (_currentPage === 'deck')    initDeckPage();
   if (_currentPage === 'reginfo') initRegInfoPage();
   if (_currentPage === 'cards')   initCardPage();
