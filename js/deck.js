@@ -170,6 +170,7 @@ function renderDeckSlots() {
 function openCardPicker(slotIndex) {
   _pickingSlot = slotIndex;
   document.getElementById('cardPickerSlotNum').textContent = slotIndex + 1;
+  document.getElementById('filterOwned').checked = false;  // デフォルトは全カード表示
   refreshWorkFilter();
   refreshGensakuFilter();
   renderCardGrid();
@@ -187,9 +188,11 @@ function renderCardGrid() {
   const attr    = document.getElementById('filterAttribute').value;
   const work    = document.getElementById('filterWork').value;
   const gensaku = document.getElementById('filterGensaku').value;
+  const owned   = document.getElementById('filterOwned').checked;
   const grid    = document.getElementById('cardGrid');
 
   let cards = Storage.cards.getAll();
+  if (owned)   { Ownership.cleanup(); cards = cards.filter(c => Ownership.isOwned(c.id)); }
   if (text)    cards = cards.filter(c => [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(text)));
   if (skill)   cards = cards.filter(c => {
     const s = c.skillId ? Storage.skills.get(c.skillId) : null;
@@ -552,6 +555,7 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 ['filterText', 'filterSkill', 'filterOugi', 'filterRarity', 'filterAttribute', 'filterWork', 'filterGensaku'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderCardGrid);
 });
+document.getElementById('filterOwned').addEventListener('change', renderCardGrid);
 
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);

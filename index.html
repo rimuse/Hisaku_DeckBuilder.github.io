@@ -610,6 +610,11 @@
           <select id="reginfoCardGensaku" class="filter-select">
             <option value="">原作: すべて</option>
           </select>
+          <select id="reginfoCardOwned" class="filter-select">
+            <option value="">所持: 全カード</option>
+            <option value="owned">所持カードのみ</option>
+            <option value="unowned">未所持カードのみ</option>
+          </select>
           <button id="reginfoCardCsvBtn" class="btn btn-secondary btn-sm">CSVダウンロード</button>
         </div>
         <div class="registered-list" id="reginfoCardList"></div>
@@ -812,6 +817,7 @@
         <select id="filterGensaku" class="filter-select">
           <option value="">原作: すべて</option>
         </select>
+        <label class="filter-checkbox"><input type="checkbox" id="filterOwned"> 所持カードのみ</label>
       </div>
       <div class="card-grid" id="cardGrid"></div>
     </div>
@@ -828,6 +834,7 @@
   <!-- 読み込み順序: Firebase設定 → 基盤 → UI共通 → 機能別 → ナビ → 認証 → 起動 -->
   <script src="js/firebase-config.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/ownership.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/modal.js"></script>
   <script src="js/deck.js"></script>
