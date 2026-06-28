@@ -192,7 +192,7 @@ function renderCardGrid() {
   const grid    = document.getElementById('cardGrid');
 
   let cards = Storage.cards.getAll();
-  if (owned)   { Ownership.cleanup(); cards = cards.filter(c => Ownership.isOwned(c.id)); }
+  if (owned)   cards = cards.filter(c => Ownership.isOwned(c.id));
   if (text)    cards = cards.filter(c => [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(text)));
   if (skill)   cards = cards.filter(c => {
     const s = c.skillId ? Storage.skills.get(c.skillId) : null;

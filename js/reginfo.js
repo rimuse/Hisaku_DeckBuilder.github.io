@@ -39,6 +39,15 @@ document.getElementById('reginfo-tab-history').addEventListener('click', () => _
 });
 document.getElementById('reginfoCardCsvBtn').addEventListener('click', downloadRegCardCSV);
 
+/* 所持チェックボックスはイベント委譲で処理（毎描画のリスナー登録を避ける） */
+document.getElementById('reginfoCardList').addEventListener('change', e => {
+  const cb = e.target.closest('.owned-checkbox');
+  if (!cb) return;
+  Ownership.setOwned(cb.dataset.id, cb.checked);
+  /* 所持で絞り込み中はリストから外れるため再描画する */
+  if (document.getElementById('reginfoCardOwned').value) renderRegCardList();
+});
+
 function _refreshRegWorkFilter() {
   const sel   = document.getElementById('reginfoCardWork');
   const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
@@ -64,8 +73,6 @@ function renderRegCardList() {
   const work    = document.getElementById('reginfoCardWork').value;
   const gensaku = document.getElementById('reginfoCardGensaku').value;
   const owned   = document.getElementById('reginfoCardOwned').value;
-
-  Ownership.cleanup();
 
   let cards = Storage.cards.getAll().slice().sort((a, b) =>
     (a.cardName || '').localeCompare(b.cardName || '', 'ja')
@@ -111,14 +118,6 @@ function renderRegCardList() {
       </label>
     </div>`;
   }).join('');
-
-  el.querySelectorAll('.owned-checkbox').forEach(cb =>
-    cb.addEventListener('change', () => {
-      Ownership.setOwned(cb.dataset.id, cb.checked);
-      /* 所持で絞り込み中はリストから外れるため再描画する */
-      if (document.getElementById('reginfoCardOwned').value) renderRegCardList();
-    })
-  );
 }
 
 function downloadRegCardCSV() {

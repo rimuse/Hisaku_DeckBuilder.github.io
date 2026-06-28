@@ -28,6 +28,19 @@ const _db = firebase.database();
 let _cache = { cards: [], skills: [], ougi: [], cardHistory: [] };
 
 /* ----------------------------------------------------------------
+   ID インデックス（id → アイテムの Map）
+   get(id) を線形探索 O(n) から O(1) に高速化するため、
+   キャッシュ更新時に再構築する。
+---------------------------------------------------------------- */
+let _index = { cards: new Map(), skills: new Map(), ougi: new Map() };
+
+function _rebuildIndex(key) {
+  const m = new Map();
+  for (const item of _cache[key]) m.set(item.id, item);
+  _index[key] = m;
+}
+
+/* ----------------------------------------------------------------
    Firebase リアルタイムリスナー
    管理者がデータを変更すると全利用者のキャッシュが即時更新される
 ---------------------------------------------------------------- */
@@ -39,6 +52,10 @@ _db.ref('hisaku').on('value', snapshot => {
   _cache.skills      = toArr(data.skills);
   _cache.ougi        = toArr(data.ougi);
   _cache.cardHistory = toArr(data.cardHistory);
+
+  _rebuildIndex('cards');
+  _rebuildIndex('skills');
+  _rebuildIndex('ougi');
 
   const overlay = document.getElementById('loadingOverlay');
   if (overlay) overlay.hidden = true;
@@ -102,8 +119,8 @@ function makeStore(key) {
     /** キャッシュから全件返す（同期） */
     getAll() { return _cache[key].slice(); },
 
-    /** キャッシュから1件返す（同期） */
-    get(id)  { return _cache[key].find(x => x.id === id) || null; },
+    /** キャッシュから1件返す（同期, O(1)） */
+    get(id)  { return _index[key].get(id) || null; },
 
     /**
      * Firebase に書き込む（認証済み管理者のみ）。
@@ -124,6 +141,7 @@ function makeStore(key) {
       const idx = _cache[key].findIndex(x => x.id === clean.id);
       if (idx >= 0) _cache[key][idx] = clean;
       else _cache[key].push(clean);
+      _index[key].set(clean.id, clean);
 
       const path = `hisaku/${key}/${clean.id}`;
       console.log(`[Storage.save] Writing to ${path}`);
@@ -155,6 +173,7 @@ function makeStore(key) {
         const idx = _cache[key].findIndex(x => x.id === clean.id);
         if (idx >= 0) _cache[key][idx] = clean;
         else _cache[key].push(clean);
+        _index[key].set(clean.id, clean);
         updates[`hisaku/${key}/${clean.id}`] = clean;
       });
       console.log(`[Storage.saveAll] Paths:`, Object.keys(updates));
@@ -177,6 +196,7 @@ function makeStore(key) {
         return;
       }
       _cache[key] = _cache[key].filter(x => x.id !== id);
+      _index[key].delete(id);
 
       _db.ref(`hisaku/${key}/${id}`).remove().catch(err => {
         console.error('Firebase delete error:', err);
