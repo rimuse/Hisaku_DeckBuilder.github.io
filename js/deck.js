@@ -317,9 +317,13 @@ function renderDeckStats() {
     return parts.join('');
   }
 
+  function detailParens(base, ...buffs) {
+    return `<span class="stat-detail">（基本 ${fmt(base)}${buffParts(...buffs)}）</span>`;
+  }
+
   statsEl.innerHTML = `
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${buffParts(lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
-    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${buffParts(lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
+    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${detailParens(baseThreat, lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
+    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${detailParens(baseHp, lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
