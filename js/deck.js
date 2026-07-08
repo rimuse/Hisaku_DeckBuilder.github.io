@@ -322,8 +322,8 @@ function renderDeckStats() {
   }
 
   statsEl.innerHTML = `
-    <div class="stat-row"><span class="stat-label">総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${detailParens(baseThreat, lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
-    <div class="stat-row"><span class="stat-label">総耐久力</span><span class="stat-value">${fmt(totalHp)}${detailParens(baseHp, lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
+    <div class="stat-row"><span class="stat-label">最終総脅迫力</span><span class="stat-value">${fmt(totalThreat)}${detailParens(baseThreat, lbThreat, skillThreat, tokuboThreat, fukyoThreat, corrTokkoThreat, corrNewTokkoThreat)}</span></div>
+    <div class="stat-row"><span class="stat-label">最終総耐久力</span><span class="stat-value">${fmt(totalHp)}${detailParens(baseHp, lbHp, skillHp, tokuboHp, fukyoHp, corrTokkoHp, newCardTokkoHp)}</span></div>
     <div class="stat-row"><span class="stat-label">属性内訳</span><span class="stat-value">${attrStr || '—'}</span></div>`;
 
   if (!activations.length) { skillEl.innerHTML = ''; return; }
