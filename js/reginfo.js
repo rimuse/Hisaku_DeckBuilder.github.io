@@ -169,7 +169,7 @@ const _TARGET_TYPE_LABEL = {
   owner_attribute: '所有者属性',
 };
 
-function _conditionsToStr(conditions, condMinCount) {
+function _conditionGroupToStr(conditions, condMinCount) {
   if (!conditions || !conditions.length) return '';
   if (condMinCount !== undefined) {
     /* 新形式: 最後の条件に枚数を付加 */
@@ -187,6 +187,12 @@ function _conditionsToStr(conditions, condMinCount) {
     const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
     return isOwner ? `${label}:${c.minCount ?? 1}` : `${label}:${c.value}:${c.minCount ?? 1}`;
   }).join(';');
+}
+
+/** 発動条件（OR グループ）→ CSV/テキスト形式（グループ間は「|」区切り） */
+function _conditionsToStr(skill) {
+  const groups = getSkillConditionGroups(skill);
+  return groups.map(g => _conditionGroupToStr(g.conditions, g.minCount)).filter(Boolean).join('|');
 }
 
 function _targetsToStr(targets) {
@@ -217,7 +223,7 @@ function renderRegSkillList() {
     const tMax     = s.threatPctMax     ?? s.threatPct    ?? 0;
     const eInit    = s.endurancePctInit ?? s.endurancePct ?? 0;
     const eMax     = s.endurancePctMax  ?? s.endurancePct ?? 0;
-    const conds    = _conditionsToStr(s.conditions, s.condMinCount) || '常時発動';
+    const conds    = _conditionsToStr(s) || '常時発動';
     const targets  = getSkillTargets(s);
     const targetStr = _targetsToStr(targets);
     const effs = noEffect ? '効果なし' : (
@@ -254,7 +260,7 @@ function downloadRegSkillCSV() {
       s.name || '',
       noEffect ? 'true' : '',
       noEffect ? '' : (s.maxSkillLv || 1),
-      _conditionsToStr(s.conditions, s.condMinCount),
+      _conditionsToStr(s),
       _targetsToStr(targets),
       noEffect ? '' : (s.threatPctInit    ?? s.threatPct    ?? 0),
       noEffect ? '' : (s.threatPctMax     ?? s.threatPct    ?? 0),

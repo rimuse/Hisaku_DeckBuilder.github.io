@@ -256,6 +256,7 @@
 
               <div class="form-row">
                 <label class="form-label">発動条件</label>
+                <div id="condGroupList" class="cond-list"></div>
                 <div class="cond-add-row">
                   <select id="condType" class="form-select cond-type-sel">
                     <option value="character">キャラクター名</option>
@@ -282,7 +283,9 @@
                   <span class="sep">上記条件すべてに一致するカードが</span>
                   <input type="number" id="skillCondMinCount" class="form-input cond-count-input" min="1" max="5" value="1">
                   <span class="sep">枚以上</span>
+                  <button type="button" id="btnAddCondGroup" class="btn btn-sm btn-secondary">OR条件として確定</button>
                 </div>
+                <span class="empty-hint">複数グループを確定すると、いずれかのグループを満たせば発動（OR）になります。</span>
               </div>
 
               <div class="form-row">
@@ -476,7 +479,7 @@
               <code class="csv-format-code">特技名,効果なし,最大特技Lv,発動条件,発動対象,脅迫力(初期値)%,脅迫力(最大値)%,耐久力(初期値)%,耐久力(最大値)%</code>
               <button id="skillCsvSampleDownload" class="btn btn-sm btn-secondary">サンプルDL</button>
             </div>
-            <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値」をセミコロン区切りで記述し、最後の条件に枚数を付加（例: キャラクター名:キャラA;作品:作品B:3）。条件1件の場合は「作品:作品A:2」</p>
+            <p class="csv-hint csv-hint-sm">発動条件: 「タイプ:値」をセミコロン区切りで記述し、最後の条件に枚数を付加（例: キャラクター名:キャラA;作品:作品B:3）。条件1件の場合は「作品:作品A:2」。複数グループを「|」区切りで並べるとOR条件になる（例: 属性:親愛:3|作品:作品B:3）</p>
             <p class="csv-hint csv-hint-sm">発動対象タイプ: 全体 / キャラクター名 / 作品 / 属性</p>
           </div>
 

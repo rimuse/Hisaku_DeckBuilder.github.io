@@ -343,18 +343,7 @@ function renderDeckStats() {
       const targetStr = !a.resolvedTargets?.length
         ? '全体'
         : a.resolvedTargets.map(t => `${condLabel(t.type)}: ${esc(t.value)}`).join(' または ');
-      const condItems = a.skill.conditions || [];
-      const condStr = condItems.length === 0 ? '常時発動' : (() => {
-        const parts = condItems.map(c => {
-          const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
-          return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}`;
-        }).join(' かつ ');
-        if (a.skill.condMinCount !== undefined) return `${parts} ≥${a.skill.condMinCount}枚`;
-        return condItems.map(c => {
-          const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
-          return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount ?? 1}`;
-        }).join(' AND ');
-      })();
+      const condStr = formatConditionGroups(getSkillConditionGroups(a.skill));
       return `<div class="skill-status-item${a.active ? ' active' : ''}">
         <div class="skill-status-header">
           <span class="skill-status-name">${esc(a.skill.name)}${lvLabel}</span>${badge}
@@ -393,39 +382,38 @@ function calcSkillActivations(slots) {
         : num(skill.endurancePct);
 
       /* 条件の owner タイプを所有者情報で解決 */
-      const conditions = (skill.conditions || []).map(cond => {
+      const resolveOwnerCond = cond => {
         if (cond.type === 'owner_character') return { ...cond, type: 'character', value: ownerChar };
         if (cond.type === 'owner_work')      return { ...cond, type: 'work',      value: ownerWork };
         if (cond.type === 'owner_attribute') return { ...cond, type: 'attribute', value: ownerAttr };
         return cond;
-      });
+      };
+      const matchCond = (cond, c) => {
+        if (cond.type === 'character') return c.charName  === cond.value;
+        if (cond.type === 'work')      return c.workName  === cond.value;
+        if (cond.type === 'attribute') return c.attribute === cond.value;
+        return false;
+      };
 
-      const active = conditions.length === 0 || (() => {
-        if (skill.condMinCount !== undefined) {
-          /* 新形式: 全条件に一致するカード数を合算して比較 */
-          const count = slots.filter(s => {
-            const c = s.card;
-            return conditions.every(cond => {
-              if (cond.type === 'character') return c.charName  === cond.value;
-              if (cond.type === 'work')      return c.workName  === cond.value;
-              if (cond.type === 'attribute') return c.attribute === cond.value;
-              return true;
-            });
-          }).length;
-          return count >= num(skill.condMinCount);
+      /* 発動条件（OR グループ）: グループ間は OR、グループ内の条件は AND */
+      const conditionGroups = getSkillConditionGroups(skill).map(g => ({
+        minCount:   g.minCount,
+        conditions: (g.conditions || []).map(resolveOwnerCond),
+      }));
+
+      const active = conditionGroups.length === 0 || conditionGroups.some(g => {
+        if (!g.conditions.length) return true;
+        if (g.minCount !== undefined) {
+          /* 新形式: グループ内の全条件に一致するカード数を合算して比較 */
+          const count = slots.filter(s => g.conditions.every(cond => matchCond(cond, s.card))).length;
+          return count >= num(g.minCount);
         }
         /* 旧データ互換: 各条件を独立カウントして AND 評価 */
-        return conditions.every(cond => {
-          const count = slots.filter(s => {
-            const c = s.card;
-            if (cond.type === 'character') return c.charName  === cond.value;
-            if (cond.type === 'work')      return c.workName  === cond.value;
-            if (cond.type === 'attribute') return c.attribute === cond.value;
-            return false;
-          }).length;
+        return g.conditions.every(cond => {
+          const count = slots.filter(s => matchCond(cond, s.card)).length;
           return count >= num(cond.minCount || 1);
         });
-      })();
+      });
 
       /* 発動対象の正規化（旧 target 単体形式との後方互換）と owner タイプ解決 */
       const rawTargets = skill.targets?.length ? skill.targets

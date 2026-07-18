@@ -19,9 +19,72 @@ document.getElementById('skillNoEffect').addEventListener('change', function () 
 });
 
 /* ----------------------------------------------------------------
+   発動条件（OR グループ）ヘルパー
+   1グループ = 複数条件の AND、グループ間は OR
+   旧データ（conditions + condMinCount のみ）は単一グループとして扱う
+---------------------------------------------------------------- */
+function getSkillConditionGroups(skill) {
+  if (skill.conditionGroups?.length) return skill.conditionGroups;
+  if (skill.conditions?.length) return [{ conditions: skill.conditions, minCount: skill.condMinCount }];
+  return [];
+}
+
+/** OR グループ配列 → 表示用文字列（グループ内は「かつ」、グループ間は「または」） */
+function formatConditionGroups(groups) {
+  if (!groups.length) return '常時発動';
+  return groups.map(g => {
+    const condItems = g.conditions || [];
+    if (!condItems.length) return '常時発動';
+    const parts = condItems.map(c => {
+      const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
+      return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}`;
+    });
+    if (g.minCount !== undefined) return `${parts.join(' かつ ')} ≥${g.minCount}枚`;
+    /* 旧データ互換: 条件ごとに minCount */
+    return condItems.map((c, i) => `${parts[i]}≥${c.minCount ?? 1}`).join(' かつ ');
+  }).join(' または ');
+}
+
+/* ----------------------------------------------------------------
    発動条件リスト（ローカル状態）
+   skillConditionGroups: 確定済みの OR グループ
+   skillConditions      : 編集中（未確定）のグループの条件
 ---------------------------------------------------------------- */
 let skillConditions = [];
+let skillConditionGroups = [];
+
+function renderCondGroupList() {
+  const el = document.getElementById('condGroupList');
+  if (!skillConditionGroups.length) { el.innerHTML = ''; return; }
+  el.innerHTML = skillConditionGroups.map((g, i) => {
+    const parts = (g.conditions || []).map(c => {
+      const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
+      return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}`;
+    }).join(' かつ ');
+    const countLabel = g.minCount !== undefined ? ` ≥${g.minCount}枚` : '';
+    return `<span class="cond-tag">
+      ${parts || '条件なし'}${countLabel}
+      <button type="button" class="cond-tag-remove" data-i="${i}">&times;</button>
+    </span>`;
+  }).join('<span class="or-sep">または</span>');
+  el.querySelectorAll('.cond-tag-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      skillConditionGroups.splice(+btn.dataset.i, 1);
+      renderCondGroupList();
+    });
+  });
+}
+
+/* 現在編集中の条件を OR グループとして確定 */
+document.getElementById('btnAddCondGroup').addEventListener('click', () => {
+  if (!skillConditions.length) { alert('条件を1つ以上追加してください'); return; }
+  const minCount = num(document.getElementById('skillCondMinCount').value) || 1;
+  skillConditionGroups.push({ conditions: skillConditions.slice(), minCount });
+  skillConditions = [];
+  renderCondList();
+  document.getElementById('skillCondMinCount').value = 1;
+  renderCondGroupList();
+});
 
 function renderCondList() {
   const el = document.getElementById('condList');
@@ -202,21 +265,7 @@ function renderSkillList() {
   }
 
   el.innerHTML = skills.map(s => {
-    const condItems = s.conditions || [];
-    const conds = condItems.length === 0 ? '常時発動' : (() => {
-      const parts = condItems.map(c => {
-        const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
-        return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}`;
-      }).join(' かつ ');
-      if (s.condMinCount !== undefined) {
-        return `${parts} ≥${s.condMinCount}枚`;
-      }
-      /* 旧データ互換 */
-      return condItems.map(c => {
-        const isOwner = c.type === 'owner_character' || c.type === 'owner_work' || c.type === 'owner_attribute';
-        return `${condLabel(c.type)}${isOwner ? '' : ':' + esc(c.value)}≥${c.minCount ?? 1}`;
-      }).join(' AND ');
-    })();
+    const conds = formatConditionGroups(getSkillConditionGroups(s));
     const noEffect = !!s.noEffect;
     const tInit = s.threatPctInit     ?? s.threatPct     ?? 0;
     const tMax  = s.threatPctMax      ?? s.threatPct     ?? 0;
@@ -269,6 +318,8 @@ function resetSkillForm() {
   document.getElementById('skillId').value = '';
   skillConditions = [];
   renderCondList();
+  skillConditionGroups = [];
+  renderCondGroupList();
   skillTargets = [];
   renderTargetList();
   document.getElementById('skillNoEffect').checked      = false;
@@ -297,11 +348,26 @@ function editSkill(id) {
   document.getElementById('effectThreatMax').value      = s.threatPctMax     ?? s.threatPct    ?? 0;
   document.getElementById('effectEnduranceMax').value   = s.endurancePctMax  ?? s.endurancePct ?? 0;
 
-  /* 旧データ（condMinCount なし）は最初の条件の minCount を引き継ぐ */
-  skillConditions = (s.conditions || []).map(c => ({ type: c.type, value: c.value }));
-  renderCondList();
-  document.getElementById('skillCondMinCount').value =
-    s.condMinCount ?? s.conditions?.[0]?.minCount ?? 1;
+  /* 既存グループのうち最後の1件を編集中欄に、それより前は確定済み OR グループとして読み込む */
+  const allGroups = getSkillConditionGroups(s);
+  if (allGroups.length) {
+    const editing = allGroups[allGroups.length - 1];
+    skillConditionGroups = allGroups.slice(0, -1).map(g => ({
+      conditions: (g.conditions || []).map(c => ({ type: c.type, value: c.value })),
+      minCount: g.minCount,
+    }));
+    skillConditions = (editing.conditions || []).map(c => ({ type: c.type, value: c.value }));
+    renderCondList();
+    /* 旧データ（minCount なし）は最初の条件の minCount を引き継ぐ */
+    document.getElementById('skillCondMinCount').value =
+      editing.minCount ?? editing.conditions?.[0]?.minCount ?? 1;
+  } else {
+    skillConditionGroups = [];
+    skillConditions = [];
+    renderCondList();
+    document.getElementById('skillCondMinCount').value = 1;
+  }
+  renderCondGroupList();
 
   skillTargets = getSkillTargets(s);
   renderTargetList();
@@ -332,12 +398,15 @@ document.getElementById('skillForm').addEventListener('submit', e => {
   const calcRise = (init, max, lv) => lv > 1 ? (max - init) / (lv - 1) : 0;
 
   const condMinCount = num(document.getElementById('skillCondMinCount').value) || 1;
+  const conditionGroups = skillConditionGroups.slice();
+  if (skillConditions.length) {
+    conditionGroups.push({ conditions: skillConditions.slice(), minCount: condMinCount });
+  }
 
   Storage.skills.save({
     id:               document.getElementById('skillId').value || undefined,
     name:             document.getElementById('skillName').value.trim(),
-    conditions:       skillConditions.slice(),
-    condMinCount:     condMinCount,
+    conditionGroups:  conditionGroups,
     targets:          skillTargets.slice(),
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : maxLv,

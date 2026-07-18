@@ -268,12 +268,12 @@ const TARGET_TYPE_MAP = {
   '所有者属性':        'owner_attribute',
 };
 
-/** 発動条件文字列 → { conditions, condMinCount }
+/** 発動条件（1グループ）文字列 → { conditions, condMinCount }
  * 通常: 「キャラクター名:キャラA:2」(type:value:count) または「キャラクター名:キャラA」(count省略)
  * 所有者: 「所有者作品:2」(type:count)
  * 枚数は最後に見つかった値を condMinCount として返す（旧形式との後方互換）
  */
-function parseConditionsStr(str) {
+function _parseConditionGroupStr(str) {
   if (!str || !str.trim()) return { conditions: [], condMinCount: 1 };
   let lastCount = 1;
   const conditions = str.split(';').map(part => {
@@ -295,21 +295,32 @@ function parseConditionsStr(str) {
   return { conditions, condMinCount: lastCount };
 }
 
+/** 発動条件文字列（グループは「|」区切り、OR）→ conditionGroups 配列 */
+function parseConditionsStr(str) {
+  if (!str || !str.trim()) return [];
+  return str.split('|').map(part => {
+    const { conditions, condMinCount } = _parseConditionGroupStr(part);
+    return { conditions, minCount: condMinCount };
+  }).filter(g => g.conditions.length);
+}
+
 /** 発動条件文字列のバリデーション（エラー文字列の配列を返す） */
 function validateConditionsStr(str) {
   if (!str || !str.trim()) return [];
   const errors = [];
-  str.split(';').forEach((part, i) => {
-    const segs    = part.trim().split(':');
-    const typeKey = COND_TYPE_MAP[segs[0]?.trim()];
-    if (!typeKey) {
-      errors.push(`条件${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者作品 / 所有者属性）`);
-      return;
-    }
-    const isOwner = typeKey === 'owner_character' || typeKey === 'owner_work' || typeKey === 'owner_attribute';
-    if (!isOwner && (segs.length < 2 || !segs[1]?.trim())) {
-      errors.push(`条件${i + 1}: フォーマット不正（例: キャラクター名:キャラA）`);
-    }
+  str.split('|').forEach((group, gi) => {
+    group.split(';').forEach((part, i) => {
+      const segs    = part.trim().split(':');
+      const typeKey = COND_TYPE_MAP[segs[0]?.trim()];
+      if (!typeKey) {
+        errors.push(`条件グループ${gi + 1}-${i + 1}: タイプ「${segs[0]}」が無効（キャラクター名 / 作品 / 属性 / 所有者キャラクター / 所有者作品 / 所有者属性）`);
+        return;
+      }
+      const isOwner = typeKey === 'owner_character' || typeKey === 'owner_work' || typeKey === 'owner_attribute';
+      if (!isOwner && (segs.length < 2 || !segs[1]?.trim())) {
+        errors.push(`条件グループ${gi + 1}-${i + 1}: フォーマット不正（例: キャラクター名:キャラA）`);
+      }
+    });
   });
   return errors;
 }
@@ -400,12 +411,11 @@ function skillRowToData(row) {
     }
   }
 
-  const { conditions, condMinCount } = parseConditionsStr(row.conditionsStr);
+  const conditionGroups = parseConditionsStr(row.conditionsStr);
 
   return {
     name:             row.name,
-    conditions,
-    condMinCount,
+    conditionGroups,
     targets,
     noEffect:         noEffect || undefined,
     maxSkillLv:       noEffect ? undefined : maxLv,
@@ -519,7 +529,8 @@ function downloadSkillSampleCSV() {
   const sample = [
     'サンプル特技A,,10,キャラクター名:キャラA:2,作品:臭作;キャラクター名:AAA,10,20,5,10',
     'サンプル特技B（効果なし）,true,,,,,,,',
-    'サンプル特技C（常時・全体）,,5,,全体,15,30,0,0'
+    'サンプル特技C（常時・全体）,,5,,全体,15,30,0,0',
+    'サンプル特技D（OR条件）,,10,属性:親愛:3|作品:作品B:3,全体,10,20,5,10'
   ].join('\n');
   _downloadCSV(header + '\n' + sample, 'skill_import_sample.csv');
 }
