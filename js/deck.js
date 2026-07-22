@@ -181,7 +181,9 @@ function openCardPicker(slotIndex) {
    カードグリッド（カード選択ピッカー内）
 ---------------------------------------------------------------- */
 function renderCardGrid() {
-  const text    = document.getElementById('filterText').value.trim().toLowerCase();
+  const cardName      = document.getElementById('filterCardName').value.trim().toLowerCase();
+  const cardNameExact = document.getElementById('filterCardNameExact').checked;
+  const charName      = document.getElementById('filterCharName').value.trim().toLowerCase();
   const skill   = document.getElementById('filterSkill').value.trim().toLowerCase();
   const ougi    = document.getElementById('filterOugi').value.trim().toLowerCase();
   const rar     = document.getElementById('filterRarity').value;
@@ -193,7 +195,11 @@ function renderCardGrid() {
 
   let cards = Storage.cards.getAll();
   if (owned)   cards = cards.filter(c => Ownership.isOwned(c.id));
-  if (text)    cards = cards.filter(c => [c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(text)));
+  if (cardName) cards = cards.filter(c => {
+    const name = (c.cardName || '').toLowerCase();
+    return cardNameExact ? name === cardName : name.includes(cardName);
+  });
+  if (charName) cards = cards.filter(c => (c.charName || '').toLowerCase().includes(charName));
   if (skill)   cards = cards.filter(c => {
     const s = c.skillId ? Storage.skills.get(c.skillId) : null;
     return s && s.name.toLowerCase().includes(skill);
@@ -544,10 +550,11 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
   renderDeckStats();
 });
 
-['filterText', 'filterSkill', 'filterOugi', 'filterRarity', 'filterAttribute', 'filterWork', 'filterGensaku'].forEach(id => {
+['filterCardName', 'filterCharName', 'filterSkill', 'filterOugi', 'filterRarity', 'filterAttribute', 'filterWork', 'filterGensaku'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderCardGrid);
 });
 document.getElementById('filterOwned').addEventListener('change', renderCardGrid);
+document.getElementById('filterCardNameExact').addEventListener('change', renderCardGrid);
 
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);

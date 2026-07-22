@@ -34,9 +34,10 @@ document.getElementById('reginfo-tab-history').addEventListener('click', () => _
 /* ----------------------------------------------------------------
    カード情報一覧
 ---------------------------------------------------------------- */
-['reginfoCardSearch', 'reginfoSkillFilter', 'reginfoOugiFilter', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork', 'reginfoCardGensaku', 'reginfoCardOwned'].forEach(id => {
+['reginfoCardNameSearch', 'reginfoCharNameSearch', 'reginfoSkillFilter', 'reginfoOugiFilter', 'reginfoCardRarity', 'reginfoCardAttribute', 'reginfoCardWork', 'reginfoCardGensaku', 'reginfoCardOwned'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderRegCardList);
 });
+document.getElementById('reginfoCardNameExact').addEventListener('change', renderRegCardList);
 document.getElementById('reginfoCardCsvBtn').addEventListener('click', downloadRegCardCSV);
 
 /* 所持チェックボックスはイベント委譲で処理（毎描画のリスナー登録を避ける） */
@@ -65,7 +66,9 @@ function _refreshRegGensakuFilter() {
 }
 
 function renderRegCardList() {
-  const query   = (document.getElementById('reginfoCardSearch').value || '').toLowerCase();
+  const cardName      = (document.getElementById('reginfoCardNameSearch').value || '').toLowerCase();
+  const cardNameExact = document.getElementById('reginfoCardNameExact').checked;
+  const charName      = (document.getElementById('reginfoCharNameSearch').value || '').toLowerCase();
   const skill   = (document.getElementById('reginfoSkillFilter').value || '').toLowerCase();
   const ougi    = (document.getElementById('reginfoOugiFilter').value  || '').toLowerCase();
   const rar     = document.getElementById('reginfoCardRarity').value;
@@ -77,9 +80,11 @@ function renderRegCardList() {
   let cards = Storage.cards.getAll().slice().sort((a, b) =>
     (a.cardName || '').localeCompare(b.cardName || '', 'ja')
   );
-  if (query)   cards = cards.filter(c =>
-    [c.internalId, c.cardName, c.charName, c.workName].some(v => (v || '').toLowerCase().includes(query))
-  );
+  if (cardName) cards = cards.filter(c => {
+    const name = (c.cardName || '').toLowerCase();
+    return cardNameExact ? name === cardName : name.includes(cardName);
+  });
+  if (charName) cards = cards.filter(c => (c.charName || '').toLowerCase().includes(charName));
   if (skill)   cards = cards.filter(c => {
     const s = c.skillId ? Storage.skills.get(c.skillId) : null;
     return s && s.name.toLowerCase().includes(skill);
