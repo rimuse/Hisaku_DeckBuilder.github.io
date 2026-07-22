@@ -591,7 +591,9 @@
       <!-- カード情報パネル -->
       <div id="reginfo-panel-cards">
         <div class="reginfo-toolbar">
-          <input type="text" id="reginfoCardSearch" class="filter-input filter-input-third" placeholder="カード名 / キャラクター名で検索">
+          <input type="text" id="reginfoCardNameSearch" class="filter-input filter-input-third" placeholder="カード名で検索">
+          <label class="filter-checkbox"><input type="checkbox" id="reginfoCardNameExact"> 完全一致</label>
+          <input type="text" id="reginfoCharNameSearch" class="filter-input filter-input-third" placeholder="キャラクター名で検索">
           <input type="text" id="reginfoSkillFilter" class="filter-input filter-input-third" placeholder="特技名で検索">
           <input type="text" id="reginfoOugiFilter" class="filter-input filter-input-third" placeholder="奥義名で検索">
           <select id="reginfoCardRarity" class="filter-select">
@@ -798,7 +800,9 @@
       <button class="modal-close" id="cardPickerClose" aria-label="閉じる">&times;</button>
       <h3 class="panel-title" style="margin-bottom:0.75rem">カードを選択 — スロット <span id="cardPickerSlotNum">1</span></h3>
       <div class="filter-bar">
-        <input type="text" id="filterText" class="filter-input filter-input-third" placeholder="カード名 / キャラクター名で検索">
+        <input type="text" id="filterCardName" class="filter-input filter-input-third" placeholder="カード名で検索">
+        <label class="filter-checkbox"><input type="checkbox" id="filterCardNameExact"> 完全一致</label>
+        <input type="text" id="filterCharName" class="filter-input filter-input-third" placeholder="キャラクター名で検索">
         <input type="text" id="filterSkill" class="filter-input filter-input-third" placeholder="特技名で検索">
         <input type="text" id="filterOugi" class="filter-input filter-input-third" placeholder="奥義名で検索">
         <select id="filterRarity" class="filter-select">
