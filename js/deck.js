@@ -213,6 +213,8 @@ function renderCardGrid() {
   if (work)    cards = cards.filter(c => c.workName  === work);
   if (gensaku) cards = cards.filter(c => c.gensaku   === gensaku);
 
+  cards = applySkillEffectFilter(cards);
+
   if (!cards.length) {
     grid.innerHTML = '<div class="empty-state">カードが見つかりません</div>';
     return;
@@ -240,6 +242,82 @@ function renderCardGrid() {
 
   grid.querySelectorAll('.card-thumb').forEach(el => {
     el.addEventListener('click', () => onCardThumbClick(el.dataset.id));
+  });
+}
+
+/* ----------------------------------------------------------------
+   特技効果による絞り込み（カード選択ピッカー用）
+---------------------------------------------------------------- */
+function normalizeSkillTargets(skill) {
+  return skill.targets?.length ? skill.targets
+    : (skill.target && skill.target.type !== 'all' ? [skill.target] : []);
+}
+
+function skillEffectTargetFilterActive() {
+  return !!(
+    document.getElementById('filterSkillTargetChar').value.trim() ||
+    document.getElementById('filterSkillTargetAttr').value ||
+    document.getElementById('filterSkillTargetWork').value ||
+    document.getElementById('filterSkillTargetOwnerDependent').checked
+  );
+}
+
+function skillEffectContentFilterActive() {
+  return !!(
+    document.getElementById('filterSkillEnduranceMin').value.trim() ||
+    document.getElementById('filterSkillThreatMin').value.trim()
+  );
+}
+
+function matchesSkillTargetFilter(skill) {
+  if (!skill) return false;
+  const targets = normalizeSkillTargets(skill);
+  if (!targets.length) return true; /* 対象が全体の特技は常にヒット */
+
+  const charVal  = document.getElementById('filterSkillTargetChar').value.trim().toLowerCase();
+  const attrVal  = document.getElementById('filterSkillTargetAttr').value;
+  const workVal  = document.getElementById('filterSkillTargetWork').value;
+  const logic    = document.querySelector('input[name="skillTargetLogic"]:checked').value;
+  const includeOwnerDependent = document.getElementById('filterSkillTargetOwnerDependent').checked;
+
+  const checks = [];
+  if (charVal) checks.push(targets.some(t => t.type === 'character' && (t.value || '').toLowerCase().includes(charVal)));
+  if (attrVal) checks.push(targets.some(t => t.type === 'attribute' && t.value === attrVal));
+  if (workVal) checks.push(targets.some(t => t.type === 'work'      && t.value === workVal));
+  const valueMatch = checks.length ? (logic === 'and' ? checks.every(Boolean) : checks.some(Boolean)) : false;
+
+  const ownerMatch = includeOwnerDependent && targets.some(t =>
+    t.type === 'owner_character' || t.type === 'owner_work' || t.type === 'owner_attribute');
+
+  return valueMatch || ownerMatch;
+}
+
+function matchesSkillContentFilter(skill) {
+  if (!skill) return false;
+  const enduranceMin = document.getElementById('filterSkillEnduranceMin').value.trim();
+  const threatMin    = document.getElementById('filterSkillThreatMin').value.trim();
+  const logic        = document.querySelector('input[name="skillContentLogic"]:checked').value;
+
+  const eMax = skill.noEffect ? 0 : num(skill.endurancePctMax ?? skill.endurancePct);
+  const tMax = skill.noEffect ? 0 : num(skill.threatPctMax    ?? skill.threatPct);
+
+  const checks = [];
+  if (enduranceMin) checks.push(eMax >= Number(enduranceMin));
+  if (threatMin)    checks.push(tMax >= Number(threatMin));
+
+  return logic === 'and' ? checks.every(Boolean) : checks.some(Boolean);
+}
+
+function applySkillEffectFilter(cards) {
+  const targetActive  = skillEffectTargetFilterActive();
+  const contentActive = skillEffectContentFilterActive();
+  if (!targetActive && !contentActive) return cards;
+
+  return cards.filter(c => {
+    const skill = c.skillId ? Storage.skills.get(c.skillId) : null;
+    if (targetActive  && !matchesSkillTargetFilter(skill))  return false;
+    if (contentActive && !matchesSkillContentFilter(skill)) return false;
+    return true;
   });
 }
 
@@ -526,11 +604,17 @@ function refreshTokutsuboSelect() {
    作品フィルター更新
 ---------------------------------------------------------------- */
 function refreshWorkFilter() {
-  const sel   = document.getElementById('filterWork');
   const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
-  const prev  = sel.value;
+
+  const sel  = document.getElementById('filterWork');
+  const prev = sel.value;
   sel.innerHTML = '<option value="">作品: すべて</option>' +
     works.map(w => `<option value="${esc(w)}"${w === prev ? ' selected' : ''}>${esc(w)}</option>`).join('');
+
+  const targetSel  = document.getElementById('filterSkillTargetWork');
+  const targetPrev = targetSel.value;
+  targetSel.innerHTML = '<option value="">対象作品: すべて</option>' +
+    works.map(w => `<option value="${esc(w)}"${w === targetPrev ? ' selected' : ''}>${esc(w)}</option>`).join('');
 }
 
 function refreshGensakuFilter() {
@@ -555,6 +639,13 @@ document.getElementById('btnClearDeck').addEventListener('click', () => {
 });
 document.getElementById('filterOwned').addEventListener('change', renderCardGrid);
 document.getElementById('filterCardNameExact').addEventListener('change', renderCardGrid);
+
+['filterSkillTargetChar', 'filterSkillTargetAttr', 'filterSkillTargetWork', 'filterSkillEnduranceMin', 'filterSkillThreatMin'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderCardGrid);
+});
+document.getElementById('filterSkillTargetOwnerDependent').addEventListener('change', renderCardGrid);
+document.querySelectorAll('input[name="skillTargetLogic"]').forEach(el => el.addEventListener('change', renderCardGrid));
+document.querySelectorAll('input[name="skillContentLogic"]').forEach(el => el.addEventListener('change', renderCardGrid));
 
 document.getElementById('tokutsuboChar').addEventListener('change', renderDeckStats);
 document.getElementById('tokutsuboLv').addEventListener('change', renderDeckStats);

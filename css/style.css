@@ -497,6 +497,32 @@ body {
 }
 .filter-select:focus { border-color: var(--primary); }
 
+/* ===== Skill Effect Filter (collapsible) ===== */
+.skill-effect-filter {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg3);
+}
+.skill-effect-filter > summary {
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  user-select: none;
+}
+.skill-effect-filter[open] > summary { border-bottom: 1px solid var(--border); }
+.skill-effect-filter-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.skill-effect-filter-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.skill-effect-filter-group-head { display: flex; align-items: center; gap: 0.75rem; }
+.skill-effect-filter-group-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.skill-effect-filter-group .filter-bar { margin-bottom: 0; }
+
 /* ===== Card Grid ===== */
 .card-grid {
   display: grid;
