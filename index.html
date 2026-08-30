@@ -826,6 +826,45 @@
         </select>
         <label class="filter-checkbox"><input type="checkbox" id="filterOwned"> 所持カードのみ</label>
       </div>
+      <details class="skill-effect-filter">
+        <summary>特技効果による絞り込み</summary>
+        <div class="skill-effect-filter-body">
+          <div class="skill-effect-filter-group">
+            <div class="skill-effect-filter-group-head">
+              <span class="skill-effect-filter-group-label">対象</span>
+              <label class="radio-label"><input type="radio" name="skillTargetLogic" value="or" checked> OR</label>
+              <label class="radio-label"><input type="radio" name="skillTargetLogic" value="and"> AND</label>
+            </div>
+            <div class="filter-bar">
+              <input type="text" id="filterSkillTargetChar" class="filter-input filter-input-third" placeholder="対象キャラクター名で検索">
+              <select id="filterSkillTargetAttr" class="filter-select">
+                <option value="">対象属性: すべて</option>
+                <option value="親愛">親愛</option>
+                <option value="調教">調教</option>
+                <option value="従順">従順</option>
+              </select>
+              <select id="filterSkillTargetWork" class="filter-select">
+                <option value="">対象作品: すべて</option>
+              </select>
+            </div>
+            <label class="filter-checkbox">
+              <input type="checkbox" id="filterSkillTargetOwnerDependent">
+              所有者の名前/属性/作品に依存する特技を含める
+            </label>
+          </div>
+          <div class="skill-effect-filter-group">
+            <div class="skill-effect-filter-group-head">
+              <span class="skill-effect-filter-group-label">内容</span>
+              <label class="radio-label"><input type="radio" name="skillContentLogic" value="or" checked> OR</label>
+              <label class="radio-label"><input type="radio" name="skillContentLogic" value="and"> AND</label>
+            </div>
+            <div class="filter-bar">
+              <input type="number" id="filterSkillEnduranceMin" class="filter-input filter-input-third" placeholder="耐久◯%以上" min="0" step="0.1">
+              <input type="number" id="filterSkillThreatMin" class="filter-input filter-input-third" placeholder="脅迫◯%以上" min="0" step="0.1">
+            </div>
+          </div>
+        </div>
+      </details>
       <div class="card-grid" id="cardGrid"></div>
     </div>
   </div>
