@@ -17,22 +17,19 @@ function initCardPage() {
    カードフォームのセレクト更新（他ページから呼び出される）
 ---------------------------------------------------------------- */
 function populateSkillSelect() {
-  const sel = document.getElementById('cardSkill');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">なし</option>' +
-    Storage.skills.getAll().slice().sort((a, b) => a.name.localeCompare(b.name, 'ja')).map(s =>
-      `<option value="${esc(s.id)}"${s.id === cur ? ' selected' : ''}>${esc(s.name)}</option>`
-    ).join('');
+  setSelectOptions(document.getElementById('cardSkill'),
+    Storage.skills.getAll().slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+      .map(s => ({ value: s.id, label: s.name })));
 }
 
 function populateOugiSelect() {
-  const sel = document.getElementById('cardOugi');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">なし</option>' +
-    Storage.ougi.getAll().slice().sort((a, b) => a.name.localeCompare(b.name, 'ja')).map(o =>
-      `<option value="${esc(o.id)}"${o.id === cur ? ' selected' : ''}>${esc(o.name)}</option>`
-    ).join('');
+  setSelectOptions(document.getElementById('cardOugi'),
+    Storage.ougi.getAll().slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+      .map(o => ({ value: o.id, label: o.name })));
 }
+
+bindSelectFilter(document.getElementById('cardSkillFilter'), document.getElementById('cardSkill'));
+bindSelectFilter(document.getElementById('cardOugiFilter'),  document.getElementById('cardOugi'));
 
 /* ----------------------------------------------------------------
    原作・作品サジェスト更新
@@ -100,6 +97,9 @@ document.getElementById('cardListSearch').addEventListener('input', renderCardLi
 function resetCardForm() {
   document.getElementById('cardForm').reset();
   document.getElementById('cardId').value = '';
+  // form.reset() は option の selected 属性や絞り込み状態に左右されるため明示的に「なし」へ戻す
+  setFilteredSelectValue(document.getElementById('cardSkill'), '');
+  setFilteredSelectValue(document.getElementById('cardOugi'),  '');
   document.getElementById('cardFormTitle').textContent = '新規カード登録';
   document.getElementById('cardCancelBtn').hidden = true;
 }
@@ -116,8 +116,8 @@ function editCard(id) {
   document.getElementById('workName').value       = c.workName   || '';
   document.getElementById('cardPower').value      = c.power      || '';
   document.getElementById('cardHp').value         = c.hp         || '';
-  document.getElementById('cardSkill').value      = c.skillId    || '';
-  document.getElementById('cardOugi').value       = c.ougiId     || '';
+  setFilteredSelectValue(document.getElementById('cardSkill'), c.skillId);
+  setFilteredSelectValue(document.getElementById('cardOugi'),  c.ougiId);
   document.querySelector(`input[name="rarity"][value="${c.rarity}"]`).checked       = true;
   document.querySelector(`input[name="attribute"][value="${c.attribute}"]`).checked = true;
 

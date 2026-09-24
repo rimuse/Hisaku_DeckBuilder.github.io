@@ -35,3 +35,57 @@ function showToast(msg, isError = false) {
   clearTimeout(el._hideTimer);
   el._hideTimer  = setTimeout(() => { el.hidden = true; }, 3000);
 }
+
+/* ----------------------------------------------------------------
+   セレクトの文字入力絞り込み
+---------------------------------------------------------------- */
+/** 絞り込み比較用の正規化（全角半角・大小文字・カタカナ/ひらがなを同一視） */
+function normalizeForFilter(s) {
+  return String(s ?? '').normalize('NFKC').toLowerCase()
+    .replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+
+/**
+ * セレクトの選択肢を設定する（先頭に「なし」を自動付与）
+ * items: [{ value, label }]
+ * 絞り込み入力欄が紐づいていれば、その文字列で絞り込んで表示する
+ */
+function setSelectOptions(sel, items) {
+  sel._filterItems = items;
+  applySelectFilter(sel);
+}
+
+/**
+ * 紐づく入力欄の文字列で選択肢を絞り込む
+ * 現在の選択値は、条件に合わなくても選択肢に残す（値が勝手に変わらないように）
+ */
+function applySelectFilter(sel) {
+  const cur = sel.value;
+  const q   = normalizeForFilter(sel._filterInput ? sel._filterInput.value.trim() : '');
+  const list = (sel._filterItems || []).filter(it =>
+    !q || it.value === cur || normalizeForFilter(it.label).includes(q)
+  );
+  sel.innerHTML = '<option value="">なし</option>' +
+    list.map(it => `<option value="${esc(it.value)}">${esc(it.label)}</option>`).join('');
+  sel.value = list.some(it => it.value === cur) ? cur : '';
+}
+
+/** 絞り込み入力欄とセレクトを紐づける */
+function bindSelectFilter(input, sel) {
+  sel._filterInput = input;
+  input.addEventListener('input', () => applySelectFilter(sel));
+  // Enter でフォーム送信させず、候補があれば先頭を選択してセレクトへ移動
+  input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    if (sel.options.length > 1 && !sel.value) sel.value = sel.options[1].value;
+    sel.focus();
+  });
+}
+
+/** 絞り込みを解除して値を設定する（編集・リセット時用） */
+function setFilteredSelectValue(sel, value) {
+  if (sel._filterInput) sel._filterInput.value = '';
+  applySelectFilter(sel);
+  sel.value = value || '';
+}
