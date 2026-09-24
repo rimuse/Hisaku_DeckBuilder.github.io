@@ -354,7 +354,7 @@ function downloadRegOugiCSV() {
 /* ----------------------------------------------------------------
    登録履歴一覧
 ---------------------------------------------------------------- */
-const _REG_HISTORY_SOURCE_LABELS = { web: 'Web', csv: 'CSV', discord: 'DiscordBot' };
+const _REG_HISTORY_SOURCE_LABELS = { web: 'Web', csv: 'CSV', discord: 'Bot' };
 
 function renderRegHistoryList() {
   const list = Storage.cardHistory.getAll();
