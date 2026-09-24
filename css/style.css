@@ -1237,3 +1237,14 @@ body {
 
 .history-action-create { color: var(--primary-light); font-weight: 600; }
 .history-action-update { color: #f59e0b; font-weight: 600; }
+.history-source {
+  display: inline-block;
+  padding: 0 0.4em;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+.history-source-web     { color: #38bdf8; }
+.history-source-csv     { color: #34d399; }
+.history-source-discord { color: #818cf8; }

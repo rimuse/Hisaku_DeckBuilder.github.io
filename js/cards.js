@@ -146,7 +146,7 @@ function saveCard(data) {
   const isNew = !data.id || !Storage.cards.get(data.id);
   const ok = Storage.cards.save(data);
   if (!ok) return;            // 未認証 — Storage 側でエラートーストを表示済み
-  Storage.cardHistory.record(data.cardName, data.charName, isNew ? 'create' : 'update');
+  Storage.cardHistory.record(data.cardName, data.charName, isNew ? 'create' : 'update', 'web');
   resetCardForm();
   renderCardList();
   refreshGensakuSuggestions();

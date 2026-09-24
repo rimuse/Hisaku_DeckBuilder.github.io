@@ -214,7 +214,7 @@ function executeCardImport() {
   if (toSave.length > 0) {
     const ok = Storage.cards.saveAll(toSave);
     if (!ok) return;
-    historyEntries.forEach(e => Storage.cardHistory.record(e.cardName, e.charName, e.action));
+    historyEntries.forEach(e => Storage.cardHistory.record(e.cardName, e.charName, e.action, 'csv'));
   }
 
   _showImportResult('csvResult', 'csvPreview', imported, overwritten, skipped, errored);
