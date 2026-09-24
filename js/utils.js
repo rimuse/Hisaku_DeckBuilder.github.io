@@ -14,6 +14,20 @@ function num(v) { return +v || 0; }
 /** 数値を locale 形式で表示 */
 function fmt(v) { return num(v).toLocaleString(); }
 
+/**
+ * カードの field（gensaku / workName / charName）の値を重複なく集め、ゲーム内の並び順で返す。
+ * 並び順リスト（Storage.sortOrder）にない値は末尾に五十音順で並べる。
+ */
+function distinctInGameOrder(field, cards = Storage.cards.getAll()) {
+  const values = [...new Set(cards.map(c => c[field]).filter(Boolean))];
+  const rank   = new Map(Storage.sortOrder.get(field).map((v, i) => [v, i]));
+  return values.sort((a, b) => {
+    const ra = rank.has(a) ? rank.get(a) : Infinity;
+    const rb = rank.has(b) ? rank.get(b) : Infinity;
+    return ra !== rb ? ra - rb : a.localeCompare(b, 'ja');
+  });
+}
+
 /** 条件タイプの日本語ラベル */
 const COND_LABELS = {
   character:       'キャラ',
