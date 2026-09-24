@@ -129,7 +129,7 @@ function downloadRegCardCSV() {
   const cards = Storage.cards.getAll().slice().sort((a, b) =>
     (a.cardName || '').localeCompare(b.cardName || '', 'ja')
   );
-  const header = 'ゲーム内ID,カード名,キャラクター名,レア度,作品,属性,脅迫力,耐久力,特技,奥義';
+  const header = 'ゲーム内ID,カード名,キャラクター名,レア度,原作,作品,属性,脅迫力,耐久力,特技,奥義';
   const rows = cards.map(c => {
     const skill = c.skillId ? Storage.skills.get(c.skillId) : null;
     const ougi  = c.ougiId  ? Storage.ougi.get(c.ougiId)   : null;
@@ -138,6 +138,7 @@ function downloadRegCardCSV() {
       c.cardName   || '',
       c.charName   || '',
       c.rarity     || '',
+      c.gensaku    || '',
       c.workName   || '',
       c.attribute  || '',
       c.power      || '0',
@@ -282,14 +283,15 @@ function downloadRegSkillCSV() {
 document.getElementById('reginfoOugiSearch').addEventListener('input', renderRegOugiList);
 document.getElementById('reginfoOugiCsvBtn').addEventListener('click', downloadRegOugiCSV);
 
-function _ougiTargetStr(targets) {
+/* sep: 画面表示は「 かつ 」、CSV はインポート形式に合わせて「 / 」 */
+function _ougiTargetStr(targets, sep = ' かつ ') {
   if (!targets || !targets.length) return 'すべて';
   return targets.map(t => {
     const label = t.type === 'attribute' ? '属性' :
                   t.type === 'character' ? 'キャラクター名' :
                   t.type === 'work'      ? '作品' : t.type;
     return `${label}：${t.value}`;
-  }).join(' かつ ');
+  }).join(sep);
 }
 
 function renderRegOugiList() {
@@ -338,7 +340,7 @@ function downloadRegOugiCSV() {
       o.name || '',
       noEffect ? 'true' : '',
       noEffect ? '' : (o.maxLv || 1),
-      noEffect ? '' : _ougiTargetStr(o.targets),
+      noEffect ? '' : _ougiTargetStr(o.targets, ' / '),
       noEffect ? '' : (o.pattern === 'damage' ? 'ダメージ' : '脅迫力上昇'),
       (noEffect || o.pattern === 'damage')  ? '' : (o.minPct  ?? 0),
       (noEffect || o.pattern === 'damage')  ? '' : (o.maxPct  ?? 0),
