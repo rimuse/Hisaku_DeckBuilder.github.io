@@ -594,7 +594,7 @@ function calcTokutsuboBonus(slots) {
 ---------------------------------------------------------------- */
 function refreshTokutsuboSelect() {
   const sel   = document.getElementById('tokutsuboChar');
-  const chars = [...new Set(Storage.cards.getAll().map(c => c.charName).filter(Boolean))].sort();
+  const chars = distinctInGameOrder('charName');
   const prev  = sel.value;
   sel.innerHTML = '<option value="">特壺: なし</option>' +
     chars.map(c => `<option value="${esc(c)}"${c === prev ? ' selected' : ''}>${esc(c)}</option>`).join('');
@@ -604,7 +604,7 @@ function refreshTokutsuboSelect() {
    作品フィルター更新
 ---------------------------------------------------------------- */
 function refreshWorkFilter() {
-  const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
+  const works = distinctInGameOrder('workName');
 
   const sel  = document.getElementById('filterWork');
   const prev = sel.value;
@@ -619,7 +619,7 @@ function refreshWorkFilter() {
 
 function refreshGensakuFilter() {
   const sel      = document.getElementById('filterGensaku');
-  const gensakus = [...new Set(Storage.cards.getAll().map(c => c.gensaku).filter(Boolean))].sort();
+  const gensakus = distinctInGameOrder('gensaku');
   const prev     = sel.value;
   sel.innerHTML = '<option value="">原作: すべて</option>' +
     gensakus.map(g => `<option value="${esc(g)}"${g === prev ? ' selected' : ''}>${esc(g)}</option>`).join('');

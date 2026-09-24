@@ -60,11 +60,8 @@ document.getElementById('ougiTargetType').addEventListener('change', function ()
 });
 
 function _refreshOugiTargetSuggestions() {
-  const cards = Storage.cards.getAll();
   const type  = document.getElementById('ougiTargetType').value;
-  const vals  = type === 'work'
-    ? [...new Set(cards.map(c => c.workName).filter(Boolean))].sort()
-    : [...new Set(cards.map(c => c.charName).filter(Boolean))].sort();
+  const vals  = distinctInGameOrder(type === 'work' ? 'workName' : 'charName');
   document.getElementById('ougiTargetValueSuggestions').innerHTML =
     vals.map(v => `<option value="${esc(v)}">`).join('');
 }

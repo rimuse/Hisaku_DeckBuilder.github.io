@@ -25,7 +25,7 @@ const _db = firebase.database();
 /* ----------------------------------------------------------------
    ローカルキャッシュ（読み取りはここから行う）
 ---------------------------------------------------------------- */
-let _cache = { cards: [], skills: [], ougi: [], cardHistory: [] };
+let _cache = { cards: [], skills: [], ougi: [], cardHistory: [], sortOrder: {} };
 
 /* ----------------------------------------------------------------
    ID インデックス（id → アイテムの Map）
@@ -52,6 +52,7 @@ _db.ref('hisaku').on('value', snapshot => {
   _cache.skills      = toArr(data.skills);
   _cache.ougi        = toArr(data.ougi);
   _cache.cardHistory = toArr(data.cardHistory);
+  _cache.sortOrder   = data.sortOrder || {};
 
   _rebuildIndex('cards');
   _rebuildIndex('skills');
@@ -213,6 +214,18 @@ const Storage = {
   cards:  makeStore('cards'),
   skills: makeStore('skills'),
   ougi:   makeStore('ougi'),
+
+  /**
+   * ゲーム内の並び順（hisaku/sortOrder）。Firebase コンソールで直接編集する。
+   *   hisaku/sortOrder/{gensaku,workName,charName}: ["値1", "値2", ...]
+   */
+  sortOrder: {
+    /** field の並び順リストを返す（未設定なら空配列） */
+    get(field) {
+      const v = _cache.sortOrder[field];
+      return v ? Object.values(v) : [];   // コンソール編集で配列が歯抜けになりオブジェクト化しても扱えるように
+    }
+  },
 
   cardHistory: {
     getAll() {

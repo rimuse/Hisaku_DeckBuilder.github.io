@@ -149,9 +149,8 @@ document.getElementById('condType').addEventListener('change', function () {
 });
 
 function refreshCondSuggestions() {
-  const cards = Storage.cards.getAll();
-  const chars = [...new Set(cards.map(c => c.charName).filter(Boolean))].sort();
-  const works = [...new Set(cards.map(c => c.workName).filter(Boolean))].sort();
+  const chars = distinctInGameOrder('charName');
+  const works = distinctInGameOrder('workName');
   const type  = document.getElementById('condType').value;
   document.getElementById('condValueSuggestions').innerHTML =
     (type === 'work' ? works : chars).map(v => `<option value="${esc(v)}">`).join('');
@@ -231,9 +230,8 @@ document.getElementById('targetAddType').addEventListener('change', function () 
 });
 
 function refreshTargetSuggestions() {
-  const cards = Storage.cards.getAll();
-  const chars = [...new Set(cards.map(c => c.charName).filter(Boolean))].sort();
-  const works = [...new Set(cards.map(c => c.workName).filter(Boolean))].sort();
+  const chars = distinctInGameOrder('charName');
+  const works = distinctInGameOrder('workName');
   const type  = document.getElementById('targetAddType').value;
   document.getElementById('targetAddValueSuggestions').innerHTML =
     (type === 'work' ? works : chars).map(v => `<option value="${esc(v)}">`).join('');

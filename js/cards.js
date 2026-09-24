@@ -35,13 +35,13 @@ bindSelectFilter(document.getElementById('cardOugiFilter'),  document.getElement
    原作・作品サジェスト更新
 ---------------------------------------------------------------- */
 function refreshGensakuSuggestions() {
-  const gensakus = [...new Set(Storage.cards.getAll().map(c => c.gensaku).filter(Boolean))].sort();
+  const gensakus = distinctInGameOrder('gensaku');
   document.getElementById('gensakuSuggestions').innerHTML =
     gensakus.map(g => `<option value="${esc(g)}">`).join('');
 }
 
 function refreshWorkSuggestions() {
-  const works = [...new Set(Storage.cards.getAll().map(c => c.workName).filter(Boolean))].sort();
+  const works = distinctInGameOrder('workName');
   document.getElementById('workSuggestions').innerHTML =
     works.map(w => `<option value="${esc(w)}">`).join('');
 }
