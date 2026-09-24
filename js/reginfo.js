@@ -354,6 +354,8 @@ function downloadRegOugiCSV() {
 /* ----------------------------------------------------------------
    登録履歴一覧
 ---------------------------------------------------------------- */
+const _REG_HISTORY_SOURCE_LABELS = { web: 'Web', csv: 'CSV', discord: 'DiscordBot' };
+
 function renderRegHistoryList() {
   const list = Storage.cardHistory.getAll();
   const el = document.getElementById('reginfo-history-list');
@@ -366,10 +368,13 @@ function renderRegHistoryList() {
     const dt = new Date(h.timestamp);
     const dateStr = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
     const actionLabel = h.action === 'create' ? '登録' : '編集';
+    // 登録元（source 未設定の既存データは空欄）
+    const sourceLabel = _REG_HISTORY_SOURCE_LABELS[h.source];
+    const sourceHtml = sourceLabel ? ` — <span class="history-source history-source-${esc(h.source)}">${sourceLabel}</span>` : '';
     return `
     <div class="list-item">
       <div class="list-item-main">
-        <div class="list-item-sub">${esc(dateStr)} — <span class="history-action-${esc(h.action || 'create')}">${actionLabel}</span> — ${esc(h.cardName || '—')} / ${esc(h.charName || '—')}</div>
+        <div class="list-item-sub">${esc(dateStr)} — <span class="history-action-${esc(h.action || 'create')}">${actionLabel}</span>${sourceHtml} — ${esc(h.cardName || '—')} / ${esc(h.charName || '—')}</div>
       </div>
     </div>`;
   }).join('');

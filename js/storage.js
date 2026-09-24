@@ -233,11 +233,11 @@ const Storage = {
         .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
         .slice(0, 100);
     },
-    /** カード登録/編集時に呼び出す */
-    record(cardName, charName, action) {
+    /** カード登録/編集時に呼び出す（source: 'web' | 'csv' | 'discord'） */
+    record(cardName, charName, action, source) {
       const user = firebase.auth().currentUser;
       if (!user) return;
-      const entry = { id: _uid(), timestamp: Date.now(), cardName, charName, action };
+      const entry = { id: _uid(), timestamp: Date.now(), cardName, charName, action, source };
       _cache.cardHistory.push(entry);
       _db.ref(`hisaku/cardHistory/${entry.id}`).set(entry)
         .catch(err => console.error('[cardHistory.record] FAILED', err));
